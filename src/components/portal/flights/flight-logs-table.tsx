@@ -1,4 +1,4 @@
-import { Badge } from "@/components/ui/badge";
+import { StatusDot } from "@/components/portal/status-dot";
 import {
   Table,
   TableBody,
@@ -18,10 +18,10 @@ export type FlightLogRow = {
   uavs: { drone_id: string } | null;
 };
 
-const outcomeVariant: Record<FlightLogRow["mission_outcome"], "default" | "secondary" | "destructive"> = {
-  completed: "default",
-  partial: "secondary",
-  aborted: "destructive",
+const outcomeTone: Record<FlightLogRow["mission_outcome"], "good" | "warning" | "critical"> = {
+  completed: "good",
+  partial: "warning",
+  aborted: "critical",
 };
 
 export function FlightLogsTable({ rows }: { rows: FlightLogRow[] }) {
@@ -54,9 +54,7 @@ export function FlightLogsTable({ rows }: { rows: FlightLogRow[] }) {
                 <TableCell>{row.duration_minutes ?? "—"}</TableCell>
                 <TableCell>{row.weather_conditions ?? "—"}</TableCell>
                 <TableCell>
-                  <Badge variant={outcomeVariant[row.mission_outcome]} className="capitalize">
-                    {row.mission_outcome}
-                  </Badge>
+                  <StatusDot tone={outcomeTone[row.mission_outcome]} label={row.mission_outcome} />
                 </TableCell>
               </TableRow>
             ))

@@ -1,6 +1,6 @@
-import { GraduationCap, Clock, AlertTriangle, Award } from "lucide-react";
-import { PageHero } from "@/components/portal/page-hero";
-import { StatCard } from "@/components/portal/stat-card";
+import { HeroBand } from "@/components/portal/hero-band";
+import { MetricTile } from "@/components/portal/metric-tile";
+import { SectionLabel } from "@/components/portal/section-label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   CertificationsTable,
@@ -48,27 +48,29 @@ export default async function TrainingPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHero
+      <HeroBand
+        eyebrow="Crew Readiness"
         title="Training & Certification Portal"
         subtitle="Course tracking, certification management, competency levels, and renewal reminders — keeping our team mission-ready."
         actions={canManage ? <UploadCertificationDialog pilots={pilotOptions} /> : undefined}
       />
 
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <StatCard label="Certifications on File" value={`${records.length}`} icon={GraduationCap} />
-        <StatCard
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <MetricTile label="Certifications on File" value={`${records.length}`} tone="neutral" />
+        <MetricTile
           label="Expiring (60 days)"
           value={`${expiringSoon}`}
-          icon={Clock}
-          tone={expiringSoon > 0 ? "warning" : "default"}
+          tone={expiringSoon > 0 ? "warning" : "good"}
         />
-        <StatCard label="Expired" value={`${expired}`} icon={AlertTriangle} tone={expired > 0 ? "critical" : "default"} />
-        <StatCard label="Fully Qualified Pilots" value={`${qualifiedCount}`} icon={Award} />
+        <MetricTile label="Expired" value={`${expired}`} tone={expired > 0 ? "critical" : "good"} />
+        <MetricTile label="Fully Qualified Pilots" value={`${qualifiedCount}`} tone="good" />
       </div>
 
-      <Card>
+      <Card className="rounded-md">
         <CardHeader>
-          <CardTitle className="text-base">Competency Matrix</CardTitle>
+          <CardTitle className="font-heading text-sm font-bold tracking-wide uppercase">
+            Competency Matrix
+          </CardTitle>
         </CardHeader>
         <CardContent className="text-sm text-muted-foreground">
           Tracks each pilot&apos;s highest demonstrated competency level from the certifications below.
@@ -77,7 +79,7 @@ export default async function TrainingPage() {
       </Card>
 
       <div>
-        <h2 className="mb-3 text-sm font-medium text-muted-foreground">Certification Status</h2>
+        <SectionLabel>Certification Status</SectionLabel>
         <CertificationsTable rows={records} />
       </div>
     </div>

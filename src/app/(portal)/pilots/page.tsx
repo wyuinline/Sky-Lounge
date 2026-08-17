@@ -1,8 +1,8 @@
-import { Clock, ShieldAlert, GraduationCap, Lock } from "lucide-react";
-import { PageHero } from "@/components/portal/page-hero";
+import { Lock } from "lucide-react";
+import { HeroBand } from "@/components/portal/hero-band";
+import { StatusDot } from "@/components/portal/status-dot";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge";
 import { PilotsTable, type PilotRow } from "@/components/portal/pilots/pilots-table";
 import { AddPilotDialog } from "@/components/portal/pilots/add-pilot-dialog";
 import { createClient } from "@/lib/supabase/server";
@@ -26,43 +26,43 @@ export default async function PilotsPage() {
 
   const today = new Date();
   const in30Days = new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000);
-  const in60Days = new Date(today.getTime() + 60 * 24 * 60 * 60 * 1000);
 
   const medicalExpiring30 = rows.filter(
     (r) => r.medical_expiry && new Date(r.medical_expiry) >= today && new Date(r.medical_expiry) <= in30Days,
   ).length;
   const currencyChanges = rows.filter((r) => r.currency_status !== "current").length;
+  const trainingRecordsCount = rows.reduce((c, r) => c + r.training_records.length, 0);
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHero
+      <HeroBand
+        eyebrow="Crew Registry"
         title="Pilots & Crew Management"
         subtitle="Secure pilot database — certifications, medical status, training records, and flight currency tracking."
         actions={canManagePilots ? <AddPilotDialog /> : undefined}
       />
 
-      <Card>
+      <Card className="rounded-md">
         <CardHeader>
-          <CardTitle className="text-base">Expiry Alerts</CardTitle>
+          <CardTitle className="font-heading text-sm font-bold tracking-wide uppercase">
+            Expiry Alerts
+          </CardTitle>
         </CardHeader>
         <CardContent className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-          <div className="flex items-center justify-between rounded-md border px-3 py-2 text-sm">
-            <span className="flex items-center gap-2">
-              <Clock className="size-4 text-muted-foreground" /> Medical certs expiring (30 days)
-            </span>
-            <Badge variant={medicalExpiring30 > 0 ? "destructive" : "secondary"}>{medicalExpiring30}</Badge>
+          <div className="flex items-center justify-between border-b border-border pb-2 text-sm sm:border-b-0 sm:pb-0">
+            <StatusDot
+              tone={medicalExpiring30 > 0 ? "warning" : "good"}
+              label="Medical certs expiring (30 days)"
+            />
+            <span className="font-heading text-sm font-bold tabular-nums">{medicalExpiring30}</span>
           </div>
-          <div className="flex items-center justify-between rounded-md border px-3 py-2 text-sm">
-            <span className="flex items-center gap-2">
-              <GraduationCap className="size-4 text-muted-foreground" /> Training records on file
-            </span>
-            <Badge variant="secondary">{rows.reduce((c, r) => c + r.training_records.length, 0)}</Badge>
+          <div className="flex items-center justify-between border-b border-border pb-2 text-sm sm:border-b-0 sm:pb-0">
+            <StatusDot tone="neutral" label="Training records on file" />
+            <span className="font-heading text-sm font-bold tabular-nums">{trainingRecordsCount}</span>
           </div>
-          <div className="flex items-center justify-between rounded-md border px-3 py-2 text-sm">
-            <span className="flex items-center gap-2">
-              <ShieldAlert className="size-4 text-muted-foreground" /> Currency status changes
-            </span>
-            <Badge variant={currencyChanges > 0 ? "destructive" : "secondary"}>{currencyChanges}</Badge>
+          <div className="flex items-center justify-between text-sm">
+            <StatusDot tone={currencyChanges > 0 ? "warning" : "good"} label="Currency status changes" />
+            <span className="font-heading text-sm font-bold tabular-nums">{currencyChanges}</span>
           </div>
         </CardContent>
       </Card>

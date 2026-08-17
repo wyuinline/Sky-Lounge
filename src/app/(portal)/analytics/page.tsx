@@ -1,6 +1,5 @@
-import { Activity, Plane, Users, ShieldAlert, ClipboardCheck, Wrench } from "lucide-react";
-import { PageHero } from "@/components/portal/page-hero";
-import { StatCard } from "@/components/portal/stat-card";
+import { HeroBand } from "@/components/portal/hero-band";
+import { MetricTile } from "@/components/portal/metric-tile";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CategoryBarChart, type CategoryDatum } from "@/components/portal/analytics/category-bar-chart";
 import { TrendChart, type TrendDatum } from "@/components/portal/analytics/trend-chart";
@@ -104,31 +103,46 @@ export default async function AnalyticsPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHero
+      <HeroBand
+        eyebrow="Operational Intelligence"
         title="Analytics & Reporting Dashboard"
         subtitle="Operational intelligence — flight hours, fleet utilization, pilot compliance, incident trends, audit performance, and maintenance metrics at a glance."
       />
 
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-3">
-        <StatCard label="Total Flight Hours (YTD)" value={`${flightHoursYtd}`} icon={Activity} />
-        <StatCard label="Fleet Utilization Rate" value={fleetUtilization !== null ? `${fleetUtilization}%` : "—"} icon={Plane} />
-        <StatCard label="Pilot Compliance Score" value={pilotCompliance !== null ? `${pilotCompliance}%` : "—"} icon={Users} />
-        <StatCard
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-3">
+        <MetricTile label="Total Flight Hours (YTD)" value={`${flightHoursYtd}`} tone="neutral" />
+        <MetricTile
+          label="Fleet Utilization Rate"
+          value={fleetUtilization !== null ? `${fleetUtilization}%` : "—"}
+          tone="neutral"
+        />
+        <MetricTile
+          label="Pilot Compliance Score"
+          value={pilotCompliance !== null ? `${pilotCompliance}%` : "—"}
+          tone="neutral"
+        />
+        <MetricTile
           label="Incident Rate (per 100 flights)"
           value={incidentRate !== null ? `${incidentRate}` : "—"}
-          icon={ShieldAlert}
+          tone="neutral"
         />
-        <StatCard label="Audit Pass Rate" value={auditPassRate !== null ? `${auditPassRate}%` : "—"} icon={ClipboardCheck} />
-        <StatCard
+        <MetricTile
+          label="Audit Pass Rate"
+          value={auditPassRate !== null ? `${auditPassRate}%` : "—"}
+          tone="neutral"
+        />
+        <MetricTile
           label="Maintenance On-Time Rate"
           value={maintenanceOnTime !== null ? `${maintenanceOnTime}%` : "—"}
-          icon={Wrench}
+          tone="neutral"
         />
       </div>
 
-      <Card>
+      <Card className="rounded-md">
         <CardHeader>
-          <CardTitle className="text-base">Flight Hours by Month (YTD)</CardTitle>
+          <CardTitle className="font-heading text-sm font-bold tracking-wide uppercase">
+            Flight Hours by Month (YTD)
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <TrendChart data={flightHoursByMonth} />
@@ -136,33 +150,41 @@ export default async function AnalyticsPage() {
       </Card>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <Card>
+        <Card className="rounded-md">
           <CardHeader>
-            <CardTitle className="text-base">Fleet Status</CardTitle>
+            <CardTitle className="font-heading text-sm font-bold tracking-wide uppercase">
+              Fleet Status
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <CategoryBarChart data={fleetStatusData} />
           </CardContent>
         </Card>
-        <Card>
+        <Card className="rounded-md">
           <CardHeader>
-            <CardTitle className="text-base">Incidents by Severity</CardTitle>
+            <CardTitle className="font-heading text-sm font-bold tracking-wide uppercase">
+              Incidents by Severity
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <CategoryBarChart data={incidentSeverityData} />
           </CardContent>
         </Card>
-        <Card>
+        <Card className="rounded-md">
           <CardHeader>
-            <CardTitle className="text-base">Audit Compliance</CardTitle>
+            <CardTitle className="font-heading text-sm font-bold tracking-wide uppercase">
+              Audit Compliance
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <CategoryBarChart data={auditComplianceData} />
           </CardContent>
         </Card>
-        <Card>
+        <Card className="rounded-md">
           <CardHeader>
-            <CardTitle className="text-base">Maintenance by Type</CardTitle>
+            <CardTitle className="font-heading text-sm font-bold tracking-wide uppercase">
+              Maintenance by Type
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <CategoryBarChart data={maintenanceTypeData} />

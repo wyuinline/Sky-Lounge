@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { Check, X } from "lucide-react";
 import { toast } from "sonner";
-import { Badge } from "@/components/ui/badge";
+import { StatusDot } from "@/components/portal/status-dot";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -25,17 +25,17 @@ export type FlightRequestRow = {
   uavs: { drone_id: string } | null;
 };
 
-const riskVariant: Record<FlightRequestRow["risk_level"], "default" | "secondary" | "destructive"> = {
-  low: "secondary",
-  medium: "default",
-  high: "destructive",
-  critical: "destructive",
+const riskTone: Record<FlightRequestRow["risk_level"], "good" | "neutral" | "warning" | "critical"> = {
+  low: "good",
+  medium: "neutral",
+  high: "warning",
+  critical: "critical",
 };
 
-const statusVariant: Record<FlightRequestRow["approval_status"], "default" | "secondary" | "destructive"> = {
-  pending: "secondary",
-  approved: "default",
-  rejected: "destructive",
+const approvalTone: Record<FlightRequestRow["approval_status"], "good" | "neutral" | "critical"> = {
+  pending: "neutral",
+  approved: "good",
+  rejected: "critical",
 };
 
 export function FlightRequestsTable({
@@ -90,14 +90,10 @@ export function FlightRequestsTable({
                 <TableCell>{row.location ?? "—"}</TableCell>
                 <TableCell>{row.requested_date}</TableCell>
                 <TableCell>
-                  <Badge variant={riskVariant[row.risk_level]} className="capitalize">
-                    {row.risk_level}
-                  </Badge>
+                  <StatusDot tone={riskTone[row.risk_level]} label={row.risk_level} />
                 </TableCell>
                 <TableCell>
-                  <Badge variant={statusVariant[row.approval_status]} className="capitalize">
-                    {row.approval_status}
-                  </Badge>
+                  <StatusDot tone={approvalTone[row.approval_status]} label={row.approval_status} />
                 </TableCell>
                 {canApprove && (
                   <TableCell className="text-right">

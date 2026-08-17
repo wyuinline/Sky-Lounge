@@ -1,6 +1,5 @@
-import { Wrench, AlertTriangle, CheckCircle2, Timer } from "lucide-react";
-import { PageHero } from "@/components/portal/page-hero";
-import { StatCard } from "@/components/portal/stat-card";
+import { HeroBand } from "@/components/portal/hero-band";
+import { MetricTile } from "@/components/portal/metric-tile";
 import { MaintenanceTable, type MaintenanceRow } from "@/components/portal/maintenance/maintenance-table";
 import { LogMaintenanceDialog } from "@/components/portal/maintenance/log-maintenance-dialog";
 import { createClient } from "@/lib/supabase/server";
@@ -56,25 +55,21 @@ export default async function MaintenancePage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHero
+      <HeroBand
+        eyebrow="Service Records"
         title="UAV Maintenance Management"
         subtitle="Preventive maintenance, repair tracking, parts replacement, and calibration records."
         actions={canManage ? <LogMaintenanceDialog uavs={uavOptions} technicians={technicianOptions} /> : undefined}
       />
 
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <StatCard label="Scheduled This Month" value={`${scheduledThisMonth}`} icon={Wrench} />
-        <StatCard
-          label="Overdue"
-          value={`${overdue}`}
-          icon={AlertTriangle}
-          tone={overdue > 0 ? "critical" : "default"}
-        />
-        <StatCard label="Completed (YTD)" value={`${completedYtd.length}`} icon={CheckCircle2} />
-        <StatCard
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <MetricTile label="Scheduled This Month" value={`${scheduledThisMonth}`} tone="neutral" />
+        <MetricTile label="Overdue" value={`${overdue}`} tone={overdue > 0 ? "critical" : "good"} />
+        <MetricTile label="Completed (YTD)" value={`${completedYtd.length}`} tone="good" />
+        <MetricTile
           label="Avg. Turnaround Time"
           value={avgTurnaround !== null ? `${avgTurnaround} days` : "—"}
-          icon={Timer}
+          tone="neutral"
         />
       </div>
 

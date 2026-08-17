@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
+import { StatusDot } from "@/components/portal/status-dot";
 import {
   Table,
   TableBody,
@@ -23,10 +23,10 @@ export type PilotRow = {
   training_records: { id: string }[];
 };
 
-const currencyVariant: Record<PilotRow["currency_status"], "default" | "secondary" | "destructive"> = {
-  current: "default",
-  due_soon: "secondary",
-  expired: "destructive",
+const currencyTone: Record<PilotRow["currency_status"], "good" | "warning" | "critical"> = {
+  current: "good",
+  due_soon: "warning",
+  expired: "critical",
 };
 
 const currencyLabel: Record<PilotRow["currency_status"], string> = {
@@ -88,9 +88,7 @@ export function PilotsTable({ rows }: { rows: PilotRow[] }) {
                   <TableCell>{row.medical_expiry ?? "—"}</TableCell>
                   <TableCell>{row.flight_hours}</TableCell>
                   <TableCell>
-                    <Badge variant={currencyVariant[row.currency_status]}>
-                      {currencyLabel[row.currency_status]}
-                    </Badge>
+                    <StatusDot tone={currencyTone[row.currency_status]} label={currencyLabel[row.currency_status]} />
                   </TableCell>
                 </TableRow>
               ))

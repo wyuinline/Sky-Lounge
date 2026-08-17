@@ -1,5 +1,6 @@
 import { FileText, Lock } from "lucide-react";
-import { PageHero } from "@/components/portal/page-hero";
+import { HeroBand } from "@/components/portal/hero-band";
+import { SectionLabel } from "@/components/portal/section-label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { DocumentsTable, type DocumentRow } from "@/components/portal/documents/documents-table";
@@ -29,30 +30,33 @@ export default async function DocumentsPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHero
+      <HeroBand
+        eyebrow="Document Control"
         title="Document Management Center"
         subtitle="Centralized access to SOPs, policies, flight manuals, maintenance manuals, regulatory documents, and safety materials."
         actions={canManage ? <UploadDocumentDialog /> : undefined}
       />
 
       <div>
-        <h2 className="mb-3 text-sm font-medium text-muted-foreground">Document Libraries</h2>
+        <SectionLabel>Document Libraries</SectionLabel>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           {countsByCategory.map((c) => (
-            <Card key={c.value}>
-              <CardContent className="flex flex-col items-center gap-2 py-6 text-center">
+            <Card key={c.value} className="gap-0 rounded-md border-t-2 border-t-[#a1d884] py-0">
+              <CardContent className="flex flex-col items-center gap-2 px-3 py-6 text-center">
                 <FileText className="size-5 text-primary" />
-                <span className="text-xs font-medium">{c.label}</span>
-                <span className="text-lg font-semibold">{c.count}</span>
+                <span className="font-heading text-xs font-bold tracking-wide uppercase">{c.label}</span>
+                <span className="font-heading text-lg font-bold tabular-nums">{c.count}</span>
               </CardContent>
             </Card>
           ))}
         </div>
       </div>
 
-      <Card>
+      <Card className="rounded-md">
         <CardHeader>
-          <CardTitle className="text-base">Document Standards</CardTitle>
+          <CardTitle className="font-heading text-sm font-bold tracking-wide uppercase">
+            Document Standards
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <ul className="list-disc space-y-1 pl-5 text-sm text-muted-foreground">

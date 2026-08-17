@@ -3,6 +3,7 @@ import { Send, ShieldAlert, Wrench, Upload, ClipboardCheck, Users, Plane, AlertT
 import { HeroBand } from "@/components/portal/hero-band";
 import { MetricTile } from "@/components/portal/metric-tile";
 import { StatusDot } from "@/components/portal/status-dot";
+import { SectionLabel } from "@/components/portal/section-label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { getDashboardData } from "./dashboard-data";
@@ -30,14 +31,6 @@ const activityIcon = {
   maintenance: Wrench,
   incident: ShieldAlert,
 };
-
-function SectionLabel({ children }: { children: string }) {
-  return (
-    <h2 className="mb-3 font-heading text-xs font-bold tracking-[0.15em] text-muted-foreground uppercase">
-      {children}
-    </h2>
-  );
-}
 
 export default async function DashboardPage() {
   const data = await getDashboardData();

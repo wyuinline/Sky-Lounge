@@ -1,6 +1,5 @@
-import { Plane, Wrench, ShieldAlert } from "lucide-react";
-import { PageHero } from "@/components/portal/page-hero";
-import { StatCard } from "@/components/portal/stat-card";
+import { HeroBand } from "@/components/portal/hero-band";
+import { MetricTile } from "@/components/portal/metric-tile";
 import { FleetTable, type FleetRow } from "@/components/portal/fleet/fleet-table";
 import { AddUavDialog } from "@/components/portal/fleet/add-uav-dialog";
 import { createClient } from "@/lib/supabase/server";
@@ -30,21 +29,17 @@ export default async function FleetPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHero
+      <HeroBand
+        eyebrow="Asset Registry"
         title="UAV Fleet Management"
         subtitle="Complete registry of all enterprise UAV assets — status, maintenance, and assignment tracking."
         actions={canManageFleet ? <AddUavDialog /> : undefined}
       />
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <StatCard label="Active" value={`${active}`} icon={Plane} />
-        <StatCard label="In Maintenance" value={`${maintenance}`} icon={Wrench} tone="warning" />
-        <StatCard
-          label="Grounded"
-          value={`${grounded}`}
-          icon={ShieldAlert}
-          tone={grounded > 0 ? "critical" : "default"}
-        />
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <MetricTile label="Active" value={`${active}`} tone="good" />
+        <MetricTile label="In Maintenance" value={`${maintenance}`} tone="warning" />
+        <MetricTile label="Grounded" value={`${grounded}`} tone={grounded > 0 ? "critical" : "good"} />
       </div>
 
       <FleetTable rows={rows} />

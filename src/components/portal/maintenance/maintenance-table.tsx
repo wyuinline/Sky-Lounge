@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
-import { Badge } from "@/components/ui/badge";
+import { StatusDot } from "@/components/portal/status-dot";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -24,11 +24,11 @@ export type MaintenanceRow = {
   technician: { full_name: string } | null;
 };
 
-const statusVariant: Record<MaintenanceRow["status"], "default" | "secondary" | "destructive"> = {
-  scheduled: "secondary",
-  in_progress: "default",
-  overdue: "destructive",
-  completed: "default",
+const statusTone: Record<MaintenanceRow["status"], "neutral" | "critical" | "good"> = {
+  scheduled: "neutral",
+  in_progress: "neutral",
+  overdue: "critical",
+  completed: "good",
 };
 
 export function MaintenanceTable({ rows, canManage }: { rows: MaintenanceRow[]; canManage: boolean }) {
@@ -76,9 +76,7 @@ export function MaintenanceTable({ rows, canManage }: { rows: MaintenanceRow[]; 
                 <TableCell>{row.next_service_date ?? "—"}</TableCell>
                 <TableCell>{row.technician?.full_name ?? "—"}</TableCell>
                 <TableCell>
-                  <Badge variant={statusVariant[row.status]} className="capitalize">
-                    {row.status.replace("_", " ")}
-                  </Badge>
+                  <StatusDot tone={statusTone[row.status]} label={row.status.replace("_", " ")} />
                 </TableCell>
                 {canManage && (
                   <TableCell className="text-right">

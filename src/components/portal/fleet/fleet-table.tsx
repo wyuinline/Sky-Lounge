@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
+import { StatusDot } from "@/components/portal/status-dot";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   Table,
@@ -24,10 +24,10 @@ export type FleetRow = {
   assigned_pilot: { full_name: string | null } | null;
 };
 
-const statusVariant: Record<FleetRow["status"], "default" | "secondary" | "destructive"> = {
-  active: "default",
-  maintenance: "secondary",
-  grounded: "destructive",
+const statusTone: Record<FleetRow["status"], "good" | "warning" | "critical"> = {
+  active: "good",
+  maintenance: "warning",
+  grounded: "critical",
 };
 
 export function FleetTable({ rows }: { rows: FleetRow[] }) {
@@ -98,9 +98,7 @@ export function FleetTable({ rows }: { rows: FleetRow[] }) {
                     ) : null}
                   </TableCell>
                   <TableCell>
-                    <Badge variant={statusVariant[row.status]} className="capitalize">
-                      {row.status}
-                    </Badge>
+                    <StatusDot tone={statusTone[row.status]} label={row.status} />
                   </TableCell>
                   <TableCell>{row.assigned_pilot?.full_name ?? "Unassigned"}</TableCell>
                   <TableCell>{row.flight_hours}</TableCell>

@@ -1,4 +1,4 @@
-import { Badge } from "@/components/ui/badge";
+import { StatusDot } from "@/components/portal/status-dot";
 import {
   Table,
   TableBody,
@@ -17,17 +17,17 @@ export type AuditRow = {
   auditor: { full_name: string } | null;
 };
 
-const statusVariant: Record<AuditRow["status"], "default" | "secondary" | "destructive"> = {
-  planned: "secondary",
-  in_progress: "default",
-  completed: "default",
-  overdue: "destructive",
+const statusTone: Record<AuditRow["status"], "neutral" | "good" | "critical"> = {
+  planned: "neutral",
+  in_progress: "neutral",
+  completed: "good",
+  overdue: "critical",
 };
 
-const complianceVariant: Record<NonNullable<AuditRow["compliance_status"]>, "default" | "secondary" | "destructive"> = {
-  compliant: "default",
-  at_risk: "secondary",
-  non_compliant: "destructive",
+const complianceTone: Record<NonNullable<AuditRow["compliance_status"]>, "good" | "warning" | "critical"> = {
+  compliant: "good",
+  at_risk: "warning",
+  non_compliant: "critical",
 };
 
 export function AuditsTable({ rows }: { rows: AuditRow[] }) {
@@ -57,15 +57,14 @@ export function AuditsTable({ rows }: { rows: AuditRow[] }) {
                 <TableCell>{row.audit_date}</TableCell>
                 <TableCell>{row.auditor?.full_name ?? "—"}</TableCell>
                 <TableCell>
-                  <Badge variant={statusVariant[row.status]} className="capitalize">
-                    {row.status.replace("_", " ")}
-                  </Badge>
+                  <StatusDot tone={statusTone[row.status]} label={row.status.replace("_", " ")} />
                 </TableCell>
                 <TableCell>
                   {row.compliance_status ? (
-                    <Badge variant={complianceVariant[row.compliance_status]} className="capitalize">
-                      {row.compliance_status.replace("_", " ")}
-                    </Badge>
+                    <StatusDot
+                      tone={complianceTone[row.compliance_status]}
+                      label={row.compliance_status.replace("_", " ")}
+                    />
                   ) : (
                     "—"
                   )}

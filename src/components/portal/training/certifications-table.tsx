@@ -1,4 +1,4 @@
-import { Badge } from "@/components/ui/badge";
+import { StatusDot } from "@/components/portal/status-dot";
 import {
   Table,
   TableBody,
@@ -19,10 +19,10 @@ export type CertificationRow = {
   pilots: { full_name: string } | null;
 };
 
-const statusVariant: Record<CertificationRow["status"], "default" | "secondary" | "destructive"> = {
-  current: "default",
-  due_soon: "secondary",
-  expired: "destructive",
+const statusTone: Record<CertificationRow["status"], "good" | "warning" | "critical"> = {
+  current: "good",
+  due_soon: "warning",
+  expired: "critical",
 };
 
 export function CertificationsTable({ rows }: { rows: CertificationRow[] }) {
@@ -55,9 +55,7 @@ export function CertificationsTable({ rows }: { rows: CertificationRow[] }) {
                 <TableCell>{row.expiry_date ?? "—"}</TableCell>
                 <TableCell className="capitalize">{row.competency_level ?? "—"}</TableCell>
                 <TableCell>
-                  <Badge variant={statusVariant[row.status]} className="capitalize">
-                    {row.status.replace("_", " ")}
-                  </Badge>
+                  <StatusDot tone={statusTone[row.status]} label={row.status.replace("_", " ")} />
                 </TableCell>
               </TableRow>
             ))

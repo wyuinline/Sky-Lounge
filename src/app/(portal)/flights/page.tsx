@@ -1,4 +1,5 @@
-import { PageHero } from "@/components/portal/page-hero";
+import { HeroBand } from "@/components/portal/hero-band";
+import { SectionLabel } from "@/components/portal/section-label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Info } from "lucide-react";
@@ -42,7 +43,8 @@ export default async function FlightsPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHero
+      <HeroBand
+        eyebrow="Mission Control"
         title="Flight Operations Center"
         subtitle="Flight requests, approvals, mission planning, and post-flight reporting — all in one place."
         actions={
@@ -53,15 +55,17 @@ export default async function FlightsPage() {
         }
       />
 
-      <Card>
+      <Card className="rounded-md">
         <CardHeader>
-          <CardTitle className="text-base">Flight Request Workflow</CardTitle>
+          <CardTitle className="font-heading text-sm font-bold tracking-wide uppercase">
+            Flight Request Workflow
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <ol className="flex flex-col gap-2 text-sm sm:flex-row sm:flex-wrap sm:gap-4">
             {workflowSteps.map((step, i) => (
               <li key={step} className="flex items-start gap-2 sm:flex-1 sm:min-w-48">
-                <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-medium text-primary-foreground">
+                <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-primary font-heading text-xs font-bold text-primary-foreground">
                   {i + 1}
                 </span>
                 <span className="text-muted-foreground">{step}</span>
@@ -72,12 +76,12 @@ export default async function FlightsPage() {
       </Card>
 
       <div>
-        <h2 className="mb-3 text-sm font-medium text-muted-foreground">Active Flight Requests</h2>
+        <SectionLabel>Active Flight Requests</SectionLabel>
         <FlightRequestsTable rows={requestsRes.data ?? []} canApprove={canApprove} />
       </div>
 
       <div>
-        <h2 className="mb-3 text-sm font-medium text-muted-foreground">Flight Logs</h2>
+        <SectionLabel>Flight Logs</SectionLabel>
         <FlightLogsTable rows={logsRes.data ?? []} />
       </div>
 

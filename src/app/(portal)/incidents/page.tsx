@@ -1,6 +1,7 @@
-import { ShieldAlert, Search, CheckCircle2, Calendar, Eye, Lock } from "lucide-react";
-import { PageHero } from "@/components/portal/page-hero";
-import { StatCard } from "@/components/portal/stat-card";
+import { Lock } from "lucide-react";
+import { HeroBand } from "@/components/portal/hero-band";
+import { MetricTile } from "@/components/portal/metric-tile";
+import { SectionLabel } from "@/components/portal/section-label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { IncidentsTable, type IncidentRow } from "@/components/portal/incidents/incidents-table";
@@ -47,12 +48,13 @@ export default async function IncidentsPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHero
+      <HeroBand
+        eyebrow="Safety Reporting"
         title="Incidents & Safety Reporting"
         subtitle="Report near misses, crashes, equipment failures, safety hazards, and regulatory breaches. Every report drives continuous safety improvement."
       />
 
-      <Card className="border-destructive/30">
+      <Card className="border-[var(--status-critical)]/30">
         <CardContent className="flex flex-col items-center gap-3 py-8 text-center">
           <ReportIncidentDialog pilots={pilotOptions} uavs={uavOptions} />
           <p className="max-w-md text-sm text-muted-foreground">
@@ -63,25 +65,24 @@ export default async function IncidentsPage() {
         </CardContent>
       </Card>
 
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">
-        <StatCard
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
+        <MetricTile
           label="Open Incidents"
           value={`${openIncidents}`}
-          icon={ShieldAlert}
-          tone={openIncidents > 0 ? "critical" : "default"}
+          tone={openIncidents > 0 ? "critical" : "good"}
         />
-        <StatCard label="Under Investigation" value={`${underInvestigation}`} icon={Search} />
-        <StatCard label="Closed (YTD)" value={`${closedYtd}`} icon={CheckCircle2} />
-        <StatCard
+        <MetricTile label="Under Investigation" value={`${underInvestigation}`} tone="neutral" />
+        <MetricTile label="Closed (YTD)" value={`${closedYtd}`} tone="good" />
+        <MetricTile
           label="Days Since Last Incident"
           value={daysSinceLastIncident !== null ? `${daysSinceLastIncident}` : "—"}
-          icon={Calendar}
+          tone="neutral"
         />
-        <StatCard label="Near Miss Reports (YTD)" value={`${nearMissYtd}`} icon={Eye} />
+        <MetricTile label="Near Miss Reports (YTD)" value={`${nearMissYtd}`} tone="neutral" />
       </div>
 
       <div>
-        <h2 className="mb-3 text-sm font-medium text-muted-foreground">Recent Incidents</h2>
+        <SectionLabel>Recent Incidents</SectionLabel>
         <IncidentsTable rows={incidents} canManage={canManage} />
       </div>
 

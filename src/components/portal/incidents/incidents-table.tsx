@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
-import { Badge } from "@/components/ui/badge";
+import { StatusDot } from "@/components/portal/status-dot";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -25,18 +25,18 @@ export type IncidentRow = {
   pilots: { full_name: string } | null;
 };
 
-const severityVariant: Record<IncidentRow["severity"], "default" | "secondary" | "destructive"> = {
-  low: "secondary",
-  medium: "default",
-  high: "destructive",
-  critical: "destructive",
+const severityTone: Record<IncidentRow["severity"], "good" | "neutral" | "warning" | "critical"> = {
+  low: "good",
+  medium: "neutral",
+  high: "warning",
+  critical: "critical",
 };
 
-const statusVariant: Record<IncidentRow["status"], "default" | "secondary" | "destructive"> = {
-  open: "secondary",
-  investigating: "default",
-  closed: "default",
-  escalated: "destructive",
+const statusTone: Record<IncidentRow["status"], "warning" | "neutral" | "good" | "critical"> = {
+  open: "warning",
+  investigating: "neutral",
+  closed: "good",
+  escalated: "critical",
 };
 
 export function IncidentsTable({ rows, canManage }: { rows: IncidentRow[]; canManage: boolean }) {
@@ -85,14 +85,10 @@ export function IncidentsTable({ rows, canManage }: { rows: IncidentRow[]; canMa
                 <TableCell>{row.uavs?.drone_id ?? "—"}</TableCell>
                 <TableCell>{row.is_anonymous ? "Anonymous" : (row.pilots?.full_name ?? "—")}</TableCell>
                 <TableCell>
-                  <Badge variant={severityVariant[row.severity]} className="capitalize">
-                    {row.severity}
-                  </Badge>
+                  <StatusDot tone={severityTone[row.severity]} label={row.severity} />
                 </TableCell>
                 <TableCell>
-                  <Badge variant={statusVariant[row.status]} className="capitalize">
-                    {row.status}
-                  </Badge>
+                  <StatusDot tone={statusTone[row.status]} label={row.status} />
                 </TableCell>
                 {canManage && (
                   <TableCell className="text-right">

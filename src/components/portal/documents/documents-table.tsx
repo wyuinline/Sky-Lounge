@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { Download } from "lucide-react";
 import { toast } from "sonner";
-import { Badge } from "@/components/ui/badge";
+import { StatusDot } from "@/components/portal/status-dot";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -29,11 +29,11 @@ export type DocumentRow = {
   created_at: string;
 };
 
-const approvalVariant: Record<DocumentRow["approval_status"], "default" | "secondary" | "destructive"> = {
-  draft: "secondary",
-  pending_approval: "secondary",
-  approved: "default",
-  published: "default",
+const approvalTone: Record<DocumentRow["approval_status"], "neutral" | "warning" | "good"> = {
+  draft: "neutral",
+  pending_approval: "warning",
+  approved: "good",
+  published: "good",
 };
 
 export function DocumentsTable({ rows }: { rows: DocumentRow[] }) {
@@ -111,9 +111,7 @@ export function DocumentsTable({ rows }: { rows: DocumentRow[] }) {
                   <TableCell>{labelForCategory(row.category)}</TableCell>
                   <TableCell>v{row.version}</TableCell>
                   <TableCell>
-                    <Badge variant={approvalVariant[row.approval_status]} className="capitalize">
-                      {row.approval_status.replace("_", " ")}
-                    </Badge>
+                    <StatusDot tone={approvalTone[row.approval_status]} label={row.approval_status.replace("_", " ")} />
                   </TableCell>
                   <TableCell>{row.uploader?.full_name ?? "—"}</TableCell>
                   <TableCell className="text-right">

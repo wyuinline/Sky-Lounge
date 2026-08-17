@@ -1,6 +1,7 @@
-import { ClipboardCheck, AlertTriangle, CheckCircle2, CalendarClock } from "lucide-react";
-import { PageHero } from "@/components/portal/page-hero";
-import { StatCard } from "@/components/portal/stat-card";
+import { CalendarClock } from "lucide-react";
+import { HeroBand } from "@/components/portal/hero-band";
+import { MetricTile } from "@/components/portal/metric-tile";
+import { SectionLabel } from "@/components/portal/section-label";
 import { AuditsTable, type AuditRow } from "@/components/portal/audits/audits-table";
 import { FindingsTable, type FindingRow } from "@/components/portal/audits/findings-table";
 import { ScheduleAuditDialog } from "@/components/portal/audits/schedule-audit-dialog";
@@ -56,7 +57,8 @@ export default async function AuditsPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHero
+      <HeroBand
+        eyebrow="Compliance Records"
         title="Audits & Compliance"
         subtitle="Internal and regulatory audit tracking, findings management, corrective actions, and compliance dashboards."
         actions={
@@ -69,20 +71,19 @@ export default async function AuditsPage() {
         }
       />
 
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <StatCard
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <MetricTile
           label="Compliance Score"
           value={complianceScore !== null ? `${complianceScore}%` : "—"}
-          icon={ClipboardCheck}
+          tone="neutral"
         />
-        <StatCard label="Open Findings" value={`${findings.length}`} icon={AlertTriangle} />
-        <StatCard
+        <MetricTile label="Open Findings" value={`${findings.length}`} tone="neutral" />
+        <MetricTile
           label="Overdue Actions"
           value={`${overdueActions}`}
-          icon={AlertTriangle}
-          tone={overdueActions > 0 ? "critical" : "default"}
+          tone={overdueActions > 0 ? "critical" : "good"}
         />
-        <StatCard label="Audits Completed (YTD)" value={`${auditsCompletedYtd}`} icon={CheckCircle2} />
+        <MetricTile label="Audits Completed (YTD)" value={`${auditsCompletedYtd}`} tone="good" />
       </div>
 
       {nextAudit && (
@@ -93,12 +94,12 @@ export default async function AuditsPage() {
       )}
 
       <div>
-        <h2 className="mb-3 text-sm font-medium text-muted-foreground">Audit Schedule</h2>
+        <SectionLabel>Audit Schedule</SectionLabel>
         <AuditsTable rows={audits} />
       </div>
 
       <div>
-        <h2 className="mb-3 text-sm font-medium text-muted-foreground">Open Findings</h2>
+        <SectionLabel>Open Findings</SectionLabel>
         <FindingsTable rows={findings} />
       </div>
     </div>

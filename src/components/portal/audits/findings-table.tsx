@@ -1,4 +1,4 @@
-import { Badge } from "@/components/ui/badge";
+import { StatusDot } from "@/components/portal/status-dot";
 import {
   Table,
   TableBody,
@@ -17,18 +17,18 @@ export type FindingRow = {
   assignee: { full_name: string } | null;
 };
 
-const severityVariant: Record<FindingRow["severity"], "default" | "secondary" | "destructive"> = {
-  low: "secondary",
-  medium: "default",
-  high: "destructive",
-  critical: "destructive",
+const severityTone: Record<FindingRow["severity"], "good" | "neutral" | "warning" | "critical"> = {
+  low: "good",
+  medium: "neutral",
+  high: "warning",
+  critical: "critical",
 };
 
-const statusVariant: Record<FindingRow["status"], "default" | "secondary" | "destructive"> = {
-  open: "secondary",
-  in_progress: "default",
-  closed: "default",
-  overdue: "destructive",
+const statusTone: Record<FindingRow["status"], "neutral" | "good" | "critical"> = {
+  open: "neutral",
+  in_progress: "neutral",
+  closed: "good",
+  overdue: "critical",
 };
 
 export function FindingsTable({ rows }: { rows: FindingRow[] }) {
@@ -55,17 +55,13 @@ export function FindingsTable({ rows }: { rows: FindingRow[] }) {
             rows.map((row) => (
               <TableRow key={row.id}>
                 <TableCell>
-                  <Badge variant={severityVariant[row.severity]} className="capitalize">
-                    {row.severity}
-                  </Badge>
+                  <StatusDot tone={severityTone[row.severity]} label={row.severity} />
                 </TableCell>
                 <TableCell className="max-w-xs truncate">{row.description}</TableCell>
                 <TableCell>{row.assignee?.full_name ?? "—"}</TableCell>
                 <TableCell>{row.due_date ?? "—"}</TableCell>
                 <TableCell>
-                  <Badge variant={statusVariant[row.status]} className="capitalize">
-                    {row.status.replace("_", " ")}
-                  </Badge>
+                  <StatusDot tone={statusTone[row.status]} label={row.status.replace("_", " ")} />
                 </TableCell>
               </TableRow>
             ))
