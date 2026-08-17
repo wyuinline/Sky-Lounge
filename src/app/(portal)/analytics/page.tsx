@@ -140,7 +140,7 @@ export default async function AnalyticsPage() {
 
       <Card className="rounded-md">
         <CardHeader>
-          <CardTitle className="font-heading text-sm font-bold tracking-wide uppercase">
+          <CardTitle className="text-base font-semibold tracking-[-0.01em]">
             Flight Hours by Month (YTD)
           </CardTitle>
         </CardHeader>
@@ -152,7 +152,7 @@ export default async function AnalyticsPage() {
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <Card className="rounded-md">
           <CardHeader>
-            <CardTitle className="font-heading text-sm font-bold tracking-wide uppercase">
+            <CardTitle className="text-base font-semibold tracking-[-0.01em]">
               Fleet Status
             </CardTitle>
           </CardHeader>
@@ -162,7 +162,7 @@ export default async function AnalyticsPage() {
         </Card>
         <Card className="rounded-md">
           <CardHeader>
-            <CardTitle className="font-heading text-sm font-bold tracking-wide uppercase">
+            <CardTitle className="text-base font-semibold tracking-[-0.01em]">
               Incidents by Severity
             </CardTitle>
           </CardHeader>
@@ -172,7 +172,7 @@ export default async function AnalyticsPage() {
         </Card>
         <Card className="rounded-md">
           <CardHeader>
-            <CardTitle className="font-heading text-sm font-bold tracking-wide uppercase">
+            <CardTitle className="text-base font-semibold tracking-[-0.01em]">
               Audit Compliance
             </CardTitle>
           </CardHeader>
@@ -182,7 +182,7 @@ export default async function AnalyticsPage() {
         </Card>
         <Card className="rounded-md">
           <CardHeader>
-            <CardTitle className="font-heading text-sm font-bold tracking-wide uppercase">
+            <CardTitle className="text-base font-semibold tracking-[-0.01em]">
               Maintenance by Type
             </CardTitle>
           </CardHeader>

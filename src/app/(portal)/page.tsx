@@ -64,7 +64,7 @@ export default async function DashboardPage() {
                 <div className="h-1 w-full bg-brand-sage transition-colors group-hover:bg-brand-lime" />
                 <CardContent className="flex flex-col items-center gap-2 px-3 py-6 text-center">
                   <action.icon className="size-5 text-brand-teal" />
-                  <span className="font-heading text-xs font-bold tracking-wide uppercase">
+                  <span className="text-xs font-medium">
                     {action.title}
                   </span>
                 </CardContent>
@@ -96,7 +96,7 @@ export default async function DashboardPage() {
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <Card className="rounded-md">
           <CardHeader>
-            <CardTitle className="font-heading text-sm font-bold tracking-wide uppercase">
+            <CardTitle className="text-base font-semibold tracking-[-0.01em]">
               Alerts &amp; Notifications
             </CardTitle>
           </CardHeader>
@@ -106,32 +106,32 @@ export default async function DashboardPage() {
                 tone={data.expiringCertifications > 0 ? "warning" : "good"}
                 label="Expiring certifications (30 days)"
               />
-              <span className="font-heading text-sm font-bold tabular-nums">{data.expiringCertifications}</span>
+              <span className="text-sm font-semibold tabular-nums">{data.expiringCertifications}</span>
             </div>
             <div className="flex items-center justify-between border-b border-border pb-2 text-sm last:border-0">
               <StatusDot tone="neutral" label="Upcoming audits" />
-              <span className="font-heading text-sm font-bold tabular-nums">{data.upcomingAudits}</span>
+              <span className="text-sm font-semibold tabular-nums">{data.upcomingAudits}</span>
             </div>
             <div className="flex items-center justify-between border-b border-border pb-2 text-sm last:border-0">
               <StatusDot
                 tone={data.overdueMaintenance > 0 ? "critical" : "good"}
                 label="Overdue maintenance"
               />
-              <span className="font-heading text-sm font-bold tabular-nums">{data.overdueMaintenance}</span>
+              <span className="text-sm font-semibold tabular-nums">{data.overdueMaintenance}</span>
             </div>
             <div className="flex items-center justify-between pb-0 text-sm">
               <StatusDot
                 tone={data.recentIncidents > 0 ? "critical" : "good"}
                 label="Recent incidents (7 days)"
               />
-              <span className="font-heading text-sm font-bold tabular-nums">{data.recentIncidents}</span>
+              <span className="text-sm font-semibold tabular-nums">{data.recentIncidents}</span>
             </div>
           </CardContent>
         </Card>
 
         <Card className="rounded-md">
           <CardHeader>
-            <CardTitle className="font-heading text-sm font-bold tracking-wide uppercase">
+            <CardTitle className="text-base font-semibold tracking-[-0.01em]">
               Recent Activity
             </CardTitle>
           </CardHeader>

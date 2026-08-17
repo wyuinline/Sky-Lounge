@@ -20,11 +20,11 @@ export function HeroBand({
 
       <div className="relative flex flex-col gap-5 px-6 py-8 sm:px-8 sm:py-10 md:pr-[280px] lg:pr-[360px]">
         <div>
-          <p className="font-heading text-xs font-bold tracking-[0.22em] text-brand-lime uppercase">
+          <p className="text-xs font-semibold tracking-[0.12em] text-brand-lime uppercase">
             {eyebrow}
           </p>
           <div className="mt-2.5 h-0.5 w-10 bg-brand-lime" />
-          <h1 className="mt-3 font-heading text-4xl leading-[0.95] font-bold tracking-tight uppercase sm:text-5xl">
+          <h1 className="mt-3 text-[2rem] leading-[1.08] font-semibold tracking-[-0.03em] text-balance sm:text-[2.5rem]">
             {title}
           </h1>
           <p className="mt-3 max-w-xl text-sm leading-relaxed text-white/70">{subtitle}</p>

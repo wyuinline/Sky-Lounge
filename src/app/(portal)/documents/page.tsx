@@ -45,8 +45,8 @@ export default async function DocumentsPage() {
               <div className="h-1 w-full bg-brand-sage" />
               <CardContent className="flex flex-col items-center gap-2 px-3 py-6 text-center">
                 <FileText className="size-5 text-brand-teal" />
-                <span className="font-heading text-xs font-bold tracking-wide uppercase">{c.label}</span>
-                <span className="font-heading text-lg font-bold tabular-nums">{c.count}</span>
+                <span className="text-xs font-medium">{c.label}</span>
+                <span className="text-lg font-semibold tabular-nums">{c.count}</span>
               </CardContent>
             </Card>
           ))}
@@ -55,7 +55,7 @@ export default async function DocumentsPage() {
 
       <Card className="rounded-md">
         <CardHeader>
-          <CardTitle className="font-heading text-sm font-bold tracking-wide uppercase">
+          <CardTitle className="text-base font-semibold tracking-[-0.01em]">
             Document Standards
           </CardTitle>
         </CardHeader>

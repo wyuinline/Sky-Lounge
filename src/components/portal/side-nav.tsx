@@ -117,7 +117,7 @@ export function SideNav({
     <>
       {/* Desktop sidebar */}
       <aside className="hidden w-60 shrink-0 flex-col bg-sidebar text-sidebar-foreground sm:flex">
-        <div className="flex h-16 shrink-0 items-center gap-2 px-4 font-heading text-lg font-bold tracking-wide uppercase">
+        <div className="flex h-16 shrink-0 items-center gap-2 px-4 text-lg font-semibold tracking-[-0.02em]">
           <Plane className="size-5 shrink-0" />
           UAV Ops Portal
         </div>
@@ -129,7 +129,7 @@ export function SideNav({
 
       {/* Mobile top bar */}
       <header className="flex h-14 shrink-0 items-center justify-between gap-2 bg-sidebar px-4 text-sidebar-foreground sm:hidden">
-        <Link href="/" className="flex items-center gap-2 font-heading text-base font-bold tracking-wide uppercase">
+        <Link href="/" className="flex items-center gap-2 text-base font-semibold tracking-[-0.02em]">
           <Plane className="size-5" />
           UAV Ops Portal
         </Link>
@@ -148,7 +148,7 @@ export function SideNav({
         <div className="fixed inset-0 z-50 sm:hidden">
           <div className="absolute inset-0 bg-black/40" onClick={() => setMobileOpen(false)} />
           <aside className="absolute inset-y-0 left-0 flex w-64 flex-col bg-sidebar text-sidebar-foreground shadow-xl">
-            <div className="flex h-14 shrink-0 items-center justify-between px-4 font-heading text-base font-bold tracking-wide uppercase">
+            <div className="flex h-14 shrink-0 items-center justify-between px-4 text-base font-semibold tracking-[-0.02em]">
               <span className="flex items-center gap-2">
                 <Plane className="size-5" />
                 UAV Ops Portal

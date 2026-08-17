@@ -57,7 +57,7 @@ export default async function FlightsPage() {
 
       <Card className="rounded-md">
         <CardHeader>
-          <CardTitle className="font-heading text-sm font-bold tracking-wide uppercase">
+          <CardTitle className="text-base font-semibold tracking-[-0.01em]">
             Flight Request Workflow
           </CardTitle>
         </CardHeader>
@@ -65,7 +65,7 @@ export default async function FlightsPage() {
           <ol className="flex flex-col gap-2 text-sm sm:flex-row sm:flex-wrap sm:gap-4">
             {workflowSteps.map((step, i) => (
               <li key={step} className="flex items-start gap-2 sm:flex-1 sm:min-w-48">
-                <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-primary font-heading text-xs font-bold text-primary-foreground">
+                <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">
                   {i + 1}
                 </span>
                 <span className="text-muted-foreground">{step}</span>

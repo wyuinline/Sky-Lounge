@@ -44,7 +44,7 @@ export default async function PilotsPage() {
 
       <Card className="rounded-md">
         <CardHeader>
-          <CardTitle className="font-heading text-sm font-bold tracking-wide uppercase">
+          <CardTitle className="text-base font-semibold tracking-[-0.01em]">
             Expiry Alerts
           </CardTitle>
         </CardHeader>
@@ -54,15 +54,15 @@ export default async function PilotsPage() {
               tone={medicalExpiring30 > 0 ? "warning" : "good"}
               label="Medical certs expiring (30 days)"
             />
-            <span className="font-heading text-sm font-bold tabular-nums">{medicalExpiring30}</span>
+            <span className="text-sm font-semibold tabular-nums">{medicalExpiring30}</span>
           </div>
           <div className="flex items-center justify-between border-b border-border pb-2 text-sm sm:border-b-0 sm:pb-0">
             <StatusDot tone="neutral" label="Training records on file" />
-            <span className="font-heading text-sm font-bold tabular-nums">{trainingRecordsCount}</span>
+            <span className="text-sm font-semibold tabular-nums">{trainingRecordsCount}</span>
           </div>
           <div className="flex items-center justify-between text-sm">
             <StatusDot tone={currencyChanges > 0 ? "warning" : "good"} label="Currency status changes" />
-            <span className="font-heading text-sm font-bold tabular-nums">{currencyChanges}</span>
+            <span className="text-sm font-semibold tabular-nums">{currencyChanges}</span>
           </div>
         </CardContent>
       </Card>

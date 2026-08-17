@@ -68,7 +68,7 @@ export default async function TrainingPage() {
 
       <Card className="rounded-md">
         <CardHeader>
-          <CardTitle className="font-heading text-sm font-bold tracking-wide uppercase">
+          <CardTitle className="text-base font-semibold tracking-[-0.01em]">
             Competency Matrix
           </CardTitle>
         </CardHeader>
