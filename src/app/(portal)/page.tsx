@@ -1,22 +1,10 @@
 import Link from "next/link";
-import {
-  Send,
-  ShieldAlert,
-  Wrench,
-  Upload,
-  ClipboardCheck,
-  Users,
-  Plane,
-  Activity,
-  AlertTriangle,
-  FileWarning,
-  Clock,
-} from "lucide-react";
-import { PageHero } from "@/components/portal/page-hero";
-import { StatCard } from "@/components/portal/stat-card";
+import { Send, ShieldAlert, Wrench, Upload, ClipboardCheck, Users, Plane, AlertTriangle } from "lucide-react";
+import { HeroBand } from "@/components/portal/hero-band";
+import { MetricTile } from "@/components/portal/metric-tile";
+import { StatusDot } from "@/components/portal/status-dot";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge";
 import { getDashboardData } from "./dashboard-data";
 
 const quickActions = [
@@ -43,12 +31,21 @@ const activityIcon = {
   incident: ShieldAlert,
 };
 
+function SectionLabel({ children }: { children: string }) {
+  return (
+    <h2 className="mb-3 font-heading text-xs font-bold tracking-[0.15em] text-muted-foreground uppercase">
+      {children}
+    </h2>
+  );
+}
+
 export default async function DashboardPage() {
   const data = await getDashboardData();
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHero
+      <HeroBand
+        eyebrow="Site Status Overview"
         title="UAV Operations Dashboard"
         subtitle="Real-time operational overview for fleet, pilots, compliance, and safety."
       />
@@ -66,14 +63,16 @@ export default async function DashboardPage() {
       )}
 
       <div>
-        <h2 className="mb-3 text-sm font-medium text-muted-foreground">Quick Actions</h2>
+        <SectionLabel>Quick Actions</SectionLabel>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
           {quickActions.map((action) => (
             <Link key={action.href} href={action.href}>
-              <Card className="h-full transition-colors hover:border-primary/50 hover:bg-accent">
-                <CardContent className="flex flex-col items-center gap-2 py-6 text-center">
+              <Card className="h-full gap-0 rounded-md border-t-2 border-t-[#a1d884] py-0 transition-colors hover:bg-accent">
+                <CardContent className="flex flex-col items-center gap-2 px-3 py-6 text-center">
                   <action.icon className="size-5 text-primary" />
-                  <span className="text-xs font-medium">{action.title}</span>
+                  <span className="font-heading text-xs font-bold tracking-wide uppercase">
+                    {action.title}
+                  </span>
                 </CardContent>
               </Card>
             </Link>
@@ -81,65 +80,66 @@ export default async function DashboardPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">
-        <StatCard
-          label="Compliance Score"
-          value={data.complianceScore !== null ? `${data.complianceScore}%` : "—"}
-          icon={ClipboardCheck}
-        />
-        <StatCard label="Total Fleet" value={`${data.fleetTotal} UAVs`} icon={Plane} />
-        <StatCard label="Active Pilots" value={`${data.activePilots}`} icon={Users} />
-        <StatCard label="Flight Hours (YTD)" value={`${data.flightHoursYtd}`} icon={Activity} />
-        <StatCard
-          label="Open Incidents"
-          value={`${data.openIncidents}`}
-          icon={ShieldAlert}
-          tone={data.openIncidents > 0 ? "critical" : "default"}
-        />
+      <div>
+        <SectionLabel>Key Metrics</SectionLabel>
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
+          <MetricTile
+            label="Compliance Score"
+            value={data.complianceScore !== null ? `${data.complianceScore}%` : "—"}
+            tone="neutral"
+          />
+          <MetricTile label="Total Fleet" value={`${data.fleetTotal}`} tone="neutral" />
+          <MetricTile label="Active Pilots" value={`${data.activePilots}`} tone="neutral" />
+          <MetricTile label="Flight Hours (YTD)" value={`${data.flightHoursYtd}`} tone="neutral" />
+          <MetricTile
+            label="Open Incidents"
+            value={`${data.openIncidents}`}
+            tone={data.openIncidents > 0 ? "critical" : "good"}
+          />
+        </div>
       </div>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <Card>
+        <Card className="rounded-md">
           <CardHeader>
-            <CardTitle className="text-base">Alerts &amp; Notifications</CardTitle>
+            <CardTitle className="font-heading text-sm font-bold tracking-wide uppercase">
+              Alerts &amp; Notifications
+            </CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col gap-3">
-            <div className="flex items-center justify-between rounded-md border px-3 py-2 text-sm">
-              <span className="flex items-center gap-2">
-                <Clock className="size-4 text-muted-foreground" /> Expiring certifications (30 days)
-              </span>
-              <Badge variant={data.expiringCertifications > 0 ? "destructive" : "secondary"}>
-                {data.expiringCertifications}
-              </Badge>
+            <div className="flex items-center justify-between border-b border-border pb-2 text-sm last:border-0">
+              <StatusDot
+                tone={data.expiringCertifications > 0 ? "warning" : "good"}
+                label="Expiring certifications (30 days)"
+              />
+              <span className="font-heading text-sm font-bold tabular-nums">{data.expiringCertifications}</span>
             </div>
-            <div className="flex items-center justify-between rounded-md border px-3 py-2 text-sm">
-              <span className="flex items-center gap-2">
-                <ClipboardCheck className="size-4 text-muted-foreground" /> Upcoming audits
-              </span>
-              <Badge variant="secondary">{data.upcomingAudits}</Badge>
+            <div className="flex items-center justify-between border-b border-border pb-2 text-sm last:border-0">
+              <StatusDot tone="neutral" label="Upcoming audits" />
+              <span className="font-heading text-sm font-bold tabular-nums">{data.upcomingAudits}</span>
             </div>
-            <div className="flex items-center justify-between rounded-md border px-3 py-2 text-sm">
-              <span className="flex items-center gap-2">
-                <FileWarning className="size-4 text-muted-foreground" /> Overdue maintenance
-              </span>
-              <Badge variant={data.overdueMaintenance > 0 ? "destructive" : "secondary"}>
-                {data.overdueMaintenance}
-              </Badge>
+            <div className="flex items-center justify-between border-b border-border pb-2 text-sm last:border-0">
+              <StatusDot
+                tone={data.overdueMaintenance > 0 ? "critical" : "good"}
+                label="Overdue maintenance"
+              />
+              <span className="font-heading text-sm font-bold tabular-nums">{data.overdueMaintenance}</span>
             </div>
-            <div className="flex items-center justify-between rounded-md border px-3 py-2 text-sm">
-              <span className="flex items-center gap-2">
-                <ShieldAlert className="size-4 text-muted-foreground" /> Recent incidents (7 days)
-              </span>
-              <Badge variant={data.recentIncidents > 0 ? "destructive" : "secondary"}>
-                {data.recentIncidents}
-              </Badge>
+            <div className="flex items-center justify-between pb-0 text-sm">
+              <StatusDot
+                tone={data.recentIncidents > 0 ? "critical" : "good"}
+                label="Recent incidents (7 days)"
+              />
+              <span className="font-heading text-sm font-bold tabular-nums">{data.recentIncidents}</span>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="rounded-md">
           <CardHeader>
-            <CardTitle className="text-base">Recent Activity</CardTitle>
+            <CardTitle className="font-heading text-sm font-bold tracking-wide uppercase">
+              Recent Activity
+            </CardTitle>
           </CardHeader>
           <CardContent>
             {data.activity.length === 0 ? (
