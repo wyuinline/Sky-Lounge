@@ -1,0 +1,171 @@
+"use client";
+
+import { useState } from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { Plane, ChevronDown, LogOut, Menu, X } from "lucide-react";
+import { navItems } from "@/lib/nav-items";
+import { roleLabels, type UserRole } from "@/lib/types";
+import { cn } from "@/lib/utils";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+
+function initials(name: string) {
+  return name
+    .split(" ")
+    .map((part) => part[0])
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
+}
+
+function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
+  const pathname = usePathname();
+  return (
+    <nav className="flex flex-1 flex-col gap-1 overflow-y-auto px-3 py-4">
+      {navItems.map((item) => {
+        const active = pathname === item.href;
+        return (
+          <Link
+            key={item.href}
+            href={item.href}
+            onClick={onNavigate}
+            className={cn(
+              "flex items-center gap-2.5 rounded-md px-3 py-2 text-sm font-medium text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+              active && "bg-sidebar-accent text-sidebar-accent-foreground",
+            )}
+          >
+            <item.icon className="size-4 shrink-0" />
+            {item.title}
+          </Link>
+        );
+      })}
+    </nav>
+  );
+}
+
+function UserMenu({
+  fullName,
+  email,
+  role,
+  onSignOut,
+}: {
+  fullName: string;
+  email: string;
+  role: UserRole;
+  onSignOut: () => void;
+}) {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger className="flex w-full items-center gap-2 rounded-md px-2 py-2 text-left hover:bg-sidebar-accent">
+        <Avatar className="size-8 shrink-0">
+          <AvatarFallback className="bg-sidebar-primary text-sidebar-primary-foreground text-xs">
+            {initials(fullName || email)}
+          </AvatarFallback>
+        </Avatar>
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-sm font-medium text-sidebar-foreground">{fullName || email}</p>
+          <p className="truncate text-xs text-sidebar-foreground/60">{roleLabels[role]}</p>
+        </div>
+        <ChevronDown className="size-4 shrink-0 text-sidebar-foreground/60" />
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" side="top" className="w-56">
+        <DropdownMenuLabel>
+          <div className="flex flex-col gap-1">
+            <span className="text-sm font-medium">{fullName || email}</span>
+            <Badge variant="secondary" className="w-fit text-xs">
+              {roleLabels[role]}
+            </Badge>
+          </div>
+        </DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem variant="destructive" onClick={onSignOut}>
+          <LogOut className="size-4" />
+          Sign out
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
+export function SideNav({
+  fullName,
+  email,
+  role,
+  onSignOut,
+}: {
+  fullName: string;
+  email: string;
+  role: UserRole;
+  onSignOut: () => void;
+}) {
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  return (
+    <>
+      {/* Desktop sidebar */}
+      <aside className="hidden w-60 shrink-0 flex-col bg-sidebar text-sidebar-foreground sm:flex">
+        <div className="flex h-16 shrink-0 items-center gap-2 px-4 font-heading text-lg font-bold tracking-wide uppercase">
+          <Plane className="size-5 shrink-0" />
+          UAV Ops Portal
+        </div>
+        <NavLinks />
+        <div className="border-t border-sidebar-border p-3">
+          <UserMenu fullName={fullName} email={email} role={role} onSignOut={onSignOut} />
+        </div>
+      </aside>
+
+      {/* Mobile top bar */}
+      <header className="flex h-14 shrink-0 items-center justify-between gap-2 bg-sidebar px-4 text-sidebar-foreground sm:hidden">
+        <Link href="/" className="flex items-center gap-2 font-heading text-base font-bold tracking-wide uppercase">
+          <Plane className="size-5" />
+          UAV Ops Portal
+        </Link>
+        <Button
+          size="icon"
+          variant="ghost"
+          className="text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+          onClick={() => setMobileOpen(true)}
+        >
+          <Menu className="size-5" />
+        </Button>
+      </header>
+
+      {/* Mobile drawer */}
+      {mobileOpen && (
+        <div className="fixed inset-0 z-50 sm:hidden">
+          <div className="absolute inset-0 bg-black/40" onClick={() => setMobileOpen(false)} />
+          <aside className="absolute inset-y-0 left-0 flex w-64 flex-col bg-sidebar text-sidebar-foreground shadow-xl">
+            <div className="flex h-14 shrink-0 items-center justify-between px-4 font-heading text-base font-bold tracking-wide uppercase">
+              <span className="flex items-center gap-2">
+                <Plane className="size-5" />
+                UAV Ops Portal
+              </span>
+              <Button
+                size="icon"
+                variant="ghost"
+                className="text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                onClick={() => setMobileOpen(false)}
+              >
+                <X className="size-5" />
+              </Button>
+            </div>
+            <NavLinks onNavigate={() => setMobileOpen(false)} />
+            <div className="border-t border-sidebar-border p-3">
+              <UserMenu fullName={fullName} email={email} role={role} onSignOut={onSignOut} />
+            </div>
+          </aside>
+        </div>
+      )}
+    </>
+  );
+}

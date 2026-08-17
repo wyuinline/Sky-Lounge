@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { TopNav } from "@/components/portal/top-nav";
+import { SideNav } from "@/components/portal/side-nav";
 import { signOut } from "./actions";
 import type { UserRole } from "@/lib/types";
 
@@ -25,14 +25,14 @@ export default async function PortalLayout({
     .single();
 
   return (
-    <div className="flex min-h-full flex-col">
-      <TopNav
+    <div className="flex min-h-full flex-col sm:flex-row">
+      <SideNav
         fullName={profile?.full_name ?? ""}
         email={profile?.email ?? user.email ?? ""}
         role={(profile?.role as UserRole) ?? "read_only"}
         onSignOut={signOut}
       />
-      <main className="flex-1 bg-background px-4 py-6 sm:px-6">{children}</main>
+      <main className="min-w-0 flex-1 bg-background px-4 py-6 sm:px-6">{children}</main>
     </div>
   );
 }
