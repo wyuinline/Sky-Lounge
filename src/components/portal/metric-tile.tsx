@@ -1,5 +1,12 @@
 import { cn } from "@/lib/utils";
 
+const toneBar = {
+  neutral: "bg-brand-lime",
+  good: "bg-[var(--status-good)]",
+  warning: "bg-[var(--status-warning)]",
+  critical: "bg-[var(--status-critical)]",
+};
+
 export function MetricTile({
   label,
   value,
@@ -7,24 +14,23 @@ export function MetricTile({
 }: {
   label: string;
   value: string;
-  tone?: "neutral" | "good" | "warning" | "critical";
+  tone?: keyof typeof toneBar;
 }) {
-  const toneBar = {
-    neutral: "bg-[#a1d884]",
-    good: "bg-[var(--status-good)]",
-    warning: "bg-[var(--status-warning)]",
-    critical: "bg-[var(--status-critical)]",
-  }[tone];
-
   return (
-    <div className="border-t-2 border-border bg-card px-4 py-3">
-      <p className="font-heading text-[11px] font-bold tracking-[0.15em] text-muted-foreground uppercase">
+    <div className="group relative overflow-hidden rounded-md border border-border bg-card px-4 py-3.5 transition-colors hover:border-brand-teal/40">
+      {/* accent rail — the tile's status read, echoing the brand's hard edges */}
+      <div className={cn("absolute inset-y-0 left-0 w-[3px]", toneBar[tone])} />
+      <p className="font-heading text-[11px] font-bold tracking-[0.15em] text-brand-teal uppercase">
         {label}
       </p>
-      <p className="mt-1 font-heading text-3xl leading-none font-bold tabular-nums text-foreground">
+      <p
+        className={cn(
+          "mt-1.5 font-heading text-3xl leading-none font-bold tabular-nums",
+          tone === "critical" ? "text-[var(--status-critical)]" : "text-foreground",
+        )}
+      >
         {value}
       </p>
-      <div className={cn("mt-3 h-[3px] w-full", toneBar)} />
     </div>
   );
 }

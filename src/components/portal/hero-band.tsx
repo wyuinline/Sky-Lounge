@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { BrandMotif } from "@/components/portal/brand-motif";
 
 export function HeroBand({
   eyebrow,
@@ -12,19 +13,23 @@ export function HeroBand({
   actions?: ReactNode;
 }) {
   return (
-    <div className="relative overflow-hidden rounded-md bg-sidebar px-6 py-8 text-sidebar-foreground sm:px-8 sm:py-10">
-      <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+    <div className="relative overflow-hidden rounded-md bg-brand-ink text-white">
+      {/* Brand triangle composition, anchored right. Hidden on small screens
+          so it never crowds the title. */}
+      <BrandMotif className="pointer-events-none absolute inset-y-0 right-0 hidden h-full w-[300px] md:block lg:w-[380px]" />
+
+      <div className="relative flex flex-col gap-5 px-6 py-8 sm:px-8 sm:py-10 md:pr-[280px] lg:pr-[360px]">
         <div>
-          <p className="mb-2 font-heading text-xs font-bold tracking-[0.2em] text-[#a1d884] uppercase">
+          <p className="font-heading text-xs font-bold tracking-[0.22em] text-brand-lime uppercase">
             {eyebrow}
           </p>
-          <div className="mb-3 h-px w-12 bg-[#a1d884]" />
-          <h1 className="font-heading text-4xl leading-none font-bold tracking-tight uppercase sm:text-5xl">
+          <div className="mt-2.5 h-0.5 w-10 bg-brand-lime" />
+          <h1 className="mt-3 font-heading text-4xl leading-[0.95] font-bold tracking-tight uppercase sm:text-5xl">
             {title}
           </h1>
-          <p className="mt-3 max-w-xl text-sm text-sidebar-foreground/70">{subtitle}</p>
+          <p className="mt-3 max-w-xl text-sm leading-relaxed text-white/70">{subtitle}</p>
         </div>
-        {actions ? <div className="flex shrink-0 gap-2">{actions}</div> : null}
+        {actions ? <div className="flex flex-wrap gap-2">{actions}</div> : null}
       </div>
     </div>
   );

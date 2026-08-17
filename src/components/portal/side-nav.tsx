@@ -39,12 +39,15 @@ function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
             key={item.href}
             href={item.href}
             onClick={onNavigate}
+            aria-current={active ? "page" : undefined}
             className={cn(
-              "flex items-center gap-2.5 rounded-md px-3 py-2 text-sm font-medium text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
-              active && "bg-sidebar-accent text-sidebar-accent-foreground",
+              "relative flex items-center gap-2.5 rounded-md py-2 pr-3 pl-4 text-sm font-medium text-sidebar-foreground/70 transition-colors",
+              "before:absolute before:top-1.5 before:bottom-1.5 before:left-0 before:w-[3px] before:rounded-full before:bg-transparent before:transition-colors",
+              "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+              active && "bg-sidebar-accent text-white before:bg-brand-lime",
             )}
           >
-            <item.icon className="size-4 shrink-0" />
+            <item.icon className={cn("size-4 shrink-0", active && "text-brand-lime")} />
             {item.title}
           </Link>
         );

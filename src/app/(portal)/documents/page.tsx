@@ -41,9 +41,10 @@ export default async function DocumentsPage() {
         <SectionLabel>Document Libraries</SectionLabel>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           {countsByCategory.map((c) => (
-            <Card key={c.value} className="gap-0 rounded-md border-t-2 border-t-[#a1d884] py-0">
+            <Card key={c.value} className="gap-0 overflow-hidden rounded-md py-0">
+              <div className="h-1 w-full bg-brand-sage" />
               <CardContent className="flex flex-col items-center gap-2 px-3 py-6 text-center">
-                <FileText className="size-5 text-primary" />
+                <FileText className="size-5 text-brand-teal" />
                 <span className="font-heading text-xs font-bold tracking-wide uppercase">{c.label}</span>
                 <span className="font-heading text-lg font-bold tabular-nums">{c.count}</span>
               </CardContent>

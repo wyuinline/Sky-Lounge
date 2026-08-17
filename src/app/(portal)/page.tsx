@@ -60,9 +60,10 @@ export default async function DashboardPage() {
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
           {quickActions.map((action) => (
             <Link key={action.href} href={action.href}>
-              <Card className="h-full gap-0 rounded-md border-t-2 border-t-[#a1d884] py-0 transition-colors hover:bg-accent">
+              <Card className="group h-full gap-0 overflow-hidden rounded-md border-border py-0 transition-colors hover:border-brand-teal/50 hover:bg-brand-mist/50">
+                <div className="h-1 w-full bg-brand-sage transition-colors group-hover:bg-brand-lime" />
                 <CardContent className="flex flex-col items-center gap-2 px-3 py-6 text-center">
-                  <action.icon className="size-5 text-primary" />
+                  <action.icon className="size-5 text-brand-teal" />
                   <span className="font-heading text-xs font-bold tracking-wide uppercase">
                     {action.title}
                   </span>

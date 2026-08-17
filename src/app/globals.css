@@ -39,6 +39,11 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
+  --color-brand-ink: var(--brand-ink);
+  --color-brand-lime: var(--brand-lime);
+  --color-brand-sage: var(--brand-sage);
+  --color-brand-teal: var(--brand-teal);
+  --color-brand-mist: var(--brand-mist);
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
@@ -49,7 +54,13 @@
 }
 
 :root {
-  /* Inline Group brand — sourced from inlinegroupinc.ca */
+  /* Inline Group brand — sampled from their hero-overlay-triangle asset */
+  --brand-ink: #333f48;
+  --brand-lime: #c4e86c;
+  --brand-sage: #a1d884;
+  --brand-teal: #44646c;
+  --brand-mist: #e8eae6;
+
   --background: #fffef8;
   --foreground: #333f48;
   --card: #ffffff;
@@ -89,6 +100,14 @@
 }
 
 .dark {
+  --brand-ink: #333f48;
+  --brand-lime: #c4e86c;
+  --brand-sage: #a1d884;
+  /* Lightened for legibility: brand teal is used for small uppercase labels,
+     and #44646c is too dark to read on the dark card surface. */
+  --brand-teal: #8bb3bb;
+  --brand-mist: #2a3138;
+
   --background: #1c2126;
   --foreground: #f5f3ea;
   --card: #262c33;
