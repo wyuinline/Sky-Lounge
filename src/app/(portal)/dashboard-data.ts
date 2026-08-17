@@ -1,0 +1,200 @@
+import { createClient } from "@/lib/supabase/server";
+
+type FlightLogActivityRow = {
+  id: string;
+  flight_date: string;
+  duration_minutes: number | null;
+  created_at: string;
+  pilots: { full_name: string | null } | null;
+  uavs: { drone_id: string } | null;
+};
+
+type MaintenanceActivityRow = {
+  id: string;
+  maintenance_type: string;
+  status: string;
+  created_at: string;
+  uavs: { drone_id: string } | null;
+};
+
+type IncidentActivityRow = {
+  id: string;
+  incident_type: string;
+  severity: string;
+  created_at: string;
+  uavs: { drone_id: string } | null;
+};
+
+export type DashboardData = {
+  ready: boolean;
+  fleetTotal: number;
+  fleetActive: number;
+  fleetMaintenance: number;
+  fleetGrounded: number;
+  activePilots: number;
+  flightHoursYtd: number;
+  openIncidents: number;
+  complianceScore: number | null;
+  expiringCertifications: number;
+  upcomingAudits: number;
+  overdueMaintenance: number;
+  recentIncidents: number;
+  activity: ActivityItem[];
+};
+
+export type ActivityItem = {
+  id: string;
+  type: "flight" | "maintenance" | "incident";
+  title: string;
+  subtitle: string;
+  date: string;
+};
+
+const empty: DashboardData = {
+  ready: false,
+  fleetTotal: 0,
+  fleetActive: 0,
+  fleetMaintenance: 0,
+  fleetGrounded: 0,
+  activePilots: 0,
+  flightHoursYtd: 0,
+  openIncidents: 0,
+  complianceScore: null,
+  expiringCertifications: 0,
+  upcomingAudits: 0,
+  overdueMaintenance: 0,
+  recentIncidents: 0,
+  activity: [],
+};
+
+export async function getDashboardData(): Promise<DashboardData> {
+  const supabase = await createClient();
+
+  // Probe first — if the schema migration hasn't been applied yet, this
+  // errors and we render an empty-state dashboard instead of crashing.
+  const probe = await supabase.from("uavs").select("id", { count: "exact", head: true });
+  if (probe.error) {
+    return empty;
+  }
+
+  const today = new Date();
+  const startOfYear = new Date(today.getFullYear(), 0, 1).toISOString().slice(0, 10);
+  const todayStr = today.toISOString().slice(0, 10);
+  const in30Days = new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+  const sevenDaysAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
+
+  const [
+    fleetRows,
+    pilotsCount,
+    flightMinutes,
+    openIncidentsCount,
+    audits,
+    expiringCerts,
+    upcomingAudits,
+    overdueMaintenance,
+    recentIncidentsCount,
+    recentFlights,
+    recentMaintenance,
+    recentIncidentsList,
+  ] = await Promise.all([
+    supabase.from("uavs").select("status"),
+    supabase.from("pilots").select("id", { count: "exact", head: true }),
+    supabase.from("flight_logs").select("duration_minutes").gte("flight_date", startOfYear),
+    supabase
+      .from("incidents")
+      .select("id", { count: "exact", head: true })
+      .in("status", ["open", "investigating", "escalated"]),
+    supabase.from("audits").select("compliance_status").not("compliance_status", "is", null),
+    supabase
+      .from("training_records")
+      .select("id", { count: "exact", head: true })
+      .gte("expiry_date", todayStr)
+      .lte("expiry_date", in30Days),
+    supabase
+      .from("audits")
+      .select("id", { count: "exact", head: true })
+      .eq("status", "planned")
+      .gte("audit_date", todayStr)
+      .lte("audit_date", in30Days),
+    supabase
+      .from("maintenance_records")
+      .select("id", { count: "exact", head: true })
+      .eq("status", "overdue"),
+    supabase
+      .from("incidents")
+      .select("id", { count: "exact", head: true })
+      .gte("created_at", sevenDaysAgo),
+    supabase
+      .from("flight_logs")
+      .select("id, flight_date, duration_minutes, created_at, pilots(full_name), uavs(drone_id)")
+      .order("created_at", { ascending: false })
+      .limit(3)
+      .returns<FlightLogActivityRow[]>(),
+    supabase
+      .from("maintenance_records")
+      .select("id, maintenance_type, status, created_at, uavs(drone_id)")
+      .order("created_at", { ascending: false })
+      .limit(3)
+      .returns<MaintenanceActivityRow[]>(),
+    supabase
+      .from("incidents")
+      .select("id, incident_type, severity, created_at, uavs(drone_id)")
+      .order("created_at", { ascending: false })
+      .limit(3)
+      .returns<IncidentActivityRow[]>(),
+  ]);
+
+  const fleet = fleetRows.data ?? [];
+  const compliance = audits.data ?? [];
+  const complianceScore =
+    compliance.length > 0
+      ? Math.round(
+          (compliance.filter((a) => a.compliance_status === "compliant").length / compliance.length) * 100,
+        )
+      : null;
+
+  const activity: ActivityItem[] = [
+    ...(recentFlights.data ?? []).map((row) => ({
+      id: `flight-${row.id}`,
+      type: "flight" as const,
+      title: `Flight logged — ${row.uavs?.drone_id ?? "UAV"}`,
+      subtitle: `${row.pilots?.full_name ?? "Pilot"} · ${row.duration_minutes ?? 0} min`,
+      date: row.created_at,
+    })),
+    ...(recentMaintenance.data ?? []).map((row) => ({
+      id: `maintenance-${row.id}`,
+      type: "maintenance" as const,
+      title: `Maintenance ${row.status} — ${row.uavs?.drone_id ?? "UAV"}`,
+      subtitle: row.maintenance_type,
+      date: row.created_at,
+    })),
+    ...(recentIncidentsList.data ?? []).map((row) => ({
+      id: `incident-${row.id}`,
+      type: "incident" as const,
+      title: `${row.incident_type.replace("_", " ")} reported — ${row.uavs?.drone_id ?? "UAV"}`,
+      subtitle: `Severity: ${row.severity}`,
+      date: row.created_at,
+    })),
+  ]
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+    .slice(0, 6);
+
+  return {
+    ready: true,
+    fleetTotal: fleet.length,
+    fleetActive: fleet.filter((u) => u.status === "active").length,
+    fleetMaintenance: fleet.filter((u) => u.status === "maintenance").length,
+    fleetGrounded: fleet.filter((u) => u.status === "grounded").length,
+    activePilots: pilotsCount.count ?? 0,
+    flightHoursYtd: Math.round(
+      ((flightMinutes.data ?? []).reduce((sum, r) => sum + (r.duration_minutes ?? 0), 0) / 60) * 10,
+    ) / 10,
+    openIncidents: openIncidentsCount.count ?? 0,
+    complianceScore,
+    expiringCertifications: expiringCerts.count ?? 0,
+    upcomingAudits: upcomingAudits.count ?? 0,
+    overdueMaintenance: overdueMaintenance.count ?? 0,
+    recentIncidents: recentIncidentsCount.count ?? 0,
+    activity,
+  };
+}
