@@ -1,10 +1,79 @@
-import { ComingSoonPage } from "@/components/portal/coming-soon";
+import { FileText, Lock } from "lucide-react";
+import { PageHero } from "@/components/portal/page-hero";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { DocumentsTable, type DocumentRow } from "@/components/portal/documents/documents-table";
+import { UploadDocumentDialog } from "@/components/portal/documents/upload-document-dialog";
+import { documentCategories } from "@/lib/document-categories";
+import { createClient } from "@/lib/supabase/server";
+import { getCurrentProfile } from "@/lib/supabase/profile";
 
-export default function DocumentsPage() {
+export default async function DocumentsPage() {
+  const supabase = await createClient();
+  const [profile, documentsRes] = await Promise.all([
+    getCurrentProfile(),
+    supabase
+      .from("documents")
+      .select("id, title, category, version, approval_status, storage_path, created_at, uploader:uploaded_by(full_name)")
+      .order("created_at", { ascending: false })
+      .returns<DocumentRow[]>(),
+  ]);
+
+  const documents = documentsRes.data ?? [];
+  const canManage = profile ? ["uav_admin", "ops_manager"].includes(profile.role) : false;
+
+  const countsByCategory = documentCategories.map((c) => ({
+    ...c,
+    count: documents.filter((d) => d.category === c.value).length,
+  }));
+
   return (
-    <ComingSoonPage
-      title="Document Management Center"
-      subtitle="Centralized access to SOPs, policies, flight manuals, maintenance manuals, regulatory documents, and safety materials."
-    />
+    <div className="flex flex-col gap-6">
+      <PageHero
+        title="Document Management Center"
+        subtitle="Centralized access to SOPs, policies, flight manuals, maintenance manuals, regulatory documents, and safety materials."
+        actions={canManage ? <UploadDocumentDialog /> : undefined}
+      />
+
+      <div>
+        <h2 className="mb-3 text-sm font-medium text-muted-foreground">Document Libraries</h2>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          {countsByCategory.map((c) => (
+            <Card key={c.value}>
+              <CardContent className="flex flex-col items-center gap-2 py-6 text-center">
+                <FileText className="size-5 text-primary" />
+                <span className="text-xs font-medium">{c.label}</span>
+                <span className="text-lg font-semibold">{c.count}</span>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Document Standards</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ul className="list-disc space-y-1 pl-5 text-sm text-muted-foreground">
+            <li>Every document is tagged with category, UAV model, and department metadata on upload</li>
+            <li>Regulatory Documents and Incident Reports are restricted to administrators, operations managers, and auditors</li>
+            <li>Each document tracks a version number and an approval status (draft, pending, approved, published)</li>
+            <li>Search and filter by title or category from the library below</li>
+          </ul>
+        </CardContent>
+      </Card>
+
+      <DocumentsTable rows={documents} />
+
+      <Alert>
+        <Lock />
+        <AlertTitle>Restricted categories</AlertTitle>
+        <AlertDescription>
+          If you cannot access a document, contact your administrator to request permission. Regulatory
+          and incident report documents require elevated access.
+        </AlertDescription>
+      </Alert>
+    </div>
   );
 }
