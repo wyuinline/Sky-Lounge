@@ -2,16 +2,20 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { safeErrorMessage, parseEnum } from "@/lib/action-utils";
+
+const AUDIT_TYPES = ["internal", "regulatory"] as const;
+const SEVERITIES = ["low", "medium", "high", "critical"] as const;
 
 export async function scheduleAudit(formData: FormData) {
   const supabase = await createClient();
 
-  const auditType = String(formData.get("audit_type") ?? "internal");
+  const auditType = parseEnum(formData.get("audit_type"), AUDIT_TYPES, "internal");
   const auditDate = String(formData.get("audit_date") ?? "");
   const auditorId = String(formData.get("auditor_id") ?? "");
 
   if (!auditDate) {
-    return { error: "Audit date is required." };
+    return { error: "Set the audit date." };
   }
 
   const { error } = await supabase.from("audits").insert({
@@ -21,7 +25,7 @@ export async function scheduleAudit(formData: FormData) {
     status: "planned",
   });
 
-  if (error) return { error: error.message };
+  if (error) return { error: safeErrorMessage(error, "save") };
 
   revalidatePath("/audits");
   revalidatePath("/");
@@ -32,13 +36,13 @@ export async function addFinding(formData: FormData) {
   const supabase = await createClient();
 
   const auditId = String(formData.get("audit_id") ?? "");
-  const severity = String(formData.get("severity") ?? "low");
+  const severity = parseEnum(formData.get("severity"), SEVERITIES, "low");
   const description = String(formData.get("description") ?? "").trim();
   const assignedTo = String(formData.get("assigned_to") ?? "");
   const dueDate = String(formData.get("due_date") ?? "");
 
   if (!auditId || !description) {
-    return { error: "Audit and description are required." };
+    return { error: "Choose an audit and describe the finding." };
   }
 
   const { error } = await supabase.from("audit_findings").insert({
@@ -49,7 +53,7 @@ export async function addFinding(formData: FormData) {
     due_date: dueDate || null,
   });
 
-  if (error) return { error: error.message };
+  if (error) return { error: safeErrorMessage(error, "save") };
 
   revalidatePath("/audits");
   revalidatePath("/");

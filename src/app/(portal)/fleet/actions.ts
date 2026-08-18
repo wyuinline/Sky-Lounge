@@ -2,6 +2,9 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { safeErrorMessage, parseEnum } from "@/lib/action-utils";
+
+const UAV_STATUSES = ["active", "maintenance", "grounded"] as const;
 
 export async function addUav(formData: FormData) {
   const supabase = await createClient();
@@ -10,7 +13,7 @@ export async function addUav(formData: FormData) {
   const model = String(formData.get("model") ?? "").trim();
   const manufacturer = String(formData.get("manufacturer") ?? "").trim();
   const firmwareVersion = String(formData.get("firmware_version") ?? "").trim();
-  const status = String(formData.get("status") ?? "active");
+  const status = parseEnum(formData.get("status"), UAV_STATUSES, "active");
   const nextInspectionDate = String(formData.get("next_inspection_date") ?? "");
 
   if (!droneId || !model) {
@@ -26,9 +29,7 @@ export async function addUav(formData: FormData) {
     next_inspection_date: nextInspectionDate || null,
   });
 
-  if (error) {
-    return { error: error.message };
-  }
+  if (error) return { error: safeErrorMessage(error, "save") };
 
   revalidatePath("/fleet");
   revalidatePath("/");

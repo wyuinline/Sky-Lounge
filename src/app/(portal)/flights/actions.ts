@@ -2,6 +2,11 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { safeErrorMessage, parseEnum } from "@/lib/action-utils";
+
+const RISK_LEVELS = ["low", "medium", "high", "critical"] as const;
+const MISSION_OUTCOMES = ["completed", "aborted", "partial"] as const;
+const APPROVAL_DECISIONS = ["approved", "rejected"] as const;
 
 export async function submitFlightRequest(formData: FormData) {
   const supabase = await createClient();
@@ -10,11 +15,11 @@ export async function submitFlightRequest(formData: FormData) {
   const uavId = String(formData.get("uav_id") ?? "");
   const location = String(formData.get("location") ?? "").trim();
   const requestedDate = String(formData.get("requested_date") ?? "");
-  const riskLevel = String(formData.get("risk_level") ?? "low");
+  const riskLevel = parseEnum(formData.get("risk_level"), RISK_LEVELS, "low");
   const riskAssessment = String(formData.get("risk_assessment") ?? "").trim();
 
   if (!pilotId || !uavId || !requestedDate) {
-    return { error: "Pilot, UAV, and requested date are required." };
+    return { error: "Choose a pilot and UAV, and set the requested date." };
   }
 
   const { error } = await supabase.from("flight_requests").insert({
@@ -26,24 +31,28 @@ export async function submitFlightRequest(formData: FormData) {
     risk_assessment: riskAssessment || null,
   });
 
-  if (error) return { error: error.message };
+  if (error) return { error: safeErrorMessage(error, "request") };
 
   revalidatePath("/flights");
   return { error: null };
 }
 
-export async function updateFlightRequestStatus(id: string, status: "approved" | "rejected") {
+export async function updateFlightRequestStatus(
+  id: string,
+  status: (typeof APPROVAL_DECISIONS)[number],
+) {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
+  const safeStatus = parseEnum(status, APPROVAL_DECISIONS, "rejected");
 
   const { error } = await supabase
     .from("flight_requests")
-    .update({ approval_status: status, approved_by: user?.id ?? null })
+    .update({ approval_status: safeStatus, approved_by: user?.id ?? null })
     .eq("id", id);
 
-  if (error) return { error: error.message };
+  if (error) return { error: safeErrorMessage(error, "approval") };
 
   revalidatePath("/flights");
   return { error: null };
@@ -57,10 +66,17 @@ export async function logFlight(formData: FormData) {
   const flightDate = String(formData.get("flight_date") ?? "");
   const durationMinutes = Number(formData.get("duration_minutes") ?? 0);
   const weatherConditions = String(formData.get("weather_conditions") ?? "").trim();
-  const missionOutcome = String(formData.get("mission_outcome") ?? "completed");
+  const missionOutcome = parseEnum(
+    formData.get("mission_outcome"),
+    MISSION_OUTCOMES,
+    "completed",
+  );
 
   if (!pilotId || !uavId || !flightDate) {
-    return { error: "Pilot, UAV, and flight date are required." };
+    return { error: "Choose a pilot and UAV, and set the flight date." };
+  }
+  if (!Number.isFinite(durationMinutes) || durationMinutes < 0) {
+    return { error: "Duration must be zero or more minutes." };
   }
 
   const { error } = await supabase.from("flight_logs").insert({
@@ -72,7 +88,7 @@ export async function logFlight(formData: FormData) {
     mission_outcome: missionOutcome,
   });
 
-  if (error) return { error: error.message };
+  if (error) return { error: safeErrorMessage(error, "flight log") };
 
   revalidatePath("/flights");
   revalidatePath("/");

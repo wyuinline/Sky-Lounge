@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { safeErrorMessage } from "@/lib/action-utils";
 
 export async function addPilot(formData: FormData) {
   const supabase = await createClient();
@@ -12,7 +13,7 @@ export async function addPilot(formData: FormData) {
   const medicalExpiry = String(formData.get("medical_expiry") ?? "");
 
   if (!fullName) {
-    return { error: "Full name is required." };
+    return { error: "Enter the pilot's full name." };
   }
 
   const { error } = await supabase.from("pilots").insert({
@@ -22,9 +23,7 @@ export async function addPilot(formData: FormData) {
     medical_expiry: medicalExpiry || null,
   });
 
-  if (error) {
-    return { error: error.message };
-  }
+  if (error) return { error: safeErrorMessage(error, "save") };
 
   revalidatePath("/pilots");
   revalidatePath("/");

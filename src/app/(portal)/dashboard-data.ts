@@ -25,8 +25,16 @@ type IncidentActivityRow = {
   uavs: { drone_id: string } | null;
 };
 
+/**
+ * "schema-missing" means the migration genuinely hasn't run (Postgres 42P01).
+ * "error" is anything else — an outage, an RLS denial — where telling the user
+ * to run a migration against a live database would be actively wrong.
+ */
+export type DashboardStatus = "ok" | "schema-missing" | "error";
+
 export type DashboardData = {
   ready: boolean;
+  status: DashboardStatus;
   fleetTotal: number;
   fleetActive: number;
   fleetMaintenance: number;
@@ -52,6 +60,7 @@ export type ActivityItem = {
 
 const empty: DashboardData = {
   ready: false,
+  status: "schema-missing",
   fleetTotal: 0,
   fleetActive: 0,
   fleetMaintenance: 0,
@@ -70,11 +79,13 @@ const empty: DashboardData = {
 export async function getDashboardData(): Promise<DashboardData> {
   const supabase = await createClient();
 
-  // Probe first — if the schema migration hasn't been applied yet, this
-  // errors and we render an empty-state dashboard instead of crashing.
+  // Probe first so a missing schema renders an empty state instead of crashing.
+  // 42P01 (undefined_table) is the only error that actually means "migration
+  // not applied"; everything else is reported as a generic failure.
   const probe = await supabase.from("uavs").select("id", { count: "exact", head: true });
   if (probe.error) {
-    return empty;
+    console.error("[dashboard] probe failed", probe.error);
+    return { ...empty, status: probe.error.code === "42P01" ? "schema-missing" : "error" };
   }
 
   const today = new Date();
@@ -181,6 +192,7 @@ export async function getDashboardData(): Promise<DashboardData> {
 
   return {
     ready: true,
+    status: "ok",
     fleetTotal: fleet.length,
     fleetActive: fleet.filter((u) => u.status === "active").length,
     fleetMaintenance: fleet.filter((u) => u.status === "maintenance").length,

@@ -6,7 +6,12 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
-  ],
+  /**
+   * Only build-time static assets are exempt. An earlier version excluded any
+   * path *ending* in an image extension, which meant a route like
+   * /reports/summary.png would skip the auth redirect entirely — files under
+   * /public are served before the proxy anyway, so the exemption bought
+   * nothing and opened a bypass.
+   */
+  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
 };

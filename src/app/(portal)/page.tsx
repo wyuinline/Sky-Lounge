@@ -43,14 +43,24 @@ export default async function DashboardPage() {
         subtitle="Real-time operational overview for fleet, pilots, compliance, and safety."
       />
 
-      {!data.ready && (
+      {data.status === "schema-missing" && (
         <Alert>
           <AlertTriangle />
-          <AlertTitle>Database not connected yet</AlertTitle>
+          <AlertTitle>Database not set up yet</AlertTitle>
           <AlertDescription>
-            The schema migration hasn&apos;t been applied to Supabase yet, so this dashboard is showing an
-            empty state. Run <code>supabase/migrations/20260817000000_init_schema.sql</code> against your
-            project to see live data.
+            The tables this portal reads don&apos;t exist yet, so the figures below are empty. An
+            administrator needs to apply the database migrations.
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {data.status === "error" && (
+        <Alert>
+          <AlertTriangle />
+          <AlertTitle>Couldn&apos;t load operational data</AlertTitle>
+          <AlertDescription>
+            The figures below may be incomplete or out of date. Refresh to try again, and contact your
+            administrator if this keeps happening.
           </AlertDescription>
         </Alert>
       )}

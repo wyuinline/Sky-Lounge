@@ -46,6 +46,14 @@ export default async function TrainingPage() {
   }
   const qualifiedCount = [...highestByPilot.values()].filter((r) => r === 3).length;
 
+  // RLS limits pilots to their own training records, so for them these figures
+  // describe one person, not the programme. Label them accordingly rather than
+  // presenting a personal count as an organisation-wide total.
+  const seesAllRecords = profile
+    ? ["uav_admin", "ops_manager"].includes(profile.role)
+    : false;
+  const scope = seesAllRecords ? "" : "Your ";
+
   return (
     <div className="flex flex-col gap-6">
       <HeroBand
@@ -56,14 +64,30 @@ export default async function TrainingPage() {
       />
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <MetricTile label="Certifications on File" value={`${records.length}`} tone="neutral" />
         <MetricTile
-          label="Expiring (60 days)"
+          label={`${scope}Certifications on File`}
+          value={`${records.length}`}
+          tone="neutral"
+        />
+        <MetricTile
+          label={`${scope}Expiring (60 days)`}
           value={`${expiringSoon}`}
           tone={expiringSoon > 0 ? "warning" : "good"}
         />
-        <MetricTile label="Expired" value={`${expired}`} tone={expired > 0 ? "critical" : "good"} />
-        <MetricTile label="Fully Qualified Pilots" value={`${qualifiedCount}`} tone="good" />
+        <MetricTile
+          label={`${scope}Expired`}
+          value={`${expired}`}
+          tone={expired > 0 ? "critical" : "good"}
+        />
+        {seesAllRecords ? (
+          <MetricTile label="Fully Qualified Pilots" value={`${qualifiedCount}`} tone="good" />
+        ) : (
+          <MetricTile
+            label="Your Competency Level"
+            value={qualifiedCount > 0 ? "Qualified" : "In Progress"}
+            tone={qualifiedCount > 0 ? "good" : "neutral"}
+          />
+        )}
       </div>
 
       <Card className="rounded-md">
