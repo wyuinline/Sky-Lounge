@@ -28,13 +28,13 @@ export default async function FlightsPage() {
       .from("flight_requests")
       .select("id, location, requested_date, risk_level, approval_status, pilots(full_name), uavs(drone_id)")
       .order("created_at", { ascending: false })
-      .returns<FlightRequestRow[]>(),
+,
     supabase
       .from("flight_logs")
       .select("id, flight_date, duration_minutes, weather_conditions, mission_outcome, pilots(full_name), uavs(drone_id)")
       .order("flight_date", { ascending: false })
       .limit(20)
-      .returns<FlightLogRow[]>(),
+,
   ]);
 
   const pilotOptions = (pilotsRes.data ?? []).map((p) => ({ id: p.id, label: p.full_name }));

@@ -25,7 +25,7 @@ export type DocumentRow = {
   version: number;
   approval_status: "draft" | "pending_approval" | "approved" | "published";
   storage_path: string;
-  uploader: { full_name: string } | null;
+  uploader: { full_name: string | null } | null;
   created_at: string;
 };
 

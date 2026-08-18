@@ -22,7 +22,7 @@ export default async function TrainingPage() {
         "id, pilot_id, certification_name, issue_date, expiry_date, competency_level, status, pilots(full_name)",
       )
       .order("expiry_date")
-      .returns<CertificationRow[]>(),
+,
     supabase.from("pilots").select("id, full_name").order("full_name"),
   ]);
 
@@ -39,7 +39,9 @@ export default async function TrainingPage() {
 
   const highestByPilot = new Map<string, number>();
   for (const r of records) {
-    if (!r.competency_level) continue;
+    // pilot_id is nullable, so an orphaned certification can't be attributed
+    // to anyone and must not be counted toward a pilot's competency.
+    if (!r.competency_level || !r.pilot_id) continue;
     const rank = competencyRank[r.competency_level];
     const current = highestByPilot.get(r.pilot_id) ?? -1;
     if (rank > current) highestByPilot.set(r.pilot_id, rank);

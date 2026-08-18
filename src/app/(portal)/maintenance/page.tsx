@@ -20,7 +20,7 @@ export default async function MaintenancePage() {
         "id, maintenance_type, next_service_date, status, completed_date, created_at, uavs(drone_id), technician:technician_id(full_name)",
       )
       .order("next_service_date")
-      .returns<FullMaintenanceRow[]>(),
+,
     supabase.from("uavs").select("id, drone_id").order("drone_id"),
     supabase.from("profiles").select("id, full_name").order("full_name"),
   ]);

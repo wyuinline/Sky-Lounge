@@ -115,6 +115,23 @@ create policy flight_logs_insert on flight_logs for insert to authenticated
   );
 
 -- ---------------------------------------------------------------------------
+-- Orphaned functions from the abandoned AI-generated schema.
+--
+-- public.has_role(text) and public.is_admin() are not part of this project's
+-- schema — they survived the earlier reset because that migration only dropped
+-- functions by name and did not know about these. Nothing in the current
+-- policy set references them, so they are dead code sitting in the security
+-- surface of the public schema.
+--
+-- Deliberately no CASCADE: if some policy does still depend on one of these,
+-- Postgres will refuse the drop and report it, rather than silently deleting
+-- the policy along with the function.
+-- ---------------------------------------------------------------------------
+
+drop function if exists public.has_role(text);
+drop function if exists public.is_admin();
+
+-- ---------------------------------------------------------------------------
 -- 14. LOW — foreign keys and hot filter columns were unindexed. The dashboard
 -- issues ~12 aggregate queries per load and the RLS subqueries above run per
 -- row, so these matter well before the tables get large.

@@ -14,7 +14,7 @@ export type FindingRow = {
   description: string;
   due_date: string | null;
   status: "open" | "in_progress" | "closed" | "overdue";
-  assignee: { full_name: string } | null;
+  assignee: { full_name: string | null } | null;
 };
 
 const severityTone: Record<FindingRow["severity"], "good" | "neutral" | "warning" | "critical"> = {

@@ -17,7 +17,7 @@ export default async function DocumentsPage() {
       .from("documents")
       .select("id, title, category, version, approval_status, storage_path, created_at, uploader:uploaded_by(full_name)")
       .order("created_at", { ascending: false })
-      .returns<DocumentRow[]>(),
+,
   ]);
 
   const documents = documentsRes.data ?? [];

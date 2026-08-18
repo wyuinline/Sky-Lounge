@@ -14,7 +14,7 @@ export type AuditRow = {
   audit_date: string;
   status: "planned" | "in_progress" | "completed" | "overdue";
   compliance_status: "compliant" | "at_risk" | "non_compliant" | null;
-  auditor: { full_name: string } | null;
+  auditor: { full_name: string | null } | null;
 };
 
 const statusTone: Record<AuditRow["status"], "neutral" | "good" | "critical"> = {

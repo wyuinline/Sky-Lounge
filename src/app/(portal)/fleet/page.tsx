@@ -15,7 +15,7 @@ export default async function FleetPage() {
         "id, drone_id, model, manufacturer, status, flight_hours, next_inspection_date, assigned_pilot:assigned_pilot_id(full_name)",
       )
       .order("drone_id")
-      .returns<FleetRow[]>(),
+,
   ]);
 
   const rows = uavs ?? [];

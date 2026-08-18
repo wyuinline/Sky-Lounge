@@ -19,7 +19,7 @@ export default async function IncidentsPage() {
         "id, incident_date, incident_type, severity, status, is_anonymous, uavs(drone_id), pilots(full_name)",
       )
       .order("incident_date", { ascending: false })
-      .returns<IncidentRow[]>(),
+,
     supabase.from("pilots").select("id, full_name").order("full_name"),
     supabase.from("uavs").select("id, drone_id").order("drone_id"),
   ]);

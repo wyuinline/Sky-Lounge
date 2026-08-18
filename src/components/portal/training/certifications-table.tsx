@@ -10,7 +10,7 @@ import {
 
 export type CertificationRow = {
   id: string;
-  pilot_id: string;
+  pilot_id: string | null;
   certification_name: string;
   issue_date: string | null;
   expiry_date: string | null;

@@ -18,7 +18,7 @@ export default async function PilotsPage() {
         "id, full_name, employee_id, license_number, medical_expiry, flight_hours, currency_status, training_records(id)",
       )
       .order("full_name")
-      .returns<PilotRow[]>(),
+,
   ]);
 
   const rows = pilots ?? [];

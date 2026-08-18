@@ -21,7 +21,7 @@ export type MaintenanceRow = {
   next_service_date: string | null;
   status: "scheduled" | "in_progress" | "overdue" | "completed";
   uavs: { drone_id: string } | null;
-  technician: { full_name: string } | null;
+  technician: { full_name: string | null } | null;
 };
 
 const statusTone: Record<MaintenanceRow["status"], "neutral" | "critical" | "good"> = {

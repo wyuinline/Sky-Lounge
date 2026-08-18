@@ -140,19 +140,19 @@ export async function getDashboardData(): Promise<DashboardData> {
       .select("id, flight_date, duration_minutes, created_at, pilots(full_name), uavs(drone_id)")
       .order("created_at", { ascending: false })
       .limit(3)
-      .returns<FlightLogActivityRow[]>(),
+,
     supabase
       .from("maintenance_records")
       .select("id, maintenance_type, status, created_at, uavs(drone_id)")
       .order("created_at", { ascending: false })
       .limit(3)
-      .returns<MaintenanceActivityRow[]>(),
+,
     supabase
       .from("incidents")
       .select("id, incident_type, severity, created_at, uavs(drone_id)")
       .order("created_at", { ascending: false })
       .limit(3)
-      .returns<IncidentActivityRow[]>(),
+,
   ]);
 
   const fleet = fleetRows.data ?? [];

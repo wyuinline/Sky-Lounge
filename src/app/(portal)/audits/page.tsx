@@ -17,13 +17,13 @@ export default async function AuditsPage() {
       .from("audits")
       .select("id, audit_type, audit_date, status, compliance_status, auditor:auditor_id(full_name)")
       .order("audit_date", { ascending: false })
-      .returns<AuditRow[]>(),
+,
     supabase
       .from("audit_findings")
       .select("id, severity, description, due_date, status, assignee:assigned_to(full_name)")
       .neq("status", "closed")
       .order("due_date")
-      .returns<FindingRow[]>(),
+,
     supabase.from("profiles").select("id, full_name").order("full_name"),
   ]);
 
