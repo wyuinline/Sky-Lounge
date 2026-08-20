@@ -4,6 +4,7 @@ import { MaintenanceTable, type MaintenanceRow } from "@/components/portal/maint
 import { LogMaintenanceDialog } from "@/components/portal/maintenance/log-maintenance-dialog";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentProfile } from "@/lib/supabase/profile";
+import { isMaintenanceOverdue } from "@/lib/compliance";
 
 type FullMaintenanceRow = MaintenanceRow & {
   completed_date: string | null;
@@ -41,7 +42,9 @@ export default async function MaintenancePage() {
       new Date(r.next_service_date).getFullYear() === now.getFullYear() &&
       new Date(r.next_service_date).getMonth() === now.getMonth(),
   ).length;
-  const overdue = records.filter((r) => r.status === "overdue").length;
+  // Derived from the service date — the stored status is never advanced to
+  // 'overdue', so filtering on it always returned zero.
+  const overdue = records.filter((r) => isMaintenanceOverdue(r, now)).length;
   const completedYtd = records.filter(
     (r) => r.status === "completed" && r.completed_date && new Date(r.completed_date).getFullYear() === now.getFullYear(),
   );

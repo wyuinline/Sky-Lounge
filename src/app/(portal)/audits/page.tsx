@@ -8,6 +8,7 @@ import { ScheduleAuditDialog } from "@/components/portal/audits/schedule-audit-d
 import { AddFindingDialog } from "@/components/portal/audits/add-finding-dialog";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentProfile } from "@/lib/supabase/profile";
+import { isFindingOverdue } from "@/lib/compliance";
 
 export default async function AuditsPage() {
   const supabase = await createClient();
@@ -45,7 +46,8 @@ export default async function AuditsPage() {
     scored.length > 0
       ? Math.round((scored.filter((a) => a.compliance_status === "compliant").length / scored.length) * 100)
       : null;
-  const overdueActions = findings.filter((f) => f.status === "overdue").length;
+  // Derived from due_date; the stored status never becomes 'overdue'.
+  const overdueActions = findings.filter((f) => isFindingOverdue(f)).length;
   const currentYear = new Date().getFullYear();
   const auditsCompletedYtd = audits.filter(
     (a) => a.status === "completed" && new Date(a.audit_date).getFullYear() === currentYear,

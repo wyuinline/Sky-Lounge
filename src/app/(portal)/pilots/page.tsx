@@ -7,6 +7,7 @@ import { PilotsTable, type PilotRow } from "@/components/portal/pilots/pilots-ta
 import { AddPilotDialog } from "@/components/portal/pilots/add-pilot-dialog";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentProfile } from "@/lib/supabase/profile";
+import { deriveExpiryStatus } from "@/lib/compliance";
 
 export default async function PilotsPage() {
   const supabase = await createClient();
@@ -30,7 +31,11 @@ export default async function PilotsPage() {
   const medicalExpiring30 = rows.filter(
     (r) => r.medical_expiry && new Date(r.medical_expiry) >= today && new Date(r.medical_expiry) <= in30Days,
   ).length;
-  const currencyChanges = rows.filter((r) => r.currency_status !== "current").length;
+  // Derived from the medical expiry date. currency_status is stored but never
+  // maintained, so a pilot with a long-lapsed medical still read as "Current".
+  const currencyChanges = rows.filter(
+    (r) => deriveExpiryStatus(r.medical_expiry, today) !== "current",
+  ).length;
   const trainingRecordsCount = rows.reduce((c, r) => c + r.training_records.length, 0);
 
   return (

@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { StatusDot } from "@/components/portal/status-dot";
+import { deriveExpiryStatus, expiryStatusLabel, expiryStatusTone } from "@/lib/compliance";
 import {
   Table,
   TableBody,
@@ -88,7 +89,17 @@ export function PilotsTable({ rows }: { rows: PilotRow[] }) {
                   <TableCell>{row.medical_expiry ?? "—"}</TableCell>
                   <TableCell>{row.flight_hours}</TableCell>
                   <TableCell>
-                    <StatusDot tone={currencyTone[row.currency_status]} label={currencyLabel[row.currency_status]} />
+                    {(() => {
+                      // Derived from the medical expiry rather than the stored
+                      // currency_status column, which nothing keeps in sync.
+                      const derived = deriveExpiryStatus(row.medical_expiry);
+                      return (
+                        <StatusDot
+                          tone={expiryStatusTone[derived]}
+                          label={expiryStatusLabel[derived]}
+                        />
+                      );
+                    })()}
                   </TableCell>
                 </TableRow>
               ))

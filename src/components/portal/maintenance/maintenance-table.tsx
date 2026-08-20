@@ -14,6 +14,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { completeMaintenance } from "@/app/(portal)/maintenance/actions";
+import { isMaintenanceOverdue } from "@/lib/compliance";
 
 export type MaintenanceRow = {
   id: string;
@@ -76,7 +77,11 @@ export function MaintenanceTable({ rows, canManage }: { rows: MaintenanceRow[]; 
                 <TableCell>{row.next_service_date ?? "—"}</TableCell>
                 <TableCell>{row.technician?.full_name ?? "—"}</TableCell>
                 <TableCell>
-                  <StatusDot tone={statusTone[row.status]} label={row.status.replace("_", " ")} />
+                  {isMaintenanceOverdue(row) ? (
+                    <StatusDot tone="critical" label="overdue" />
+                  ) : (
+                    <StatusDot tone={statusTone[row.status]} label={row.status.replace("_", " ")} />
+                  )}
                 </TableCell>
                 {canManage && (
                   <TableCell className="text-right">

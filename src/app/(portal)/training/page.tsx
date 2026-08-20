@@ -9,6 +9,7 @@ import {
 import { UploadCertificationDialog } from "@/components/portal/training/upload-certification-dialog";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentProfile } from "@/lib/supabase/profile";
+import { deriveExpiryStatus } from "@/lib/compliance";
 
 const competencyRank = { beginner: 0, intermediate: 1, advanced: 2, qualified: 3 } as const;
 
@@ -35,7 +36,11 @@ export default async function TrainingPage() {
   const expiringSoon = records.filter(
     (r) => r.expiry_date && new Date(r.expiry_date) >= now && new Date(r.expiry_date) <= in60Days,
   ).length;
-  const expired = records.filter((r) => r.status === "expired").length;
+  // Derived from expiry_date — the stored status never advances past its
+  // insert-time default, so this previously always reported zero.
+  const expired = records.filter(
+    (r) => deriveExpiryStatus(r.expiry_date, now) === "expired",
+  ).length;
 
   const highestByPilot = new Map<string, number>();
   for (const r of records) {

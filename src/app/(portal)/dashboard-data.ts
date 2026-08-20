@@ -127,10 +127,14 @@ export async function getDashboardData(): Promise<DashboardData> {
       .eq("status", "planned")
       .gte("audit_date", todayStr)
       .lte("audit_date", in30Days),
+    // Overdue is derived from the service date, not the stored status, which
+    // is never advanced to 'overdue'. Filtering on it always returned zero.
     supabase
       .from("maintenance_records")
       .select("id", { count: "exact", head: true })
-      .eq("status", "overdue"),
+      .neq("status", "completed")
+      .not("next_service_date", "is", null)
+      .lt("next_service_date", todayStr),
     supabase
       .from("incidents")
       .select("id", { count: "exact", head: true })
