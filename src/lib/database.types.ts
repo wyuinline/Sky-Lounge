@@ -772,6 +772,8 @@ export type Database = {
         | "audit_upcoming"
         | "audit_overdue"
         | "finding_overdue"
+        | "maintenance_hours_due"
+        | "maintenance_hours_overdue"
       risk_level: "low" | "medium" | "high" | "critical"
       severity_level: "low" | "medium" | "high" | "critical"
       uav_status: "airworthy" | "maintenance" | "grounded"
@@ -959,6 +961,8 @@ export const Constants = {
         "audit_upcoming",
         "audit_overdue",
         "finding_overdue",
+        "maintenance_hours_due",
+        "maintenance_hours_overdue",
       ],
       risk_level: ["low", "medium", "high", "critical"],
       severity_level: ["low", "medium", "high", "critical"],

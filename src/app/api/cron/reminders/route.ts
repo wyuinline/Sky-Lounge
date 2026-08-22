@@ -44,7 +44,7 @@ export async function GET(request: NextRequest) {
 
   const now = new Date();
 
-  const [pilotsRes, certsRes, maintenanceRes, auditsRes, findingsRes] = await Promise.all([
+  const [pilotsRes, certsRes, maintenanceRes, airframeHoursRes, auditsRes, findingsRes] = await Promise.all([
     supabase.from("pilots").select("id, full_name, medical_expiry, profile_id"),
     supabase
       .from("training_records")
@@ -52,12 +52,21 @@ export async function GET(request: NextRequest) {
     supabase
       .from("maintenance_records")
       .select("id, status, next_service_date, maintenance_type, uavs(drone_id)"),
+    // Hours-since-service is derived by this view; the raw tables don't carry it.
+    supabase
+      .from("uav_maintenance_status")
+      .select("uav_id, drone_id, maintenance_interval_hours, hours_since_service, hours_until_service"),
     supabase.from("audits").select("id, status, audit_date, audit_type"),
     supabase.from("audit_findings").select("id, status, due_date, description, severity, assigned_to"),
   ]);
 
   const firstError =
-    pilotsRes.error ?? certsRes.error ?? maintenanceRes.error ?? auditsRes.error ?? findingsRes.error;
+    pilotsRes.error ??
+    certsRes.error ??
+    maintenanceRes.error ??
+    airframeHoursRes.error ??
+    auditsRes.error ??
+    findingsRes.error;
   if (firstError) {
     console.error("[reminders] scan query failed", firstError);
     return NextResponse.json({ error: "Could not read operational data." }, { status: 500 });
@@ -80,6 +89,13 @@ export async function GET(request: NextRequest) {
         next_service_date: m.next_service_date,
         maintenance_type: m.maintenance_type,
         drone_id: m.uavs?.drone_id ?? null,
+      })),
+      airframeHours: (airframeHoursRes.data ?? []).map((a) => ({
+        uav_id: a.uav_id ?? "",
+        drone_id: a.drone_id ?? "",
+        maintenance_interval_hours: a.maintenance_interval_hours,
+        hours_since_service: a.hours_since_service,
+        hours_until_service: a.hours_until_service,
       })),
       audits: auditsRes.data ?? [],
       findings: findingsRes.data ?? [],

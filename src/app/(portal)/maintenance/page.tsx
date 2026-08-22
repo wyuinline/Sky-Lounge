@@ -1,6 +1,8 @@
 import { HeroBand } from "@/components/portal/hero-band";
 import { MetricTile } from "@/components/portal/metric-tile";
 import { MaintenanceTable, type MaintenanceRow } from "@/components/portal/maintenance/maintenance-table";
+import { AirframeHoursTable } from "@/components/portal/maintenance/hours-table";
+import { SectionLabel } from "@/components/portal/section-label";
 import { LogMaintenanceDialog } from "@/components/portal/maintenance/log-maintenance-dialog";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentProfile } from "@/lib/supabase/profile";
@@ -13,7 +15,7 @@ type FullMaintenanceRow = MaintenanceRow & {
 
 export default async function MaintenancePage() {
   const supabase = await createClient();
-  const [profile, recordsRes, uavsRes, profilesRes] = await Promise.all([
+  const [profile, recordsRes, uavsRes, profilesRes, hoursRes] = await Promise.all([
     getCurrentProfile(),
     supabase
       .from("maintenance_records")
@@ -24,6 +26,11 @@ export default async function MaintenancePage() {
 ,
     supabase.from("uavs").select("id, drone_id").order("drone_id"),
     supabase.from("profiles").select("id, full_name").order("full_name"),
+    supabase
+      .from("uav_maintenance_status")
+      .select("uav_id, drone_id, maintenance_interval_hours, hours_since_service, hours_until_service")
+      .not("maintenance_interval_hours", "is", null)
+      .order("hours_until_service"),
   ]);
 
   const records = recordsRes.data ?? [];
@@ -76,7 +83,15 @@ export default async function MaintenancePage() {
         />
       </div>
 
-      <MaintenanceTable rows={records} canManage={canManage} />
+      <div>
+        <SectionLabel>Service Interval by Airframe</SectionLabel>
+        <AirframeHoursTable rows={hoursRes.data ?? []} />
+      </div>
+
+      <div>
+        <SectionLabel>Maintenance Records</SectionLabel>
+        <MaintenanceTable rows={records} canManage={canManage} />
+      </div>
     </div>
   );
 }

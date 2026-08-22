@@ -21,6 +21,8 @@ export type NotificationKind =
   | "medical_expired"
   | "maintenance_due"
   | "maintenance_overdue"
+  | "maintenance_hours_due"
+  | "maintenance_hours_overdue"
   | "audit_upcoming"
   | "audit_overdue"
   | "finding_overdue";
@@ -62,6 +64,34 @@ export function crossedThreshold(days: number): number | null {
   return null;
 }
 
+/**
+ * Flight-hour thresholds for maintenance intervals, mirroring the day-based
+ * escalation. Deliberately generous at the top end: the scan runs weekly, and
+ * an airframe can put on a lot of hours between runs, so warning only at the
+ * last few hours would routinely be skipped past.
+ */
+export const HOURS_THRESHOLDS = [25, 10, 5] as const;
+
+/** The tightest hours threshold a remaining-hours figure has crossed. */
+export function crossedHoursThreshold(hoursRemaining: number): number | null {
+  for (const t of [...HOURS_THRESHOLDS].sort((a, b) => a - b)) {
+    if (hoursRemaining <= t) return t;
+  }
+  return null;
+}
+
+function severityForHours(hoursRemaining: number): Severity {
+  if (hoursRemaining <= 0) return "critical";
+  if (hoursRemaining <= 5) return "high";
+  if (hoursRemaining <= 10) return "medium";
+  return "low";
+}
+
+/** Rounds to one decimal so reminder text doesn't read "12.700000000000001 hours". */
+function round1(value: number): number {
+  return Math.round(value * 10) / 10;
+}
+
 function severityForDays(days: number): Severity {
   if (days < 0) return "critical";
   if (days <= 7) return "high";
@@ -91,6 +121,15 @@ export type MaintenanceRecord = {
   next_service_date: string | null;
   maintenance_type: string;
   drone_id: string | null;
+};
+
+/** A row of the uav_maintenance_status view. */
+export type AirframeHoursRecord = {
+  uav_id: string;
+  drone_id: string;
+  maintenance_interval_hours: number | null;
+  hours_since_service: number | null;
+  hours_until_service: number | null;
 };
 
 export type AuditRecord = {
@@ -253,6 +292,64 @@ export function scanMaintenance(
   return out;
 }
 
+/**
+ * Maintenance driven by the flight-hour interval rather than a calendar date.
+ *
+ * Airframes with no interval set are skipped: no interval means no hours-based
+ * schedule to be due against, which is different from being up to date.
+ *
+ * The dedupe key uses the threshold band rather than the exact hours figure,
+ * so a scan the following week at slightly different hours does not raise a
+ * duplicate reminder for the same band.
+ */
+export function scanMaintenanceHours(
+  airframes: AirframeHoursRecord[],
+): ReminderCandidate[] {
+  const out: ReminderCandidate[] = [];
+
+  for (const frame of airframes) {
+    const interval = frame.maintenance_interval_hours;
+    const remaining = frame.hours_until_service;
+    if (interval === null || remaining === null) continue;
+
+    const since = round1(frame.hours_since_service ?? 0);
+
+    if (remaining <= 0) {
+      out.push({
+        dedupe_key: `maintenance_hours_overdue:${frame.uav_id}:${interval}:0`,
+        kind: "maintenance_hours_overdue",
+        severity: "critical",
+        title: `${frame.drone_id} has passed its ${interval}-hour service interval`,
+        body: `It has flown ${since} hours since the last completed service. Ground it until the service is done.`,
+        entity_table: "uavs",
+        entity_id: frame.uav_id,
+        due_date: null,
+        target_roles: MAINTENANCE_ROLES,
+        target_profile_id: null,
+      });
+      continue;
+    }
+
+    const threshold = crossedHoursThreshold(remaining);
+    if (threshold === null) continue;
+
+    out.push({
+      dedupe_key: `maintenance_hours_due:${frame.uav_id}:${interval}:${threshold}`,
+      kind: "maintenance_hours_due",
+      severity: severityForHours(remaining),
+      title: `${frame.drone_id} is ${round1(remaining)} flight hours from its ${interval}-hour service`,
+      body: `It has flown ${since} hours since the last completed service. Book the service before it reaches the interval.`,
+      entity_table: "uavs",
+      entity_id: frame.uav_id,
+      due_date: null,
+      target_roles: MAINTENANCE_ROLES,
+      target_profile_id: null,
+    });
+  }
+
+  return out;
+}
+
 export function scanAudits(audits: AuditRecord[], now = new Date()): ReminderCandidate[] {
   const out: ReminderCandidate[] = [];
 
@@ -320,6 +417,7 @@ export function scanAll(
     pilots: PilotRecord[];
     certifications: CertificationRecord[];
     maintenance: MaintenanceRecord[];
+    airframeHours?: AirframeHoursRecord[];
     audits: AuditRecord[];
     findings: FindingRecord[];
   },
@@ -329,6 +427,7 @@ export function scanAll(
     ...scanMedicals(data.pilots, now),
     ...scanCertifications(data.certifications, now),
     ...scanMaintenance(data.maintenance, now),
+    ...scanMaintenanceHours(data.airframeHours ?? []),
     ...scanAudits(data.audits, now),
     ...scanFindings(data.findings, now),
   ];

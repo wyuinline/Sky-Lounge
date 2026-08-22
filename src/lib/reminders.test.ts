@@ -1,12 +1,15 @@
 import { describe, it, expect } from "vitest";
 import {
+  crossedHoursThreshold,
   crossedThreshold,
   scanAll,
   scanAudits,
   scanCertifications,
   scanFindings,
   scanMaintenance,
+  scanMaintenanceHours,
   scanMedicals,
+  type AirframeHoursRecord,
   type PilotRecord,
 } from "./reminders";
 import { isoDaysFromNow } from "./compliance";
@@ -156,6 +159,99 @@ describe("scanMaintenance", () => {
     const [r] = scanMaintenance([record()], NOW);
     expect(r.target_roles).toContain("maintenance_team");
     expect(r.target_roles).not.toContain("pilot");
+  });
+});
+
+describe("crossedHoursThreshold", () => {
+  it("returns the tightest hours band crossed", () => {
+    expect(crossedHoursThreshold(3)).toBe(5);
+    expect(crossedHoursThreshold(8)).toBe(10);
+    expect(crossedHoursThreshold(20)).toBe(25);
+  });
+
+  it("returns null when there is plenty of margin left", () => {
+    expect(crossedHoursThreshold(80)).toBeNull();
+  });
+
+  it("includes the boundary itself", () => {
+    expect(crossedHoursThreshold(25)).toBe(25);
+  });
+});
+
+describe("scanMaintenanceHours", () => {
+  const frame = (over: Partial<AirframeHoursRecord> = {}): AirframeHoursRecord => ({
+    uav_id: "u1",
+    drone_id: "ID-001",
+    maintenance_interval_hours: 200,
+    hours_since_service: 180,
+    hours_until_service: 20,
+    ...over,
+  });
+
+  it("skips airframes with no interval set — no schedule is not the same as up to date", () => {
+    expect(
+      scanMaintenanceHours([
+        frame({ maintenance_interval_hours: null, hours_until_service: null }),
+      ]),
+    ).toHaveLength(0);
+  });
+
+  it("says nothing when there is plenty of margin", () => {
+    expect(scanMaintenanceHours([frame({ hours_since_service: 20, hours_until_service: 180 })])).toHaveLength(0);
+  });
+
+  it("warns as the interval approaches", () => {
+    const [r] = scanMaintenanceHours([frame()]);
+    expect(r.kind).toBe("maintenance_hours_due");
+    expect(r.title).toContain("ID-001");
+    expect(r.title).toContain("200-hour service");
+  });
+
+  it("escalates severity as hours run down", () => {
+    expect(scanMaintenanceHours([frame({ hours_until_service: 20 })])[0].severity).toBe("low");
+    expect(scanMaintenanceHours([frame({ hours_until_service: 8 })])[0].severity).toBe("medium");
+    expect(scanMaintenanceHours([frame({ hours_until_service: 3 })])[0].severity).toBe("high");
+  });
+
+  it("treats reaching the interval exactly as overdue, not merely due", () => {
+    const [r] = scanMaintenanceHours([
+      frame({ hours_since_service: 200, hours_until_service: 0 }),
+    ]);
+    expect(r.kind).toBe("maintenance_hours_overdue");
+    expect(r.severity).toBe("critical");
+  });
+
+  it("flags an airframe flown past its interval", () => {
+    const [r] = scanMaintenanceHours([
+      frame({ hours_since_service: 214, hours_until_service: -14 }),
+    ]);
+    expect(r.kind).toBe("maintenance_hours_overdue");
+    expect(r.body).toContain("214");
+  });
+
+  it("rounds fractional hours so the text stays readable", () => {
+    const [r] = scanMaintenanceHours([
+      frame({ hours_since_service: 187.66666, hours_until_service: 12.33333 }),
+    ]);
+    expect(r.title).toContain("12.3");
+    expect(r.body).toContain("187.7");
+  });
+
+  it("keeps the dedupe key stable within a band as hours tick up", () => {
+    const a = scanMaintenanceHours([frame({ hours_until_service: 9 })])[0];
+    const b = scanMaintenanceHours([frame({ hours_until_service: 7 })])[0];
+    expect(a.dedupe_key).toBe(b.dedupe_key);
+  });
+
+  it("issues a new key once a tighter band is crossed", () => {
+    const at20 = scanMaintenanceHours([frame({ hours_until_service: 20 })])[0];
+    const at4 = scanMaintenanceHours([frame({ hours_until_service: 4 })])[0];
+    expect(at20.dedupe_key).not.toBe(at4.dedupe_key);
+  });
+
+  it("routes to the maintenance team", () => {
+    const [r] = scanMaintenanceHours([frame()]);
+    expect(r.target_roles).toContain("maintenance_team");
   });
 });
 
