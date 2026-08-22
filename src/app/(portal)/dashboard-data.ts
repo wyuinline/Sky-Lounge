@@ -198,7 +198,7 @@ export async function getDashboardData(): Promise<DashboardData> {
     ready: true,
     status: "ok",
     fleetTotal: fleet.length,
-    fleetActive: fleet.filter((u) => u.status === "active").length,
+    fleetActive: fleet.filter((u) => u.status === "airworthy").length,
     fleetMaintenance: fleet.filter((u) => u.status === "maintenance").length,
     fleetGrounded: fleet.filter((u) => u.status === "grounded").length,
     activePilots: pilotsCount.count ?? 0,

@@ -42,7 +42,7 @@ export default async function AnalyticsPage() {
         10,
     ) / 10;
 
-  const fleetUtilization = uavs.length > 0 ? Math.round((uavs.filter((u) => u.status === "active").length / uavs.length) * 100) : null;
+  const fleetUtilization = uavs.length > 0 ? Math.round((uavs.filter((u) => u.status === "airworthy").length / uavs.length) * 100) : null;
   const pilotCompliance =
     pilots.length > 0 ? Math.round((pilots.filter((p) => p.currency_status === "current").length / pilots.length) * 100) : null;
   const incidentRate = flightLogs.length > 0 ? Math.round((incidents.length / flightLogs.length) * 100 * 10) / 10 : null;
@@ -75,7 +75,7 @@ export default async function AnalyticsPage() {
   }));
 
   const fleetStatusData: CategoryDatum[] = [
-    { name: "Active", value: uavs.filter((u) => u.status === "active").length, color: statusColor.good },
+    { name: "Airworthy", value: uavs.filter((u) => u.status === "airworthy").length, color: statusColor.good },
     { name: "Maintenance", value: uavs.filter((u) => u.status === "maintenance").length, color: statusColor.warning },
     { name: "Grounded", value: uavs.filter((u) => u.status === "grounded").length, color: statusColor.critical },
   ];

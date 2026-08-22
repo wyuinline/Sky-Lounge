@@ -206,6 +206,13 @@ export type Database = {
             foreignKeyName: "flight_logs_uav_id_fkey"
             columns: ["uav_id"]
             isOneToOne: false
+            referencedRelation: "uav_maintenance_status"
+            referencedColumns: ["uav_id"]
+          },
+          {
+            foreignKeyName: "flight_logs_uav_id_fkey"
+            columns: ["uav_id"]
+            isOneToOne: false
             referencedRelation: "uavs"
             referencedColumns: ["id"]
           },
@@ -262,6 +269,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "pilots"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "flight_requests_uav_id_fkey"
+            columns: ["uav_id"]
+            isOneToOne: false
+            referencedRelation: "uav_maintenance_status"
+            referencedColumns: ["uav_id"]
           },
           {
             foreignKeyName: "flight_requests_uav_id_fkey"
@@ -331,6 +345,13 @@ export type Database = {
             foreignKeyName: "incidents_uav_id_fkey"
             columns: ["uav_id"]
             isOneToOne: false
+            referencedRelation: "uav_maintenance_status"
+            referencedColumns: ["uav_id"]
+          },
+          {
+            foreignKeyName: "incidents_uav_id_fkey"
+            columns: ["uav_id"]
+            isOneToOne: false
             referencedRelation: "uavs"
             referencedColumns: ["id"]
           },
@@ -340,6 +361,7 @@ export type Database = {
         Row: {
           completed_date: string | null
           created_at: string
+          flight_hours_at_service: number | null
           id: string
           maintenance_type: Database["public"]["Enums"]["maintenance_type"]
           next_service_date: string | null
@@ -351,6 +373,7 @@ export type Database = {
         Insert: {
           completed_date?: string | null
           created_at?: string
+          flight_hours_at_service?: number | null
           id?: string
           maintenance_type: Database["public"]["Enums"]["maintenance_type"]
           next_service_date?: string | null
@@ -362,6 +385,7 @@ export type Database = {
         Update: {
           completed_date?: string | null
           created_at?: string
+          flight_hours_at_service?: number | null
           id?: string
           maintenance_type?: Database["public"]["Enums"]["maintenance_type"]
           next_service_date?: string | null
@@ -377,6 +401,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "maintenance_records_uav_id_fkey"
+            columns: ["uav_id"]
+            isOneToOne: false
+            referencedRelation: "uav_maintenance_status"
+            referencedColumns: ["uav_id"]
           },
           {
             foreignKeyName: "maintenance_records_uav_id_fkey"
@@ -603,11 +634,18 @@ export type Database = {
           firmware_version: string | null
           flight_hours: number
           id: string
+          location_site: string | null
+          maintenance_interval_hours: number | null
           manufacturer: string | null
           model: string
           next_inspection_date: string | null
+          notes: string | null
+          purchased_date: string | null
+          registration_number: string | null
+          serial_number: string | null
           status: Database["public"]["Enums"]["uav_status"]
           updated_at: string
+          weight_kg: number | null
         }
         Insert: {
           assigned_pilot_id?: string | null
@@ -617,11 +655,18 @@ export type Database = {
           firmware_version?: string | null
           flight_hours?: number
           id?: string
+          location_site?: string | null
+          maintenance_interval_hours?: number | null
           manufacturer?: string | null
           model: string
           next_inspection_date?: string | null
+          notes?: string | null
+          purchased_date?: string | null
+          registration_number?: string | null
+          serial_number?: string | null
           status?: Database["public"]["Enums"]["uav_status"]
           updated_at?: string
+          weight_kg?: number | null
         }
         Update: {
           assigned_pilot_id?: string | null
@@ -631,11 +676,18 @@ export type Database = {
           firmware_version?: string | null
           flight_hours?: number
           id?: string
+          location_site?: string | null
+          maintenance_interval_hours?: number | null
           manufacturer?: string | null
           model?: string
           next_inspection_date?: string | null
+          notes?: string | null
+          purchased_date?: string | null
+          registration_number?: string | null
+          serial_number?: string | null
           status?: Database["public"]["Enums"]["uav_status"]
           updated_at?: string
+          weight_kg?: number | null
         }
         Relationships: [
           {
@@ -649,7 +701,19 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      uav_maintenance_status: {
+        Row: {
+          drone_id: string | null
+          flight_hours: number | null
+          flight_hours_at_service: number | null
+          hours_since_service: number | null
+          hours_until_service: number | null
+          last_maintenance_date: string | null
+          maintenance_interval_hours: number | null
+          uav_id: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       current_user_role: {
@@ -710,7 +774,7 @@ export type Database = {
         | "finding_overdue"
       risk_level: "low" | "medium" | "high" | "critical"
       severity_level: "low" | "medium" | "high" | "critical"
-      uav_status: "active" | "maintenance" | "grounded"
+      uav_status: "airworthy" | "maintenance" | "grounded"
       user_role:
         | "uav_admin"
         | "ops_manager"
@@ -898,7 +962,7 @@ export const Constants = {
       ],
       risk_level: ["low", "medium", "high", "critical"],
       severity_level: ["low", "medium", "high", "critical"],
-      uav_status: ["active", "maintenance", "grounded"],
+      uav_status: ["airworthy", "maintenance", "grounded"],
       user_role: [
         "uav_admin",
         "ops_manager",
