@@ -45,7 +45,7 @@ export async function GET(request: NextRequest) {
   const now = new Date();
 
   const [pilotsRes, certsRes, maintenanceRes, airframeHoursRes, auditsRes, findingsRes] = await Promise.all([
-    supabase.from("pilots").select("id, full_name, medical_expiry, profile_id"),
+    supabase.from("pilots").select("id, full_name, certificate_expires, last_recency_activity, profile_id"),
     supabase
       .from("training_records")
       .select("id, certification_name, expiry_date, pilot_id, pilots(full_name, profile_id)"),

@@ -1,4 +1,5 @@
 import {
+  recencyDue,
   daysUntil,
   isAuditOverdue,
   isFindingOverdue,
@@ -17,8 +18,10 @@ import {
 export type NotificationKind =
   | "certification_expiring"
   | "certification_expired"
-  | "medical_expiring"
-  | "medical_expired"
+  | "pilot_certificate_expiring"
+  | "pilot_certificate_expired"
+  | "recency_due"
+  | "recency_overdue"
   | "maintenance_due"
   | "maintenance_overdue"
   | "maintenance_hours_due"
@@ -102,7 +105,8 @@ function severityForDays(days: number): Severity {
 export type PilotRecord = {
   id: string;
   full_name: string;
-  medical_expiry: string | null;
+  certificate_expires: string | null;
+  last_recency_activity: string | null;
   profile_id: string | null;
 };
 
@@ -152,41 +156,86 @@ const COMPLIANCE_ROLES: UserRole[] = ["uav_admin", "ops_manager"];
 const MAINTENANCE_ROLES: UserRole[] = ["uav_admin", "maintenance_team"];
 const AUDIT_ROLES: UserRole[] = ["uav_admin", "ops_manager", "auditor"];
 
-export function scanMedicals(pilots: PilotRecord[], now = new Date()): ReminderCandidate[] {
+/**
+ * RPAS pilot credentials: the Transport Canada pilot certificate and the
+ * 24-month recency activity. Both must be current for a pilot to fly, so each
+ * is reported separately — a valid certificate does not excuse lapsed recency.
+ */
+export function scanPilotCredentials(
+  pilots: PilotRecord[],
+  now = new Date(),
+): ReminderCandidate[] {
   const out: ReminderCandidate[] = [];
 
   for (const pilot of pilots) {
-    const days = daysUntil(pilot.medical_expiry, now);
-    if (days === null) continue;
+    // --- Pilot certificate ---
+    const certDays = daysUntil(pilot.certificate_expires, now);
+    if (certDays !== null) {
+      if (certDays < 0) {
+        out.push({
+          dedupe_key: `pilot_certificate_expired:${pilot.id}:${pilot.certificate_expires}:0`,
+          kind: "pilot_certificate_expired",
+          severity: "critical",
+          title: `${pilot.full_name}'s RPAS certificate has expired`,
+          body: `It expired on ${pilot.certificate_expires}. The pilot is not permitted to fly until it is renewed.`,
+          entity_table: "pilots",
+          entity_id: pilot.id,
+          due_date: pilot.certificate_expires,
+          target_roles: COMPLIANCE_ROLES,
+          target_profile_id: pilot.profile_id,
+        });
+      } else {
+        const threshold = crossedThreshold(certDays);
+        if (threshold !== null) {
+          out.push({
+            dedupe_key: `pilot_certificate_expiring:${pilot.id}:${pilot.certificate_expires}:${threshold}`,
+            kind: "pilot_certificate_expiring",
+            severity: severityForDays(certDays),
+            title: `${pilot.full_name}'s RPAS certificate expires in ${certDays} day${certDays === 1 ? "" : "s"}`,
+            body: `It expires on ${pilot.certificate_expires}. Start the renewal.`,
+            entity_table: "pilots",
+            entity_id: pilot.id,
+            due_date: pilot.certificate_expires,
+            target_roles: COMPLIANCE_ROLES,
+            target_profile_id: pilot.profile_id,
+          });
+        }
+      }
+    }
 
-    if (days < 0) {
+    // --- Recency activity ---
+    const due = recencyDue(pilot.last_recency_activity);
+    const recencyDays = daysUntil(due, now);
+    if (recencyDays === null) continue;
+
+    if (recencyDays < 0) {
       out.push({
-        dedupe_key: `medical_expired:${pilot.id}:${pilot.medical_expiry}:0`,
-        kind: "medical_expired",
+        dedupe_key: `recency_overdue:${pilot.id}:${due}:0`,
+        kind: "recency_overdue",
         severity: "critical",
-        title: `${pilot.full_name}'s medical certificate has expired`,
-        body: `It expired on ${pilot.medical_expiry}. The pilot is not cleared to fly until it is renewed.`,
+        title: `${pilot.full_name} is out of recency`,
+        body: `Recency was due on ${due}. A recency activity is required every 24 months before the pilot may fly again.`,
         entity_table: "pilots",
         entity_id: pilot.id,
-        due_date: pilot.medical_expiry,
+        due_date: due,
         target_roles: COMPLIANCE_ROLES,
         target_profile_id: pilot.profile_id,
       });
       continue;
     }
 
-    const threshold = crossedThreshold(days);
+    const threshold = crossedThreshold(recencyDays);
     if (threshold === null) continue;
 
     out.push({
-      dedupe_key: `medical_expiring:${pilot.id}:${pilot.medical_expiry}:${threshold}`,
-      kind: "medical_expiring",
-      severity: severityForDays(days),
-      title: `${pilot.full_name}'s medical certificate expires in ${days} day${days === 1 ? "" : "s"}`,
-      body: `It expires on ${pilot.medical_expiry}. Book the renewal to keep the pilot current.`,
+      dedupe_key: `recency_due:${pilot.id}:${due}:${threshold}`,
+      kind: "recency_due",
+      severity: severityForDays(recencyDays),
+      title: `${pilot.full_name}'s recency is due in ${recencyDays} day${recencyDays === 1 ? "" : "s"}`,
+      body: `Recency falls due on ${due}. Book a recency activity to keep the pilot current.`,
       entity_table: "pilots",
       entity_id: pilot.id,
-      due_date: pilot.medical_expiry,
+      due_date: due,
       target_roles: COMPLIANCE_ROLES,
       target_profile_id: pilot.profile_id,
     });
@@ -424,7 +473,7 @@ export function scanAll(
   now = new Date(),
 ): ReminderCandidate[] {
   return [
-    ...scanMedicals(data.pilots, now),
+    ...scanPilotCredentials(data.pilots, now),
     ...scanCertifications(data.certifications, now),
     ...scanMaintenance(data.maintenance, now),
     ...scanMaintenanceHours(data.airframeHours ?? []),

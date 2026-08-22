@@ -2,7 +2,9 @@ import { describe, it, expect } from "vitest";
 import {
   daysUntil,
   deriveExpiryStatus,
+  derivePilotCertificateStatus,
   derivePilotCurrency,
+  recencyDue,
   isAuditOverdue,
   isFindingOverdue,
   isMaintenanceOverdue,
@@ -128,6 +130,53 @@ describe("isAuditOverdue", () => {
 
   it("is not overdue once completed", () => {
     expect(isAuditOverdue({ status: "completed", audit_date: "2026-06-01" }, NOW)).toBe(false);
+  });
+});
+
+describe("recencyDue", () => {
+  it("returns null when no activity has been recorded", () => {
+    expect(recencyDue(null)).toBeNull();
+  });
+
+  it("adds 24 months, matching the operational sheet", () => {
+    // The sheet shows 2026-08-11 -> 2028-08-11.
+    expect(recencyDue("2026-08-11")).toBe("2028-08-11");
+  });
+
+  it("clamps month overflow toward the earlier date", () => {
+    // 31 Aug + 24 months is still 31 Aug; check a genuine overflow case.
+    expect(recencyDue("2026-08-31", 6)).toBe("2027-02-28");
+  });
+
+  it("returns null for an unparseable date", () => {
+    expect(recencyDue("nonsense")).toBeNull();
+  });
+});
+
+describe("derivePilotCertificateStatus", () => {
+  it("returns null when nothing is on file, rather than implying compliance", () => {
+    expect(derivePilotCertificateStatus(null, null, NOW)).toBeNull();
+  });
+
+  it("is current when both the certificate and recency are comfortably valid", () => {
+    expect(derivePilotCertificateStatus("2028-08-11", "2026-06-01", NOW)).toBe("current");
+  });
+
+  it("is expired when the certificate has lapsed", () => {
+    expect(derivePilotCertificateStatus("2026-01-01", "2026-06-01", NOW)).toBe("expired");
+  });
+
+  it("is expired when recency has lapsed even though the certificate is valid", () => {
+    // Last activity in 2023 means recency fell due in 2025.
+    expect(derivePilotCertificateStatus("2030-01-01", "2023-01-01", NOW)).toBe("expired");
+  });
+
+  it("reports the worst of the two", () => {
+    expect(derivePilotCertificateStatus("2026-07-01", "2023-01-01", NOW)).toBe("expired");
+  });
+
+  it("works from recency alone when no certificate expiry is recorded", () => {
+    expect(derivePilotCertificateStatus(null, "2023-01-01", NOW)).toBe("expired");
   });
 });
 

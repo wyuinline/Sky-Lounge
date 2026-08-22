@@ -8,7 +8,7 @@ import {
   scanFindings,
   scanMaintenance,
   scanMaintenanceHours,
-  scanMedicals,
+  scanPilotCredentials,
   type AirframeHoursRecord,
   type PilotRecord,
 } from "./reminders";
@@ -20,7 +20,8 @@ const inDays = (n: number) => isoDaysFromNow(n, NOW);
 const pilot = (over: Partial<PilotRecord> = {}): PilotRecord => ({
   id: "p1",
   full_name: "Jordan Reyes",
-  medical_expiry: null,
+  certificate_expires: null,
+  last_recency_activity: null,
   profile_id: "prof-1",
   ...over,
 });
@@ -43,57 +44,109 @@ describe("crossedThreshold", () => {
   });
 });
 
-describe("scanMedicals", () => {
-  it("ignores a pilot with no recorded medical", () => {
-    expect(scanMedicals([pilot()], NOW)).toHaveLength(0);
+describe("scanPilotCredentials — certificate", () => {
+  it("ignores a pilot with nothing on file", () => {
+    expect(scanPilotCredentials([pilot()], NOW)).toHaveLength(0);
   });
 
-  it("ignores a medical well beyond the warning window", () => {
-    expect(scanMedicals([pilot({ medical_expiry: inDays(200) })], NOW)).toHaveLength(0);
+  it("ignores a certificate well beyond the warning window", () => {
+    expect(scanPilotCredentials([pilot({ certificate_expires: inDays(200) })], NOW)).toHaveLength(0);
   });
 
   it("raises a critical reminder once expired", () => {
-    const [r] = scanMedicals([pilot({ medical_expiry: inDays(-3) })], NOW);
-    expect(r.kind).toBe("medical_expired");
+    const [r] = scanPilotCredentials([pilot({ certificate_expires: inDays(-3) })], NOW);
+    expect(r.kind).toBe("pilot_certificate_expired");
     expect(r.severity).toBe("critical");
   });
 
   it("escalates severity as the date approaches", () => {
-    const far = scanMedicals([pilot({ medical_expiry: inDays(45) })], NOW)[0];
-    const near = scanMedicals([pilot({ medical_expiry: inDays(3) })], NOW)[0];
+    const far = scanPilotCredentials([pilot({ certificate_expires: inDays(45) })], NOW)[0];
+    const near = scanPilotCredentials([pilot({ certificate_expires: inDays(3) })], NOW)[0];
     expect(far.severity).toBe("low");
     expect(near.severity).toBe("high");
   });
 
   it("targets the affected pilot as well as the compliance roles", () => {
-    const [r] = scanMedicals([pilot({ medical_expiry: inDays(10) })], NOW);
+    const [r] = scanPilotCredentials([pilot({ certificate_expires: inDays(10) })], NOW);
     expect(r.target_profile_id).toBe("prof-1");
     expect(r.target_roles).toContain("ops_manager");
   });
 
   it("still reminds compliance when the pilot has no linked account", () => {
-    const [r] = scanMedicals([pilot({ medical_expiry: inDays(10), profile_id: null })], NOW);
+    const [r] = scanPilotCredentials([pilot({ certificate_expires: inDays(10), profile_id: null })], NOW);
     expect(r.target_profile_id).toBeNull();
     expect(r.target_roles.length).toBeGreaterThan(0);
   });
 
   it("produces a stable dedupe key so repeat runs do not duplicate", () => {
-    const a = scanMedicals([pilot({ medical_expiry: inDays(10) })], NOW)[0];
-    const b = scanMedicals([pilot({ medical_expiry: inDays(10) })], NOW)[0];
+    const a = scanPilotCredentials([pilot({ certificate_expires: inDays(10) })], NOW)[0];
+    const b = scanPilotCredentials([pilot({ certificate_expires: inDays(10) })], NOW)[0];
     expect(a.dedupe_key).toBe(b.dedupe_key);
   });
 
   it("produces a new key once a tighter threshold is crossed", () => {
-    const at45 = scanMedicals([pilot({ medical_expiry: inDays(45) })], NOW)[0];
-    const at10 = scanMedicals([pilot({ medical_expiry: inDays(10) })], NOW)[0];
+    const at45 = scanPilotCredentials([pilot({ certificate_expires: inDays(45) })], NOW)[0];
+    const at10 = scanPilotCredentials([pilot({ certificate_expires: inDays(10) })], NOW)[0];
     expect(at45.dedupe_key).not.toBe(at10.dedupe_key);
   });
 
   it("produces a new key after renewal, so the fresh expiry is tracked", () => {
-    const before = scanMedicals([pilot({ medical_expiry: inDays(5) })], NOW)[0];
-    const renewed = scanMedicals([pilot({ medical_expiry: inDays(400) })], NOW);
+    const before = scanPilotCredentials([pilot({ certificate_expires: inDays(5) })], NOW)[0];
+    const renewed = scanPilotCredentials([pilot({ certificate_expires: inDays(400) })], NOW);
     expect(renewed).toHaveLength(0);
     expect(before.dedupe_key).toContain(inDays(5));
+  });
+});
+
+describe("scanPilotCredentials — recency", () => {
+  // Recency falls due 24 months after the activity.
+  const recencyOn = (dueInDays: number) => isoDaysFromNow(dueInDays - 730, NOW);
+
+  it("says nothing when no recency activity is recorded", () => {
+    expect(scanPilotCredentials([pilot({ last_recency_activity: null })], NOW)).toHaveLength(0);
+  });
+
+  it("flags a pilot who is out of recency as critical", () => {
+    const [r] = scanPilotCredentials(
+      [pilot({ last_recency_activity: "2023-01-01" })],
+      NOW,
+    );
+    expect(r.kind).toBe("recency_overdue");
+    expect(r.severity).toBe("critical");
+    expect(r.title).toContain("out of recency");
+  });
+
+  it("warns before recency falls due", () => {
+    const [r] = scanPilotCredentials(
+      [pilot({ last_recency_activity: recencyOn(20) })],
+      NOW,
+    );
+    expect(r.kind).toBe("recency_due");
+  });
+
+  it("reports certificate and recency separately — one valid does not excuse the other", () => {
+    const results = scanPilotCredentials(
+      [
+        pilot({
+          certificate_expires: inDays(10), // expiring
+          last_recency_activity: "2023-01-01", // already lapsed
+        }),
+      ],
+      NOW,
+    );
+    expect(results).toHaveLength(2);
+    expect(results.map((r) => r.kind).sort()).toEqual([
+      "pilot_certificate_expiring",
+      "recency_overdue",
+    ]);
+  });
+
+  it("keeps certificate and recency dedupe keys distinct", () => {
+    const results = scanPilotCredentials(
+      [pilot({ certificate_expires: inDays(-1), last_recency_activity: "2023-01-01" })],
+      NOW,
+    );
+    expect(new Set(results.map((r) => r.dedupe_key)).size).toBe(results.length);
   });
 });
 
@@ -327,7 +380,7 @@ describe("scanAll", () => {
     expect(
       scanAll(
         {
-          pilots: [pilot({ medical_expiry: inDays(300) })],
+          pilots: [pilot({ certificate_expires: inDays(300) })],
           certifications: [],
           maintenance: [],
           audits: [],
@@ -341,7 +394,7 @@ describe("scanAll", () => {
   it("emits unique dedupe keys across every category", () => {
     const results = scanAll(
       {
-        pilots: [pilot({ medical_expiry: inDays(-1) })],
+        pilots: [pilot({ certificate_expires: inDays(-1) })],
         certifications: [
           {
             id: "c1",

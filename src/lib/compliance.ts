@@ -116,6 +116,63 @@ export function derivePilotCurrency(
   return "current";
 }
 
+/**
+ * Transport Canada requires an RPAS pilot to complete a recency activity every
+ * 24 months. The due date follows from the last activity, so it is derived
+ * rather than stored.
+ */
+export const RECENCY_MONTHS = 24;
+
+/** Recency due date, or null when no activity has been recorded. */
+export function recencyDue(
+  lastActivity: string | null,
+  months: number = RECENCY_MONTHS,
+): string | null {
+  if (!lastActivity) return null;
+  const start = new Date(`${lastActivity.slice(0, 10)}T00:00:00`);
+  if (Number.isNaN(start.getTime())) return null;
+
+  // Date.setMonth overflows rather than clamping: 31 Aug + 6 months becomes
+  // "Feb 31" and rolls forward into March, pushing a compliance deadline later
+  // than it should be. Clamp to the last valid day of the target month instead.
+  const targetMonthStart = new Date(start.getFullYear(), start.getMonth() + months, 1);
+  const lastDayOfTargetMonth = new Date(
+    targetMonthStart.getFullYear(),
+    targetMonthStart.getMonth() + 1,
+    0,
+  ).getDate();
+  targetMonthStart.setDate(Math.min(start.getDate(), lastDayOfTargetMonth));
+  return todayIso(targetMonthStart);
+}
+
+/**
+ * Overall credential state for a pilot: the worst of certificate expiry and
+ * recency. Returns null when neither is on file, which the UI shows as
+ * "no expiry on file" rather than implying the pilot is compliant.
+ */
+export function derivePilotCertificateStatus(
+  certificateExpires: string | null,
+  lastRecencyActivity: string | null,
+  now: Date = new Date(),
+): ExpiryStatus | null {
+  const due = recencyDue(lastRecencyActivity);
+  if (!certificateExpires && !due) return null;
+
+  const statuses: ExpiryStatus[] = [];
+  if (certificateExpires) statuses.push(deriveExpiryStatus(certificateExpires, now));
+  if (due) statuses.push(deriveExpiryStatus(due, now));
+
+  if (statuses.includes("expired")) return "expired";
+  if (statuses.includes("due_soon")) return "due_soon";
+  return "current";
+}
+
+export const certificateTypeLabel: Record<string, string> = {
+  basic_operations: "Basic Operations",
+  advanced_operations: "Advanced Operations",
+  level_1_complex: "Level 1 Complex",
+};
+
 export const expiryStatusLabel: Record<ExpiryStatus, string> = {
   current: "Current",
   due_soon: "Due Soon",

@@ -6,7 +6,8 @@ export type DocumentCategory =
   | "regulatory"
   | "incident_report"
   | "training_material"
-  | "safety_document";
+  | "safety_document"
+  | "roc_a";
 
 export const documentCategories: { value: DocumentCategory; label: string; bucketId: string }[] = [
   { value: "sop", label: "SOPs", bucketId: "sops" },
@@ -17,6 +18,9 @@ export const documentCategories: { value: DocumentCategory; label: string; bucke
   { value: "incident_report", label: "Incident Reports", bucketId: "incident-reports" },
   { value: "training_material", label: "Training Materials", bucketId: "training-materials" },
   { value: "safety_document", label: "Safety Documents", bucketId: "safety-documents" },
+  // Uploaded from a pilot's row rather than the general document library, so
+  // that each certificate is linked to the pilot it belongs to.
+  { value: "roc_a", label: "ROC-A Certificates", bucketId: "roc-a-certificates" },
 ];
 
 export function bucketForCategory(category: DocumentCategory): string {

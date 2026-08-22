@@ -113,6 +113,7 @@ export type Database = {
           created_at: string
           department: string | null
           id: string
+          pilot_id: string | null
           storage_path: string
           title: string
           uav_model: string | null
@@ -125,6 +126,7 @@ export type Database = {
           created_at?: string
           department?: string | null
           id?: string
+          pilot_id?: string | null
           storage_path: string
           title: string
           uav_model?: string | null
@@ -137,6 +139,7 @@ export type Database = {
           created_at?: string
           department?: string | null
           id?: string
+          pilot_id?: string | null
           storage_path?: string
           title?: string
           uav_model?: string | null
@@ -144,6 +147,20 @@ export type Database = {
           version?: number
         }
         Relationships: [
+          {
+            foreignKeyName: "documents_pilot_id_fkey"
+            columns: ["pilot_id"]
+            isOneToOne: false
+            referencedRelation: "pilot_certificate_status"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documents_pilot_id_fkey"
+            columns: ["pilot_id"]
+            isOneToOne: false
+            referencedRelation: "pilots"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "documents_uploaded_by_fkey"
             columns: ["uploaded_by"]
@@ -193,6 +210,13 @@ export type Database = {
             columns: ["flight_request_id"]
             isOneToOne: false
             referencedRelation: "flight_requests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "flight_logs_pilot_id_fkey"
+            columns: ["pilot_id"]
+            isOneToOne: false
+            referencedRelation: "pilot_certificate_status"
             referencedColumns: ["id"]
           },
           {
@@ -267,6 +291,13 @@ export type Database = {
             foreignKeyName: "flight_requests_pilot_id_fkey"
             columns: ["pilot_id"]
             isOneToOne: false
+            referencedRelation: "pilot_certificate_status"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "flight_requests_pilot_id_fkey"
+            columns: ["pilot_id"]
+            isOneToOne: false
             referencedRelation: "pilots"
             referencedColumns: ["id"]
           },
@@ -327,6 +358,13 @@ export type Database = {
           uav_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "incidents_pilot_id_fkey"
+            columns: ["pilot_id"]
+            isOneToOne: false
+            referencedRelation: "pilot_certificate_status"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "incidents_pilot_id_fkey"
             columns: ["pilot_id"]
@@ -509,36 +547,48 @@ export type Database = {
       }
       pilots: {
         Row: {
+          certificate_expires: string | null
+          certificate_issued: string | null
+          certificate_number: string | null
+          certificate_type:
+            | Database["public"]["Enums"]["rpas_certificate_type"]
+            | null
           created_at: string
-          currency_status: Database["public"]["Enums"]["currency_status"]
-          employee_id: string | null
           flight_hours: number
           full_name: string
           id: string
-          license_number: string | null
-          medical_expiry: string | null
+          last_recency_activity: string | null
+          notes: string | null
           profile_id: string | null
         }
         Insert: {
+          certificate_expires?: string | null
+          certificate_issued?: string | null
+          certificate_number?: string | null
+          certificate_type?:
+            | Database["public"]["Enums"]["rpas_certificate_type"]
+            | null
           created_at?: string
-          currency_status?: Database["public"]["Enums"]["currency_status"]
-          employee_id?: string | null
           flight_hours?: number
           full_name: string
           id?: string
-          license_number?: string | null
-          medical_expiry?: string | null
+          last_recency_activity?: string | null
+          notes?: string | null
           profile_id?: string | null
         }
         Update: {
+          certificate_expires?: string | null
+          certificate_issued?: string | null
+          certificate_number?: string | null
+          certificate_type?:
+            | Database["public"]["Enums"]["rpas_certificate_type"]
+            | null
           created_at?: string
-          currency_status?: Database["public"]["Enums"]["currency_status"]
-          employee_id?: string | null
           flight_hours?: number
           full_name?: string
           id?: string
-          license_number?: string | null
-          medical_expiry?: string | null
+          last_recency_activity?: string | null
+          notes?: string | null
           profile_id?: string | null
         }
         Relationships: [
@@ -616,6 +666,13 @@ export type Database = {
           status?: Database["public"]["Enums"]["currency_status"]
         }
         Relationships: [
+          {
+            foreignKeyName: "training_records_pilot_id_fkey"
+            columns: ["pilot_id"]
+            isOneToOne: false
+            referencedRelation: "pilot_certificate_status"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "training_records_pilot_id_fkey"
             columns: ["pilot_id"]
@@ -701,6 +758,65 @@ export type Database = {
       }
     }
     Views: {
+      pilot_certificate_status: {
+        Row: {
+          certificate_expires: string | null
+          certificate_issued: string | null
+          certificate_number: string | null
+          certificate_type:
+            | Database["public"]["Enums"]["rpas_certificate_type"]
+            | null
+          flight_hours: number | null
+          full_name: string | null
+          has_roc_a: boolean | null
+          id: string | null
+          last_recency_activity: string | null
+          notes: string | null
+          profile_id: string | null
+          recency_due: string | null
+        }
+        Insert: {
+          certificate_expires?: string | null
+          certificate_issued?: string | null
+          certificate_number?: string | null
+          certificate_type?:
+            | Database["public"]["Enums"]["rpas_certificate_type"]
+            | null
+          flight_hours?: number | null
+          full_name?: string | null
+          has_roc_a?: never
+          id?: string | null
+          last_recency_activity?: string | null
+          notes?: string | null
+          profile_id?: string | null
+          recency_due?: never
+        }
+        Update: {
+          certificate_expires?: string | null
+          certificate_issued?: string | null
+          certificate_number?: string | null
+          certificate_type?:
+            | Database["public"]["Enums"]["rpas_certificate_type"]
+            | null
+          flight_hours?: number | null
+          full_name?: string | null
+          has_roc_a?: never
+          id?: string | null
+          last_recency_activity?: string | null
+          notes?: string | null
+          profile_id?: string | null
+          recency_due?: never
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pilots_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       uav_maintenance_status: {
         Row: {
           drone_id: string | null
@@ -741,6 +857,7 @@ export type Database = {
         | "incident_report"
         | "training_material"
         | "safety_document"
+        | "roc_a"
       document_workflow_status:
         | "draft"
         | "pending_approval"
@@ -774,7 +891,15 @@ export type Database = {
         | "finding_overdue"
         | "maintenance_hours_due"
         | "maintenance_hours_overdue"
+        | "pilot_certificate_expiring"
+        | "pilot_certificate_expired"
+        | "recency_due"
+        | "recency_overdue"
       risk_level: "low" | "medium" | "high" | "critical"
+      rpas_certificate_type:
+        | "basic_operations"
+        | "advanced_operations"
+        | "level_1_complex"
       severity_level: "low" | "medium" | "high" | "critical"
       uav_status: "airworthy" | "maintenance" | "grounded"
       user_role:
@@ -926,6 +1051,7 @@ export const Constants = {
         "incident_report",
         "training_material",
         "safety_document",
+        "roc_a",
       ],
       document_workflow_status: [
         "draft",
@@ -963,8 +1089,17 @@ export const Constants = {
         "finding_overdue",
         "maintenance_hours_due",
         "maintenance_hours_overdue",
+        "pilot_certificate_expiring",
+        "pilot_certificate_expired",
+        "recency_due",
+        "recency_overdue",
       ],
       risk_level: ["low", "medium", "high", "critical"],
+      rpas_certificate_type: [
+        "basic_operations",
+        "advanced_operations",
+        "level_1_complex",
+      ],
       severity_level: ["low", "medium", "high", "critical"],
       uav_status: ["airworthy", "maintenance", "grounded"],
       user_role: [

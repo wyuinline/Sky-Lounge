@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CategoryBarChart, type CategoryDatum } from "@/components/portal/analytics/category-bar-chart";
 import { TrendChart, type TrendDatum } from "@/components/portal/analytics/trend-chart";
 import { createClient } from "@/lib/supabase/server";
+import { derivePilotCertificateStatus } from "@/lib/compliance";
 
 const monthLabels = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
@@ -18,7 +19,7 @@ export default async function AnalyticsPage() {
   const supabase = await createClient();
   const [uavsRes, pilotsRes, incidentsRes, auditsRes, maintenanceRes, flightLogsRes] = await Promise.all([
     supabase.from("uavs").select("status"),
-    supabase.from("pilots").select("currency_status"),
+    supabase.from("pilot_certificate_status").select("certificate_expires, last_recency_activity"),
     supabase.from("incidents").select("severity"),
     supabase.from("audits").select("compliance_status"),
     supabase.from("maintenance_records").select("maintenance_type, status, completed_date, next_service_date"),
@@ -44,7 +45,16 @@ export default async function AnalyticsPage() {
 
   const fleetUtilization = uavs.length > 0 ? Math.round((uavs.filter((u) => u.status === "airworthy").length / uavs.length) * 100) : null;
   const pilotCompliance =
-    pilots.length > 0 ? Math.round((pilots.filter((p) => p.currency_status === "current").length / pilots.length) * 100) : null;
+    pilots.length > 0
+      ? Math.round(
+          (pilots.filter(
+            (p) =>
+              derivePilotCertificateStatus(p.certificate_expires, p.last_recency_activity) === "current",
+          ).length /
+            pilots.length) *
+            100,
+        )
+      : null;
   const incidentRate = flightLogs.length > 0 ? Math.round((incidents.length / flightLogs.length) * 100 * 10) / 10 : null;
   const scoredAudits = audits.filter((a) => a.compliance_status !== null);
   const auditPassRate =
