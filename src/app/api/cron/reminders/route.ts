@@ -4,7 +4,7 @@ import { scanAll, type ReminderCandidate } from "@/lib/reminders";
 import { isEmailConfigured, sendReminderDigest } from "@/lib/email";
 
 /**
- * Daily compliance reminder job.
+ * Weekly compliance reminder job — Wednesdays, 07:00 UTC.
  *
  * Scans for expiring credentials, due and overdue maintenance, upcoming audits
  * and overdue corrective actions, records a notification for each, then emails
@@ -13,6 +13,10 @@ import { isEmailConfigured, sendReminderDigest } from "@/lib/email";
  * Scheduled from vercel.json. Vercel sets CRON_SECRET as a bearer token on the
  * request; without that check the route would be an open endpoint anyone could
  * hammer to send mail.
+ *
+ * The run is idempotent, so the cadence is a scheduling choice rather than a
+ * correctness one: running more often would surface newly-overdue items sooner
+ * without producing duplicate reminders.
  */
 
 export const dynamic = "force-dynamic";

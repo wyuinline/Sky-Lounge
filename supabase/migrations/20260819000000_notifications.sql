@@ -1,7 +1,7 @@
 -- ============================================================================
 -- Automated reminders (original plan, Section 10).
 --
--- A daily job scans for expiring credentials, due and overdue maintenance,
+-- A scheduled job scans for expiring credentials, due and overdue maintenance,
 -- upcoming audits and overdue findings, and records a notification for each.
 --
 -- The job is expected to run repeatedly over the same data, so every
@@ -25,7 +25,7 @@ create type notification_kind as enum (
 create table notifications (
   id uuid primary key default gen_random_uuid(),
 
-  -- Idempotency across daily runs. Format:
+  -- Idempotency across repeated runs. Format:
   --   <kind>:<entity_id>:<due_date>:<threshold_days>
   dedupe_key text not null unique,
 

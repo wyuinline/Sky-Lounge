@@ -50,7 +50,8 @@ export default async function NotificationsPage() {
             <p className="font-medium">Nothing needs your attention</p>
             <p className="max-w-sm text-sm text-muted-foreground">
               Reminders appear here when a certificate or medical is approaching expiry,
-              maintenance falls due, or an audit deadline is near. The check runs each morning.
+              maintenance falls due, or an audit deadline is near. The check runs every
+              Wednesday morning.
             </p>
           </CardContent>
         </Card>

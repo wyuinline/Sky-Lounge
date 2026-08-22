@@ -11,7 +11,7 @@ import {
  * These are pure functions: given the current records and a reference date,
  * they return the reminders that *should* exist. Nothing here touches the
  * database or sends anything, which keeps the rules unit-testable and keeps
- * the daily job free of business logic.
+ * the scheduled job free of business logic.
  */
 
 export type NotificationKind =
