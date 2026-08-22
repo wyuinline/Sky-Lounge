@@ -387,6 +387,95 @@ export type Database = {
           },
         ]
       }
+      notification_reads: {
+        Row: {
+          notification_id: string
+          profile_id: string
+          read_at: string
+        }
+        Insert: {
+          notification_id: string
+          profile_id: string
+          read_at?: string
+        }
+        Update: {
+          notification_id?: string
+          profile_id?: string
+          read_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notification_reads_notification_id_fkey"
+            columns: ["notification_id"]
+            isOneToOne: false
+            referencedRelation: "notifications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notification_reads_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notifications: {
+        Row: {
+          body: string | null
+          created_at: string
+          dedupe_key: string
+          due_date: string | null
+          emailed_at: string | null
+          entity_id: string | null
+          entity_table: string | null
+          id: string
+          kind: Database["public"]["Enums"]["notification_kind"]
+          severity: Database["public"]["Enums"]["severity_level"]
+          target_profile_id: string | null
+          target_roles: Database["public"]["Enums"]["user_role"][]
+          title: string
+        }
+        Insert: {
+          body?: string | null
+          created_at?: string
+          dedupe_key: string
+          due_date?: string | null
+          emailed_at?: string | null
+          entity_id?: string | null
+          entity_table?: string | null
+          id?: string
+          kind: Database["public"]["Enums"]["notification_kind"]
+          severity: Database["public"]["Enums"]["severity_level"]
+          target_profile_id?: string | null
+          target_roles?: Database["public"]["Enums"]["user_role"][]
+          title: string
+        }
+        Update: {
+          body?: string | null
+          created_at?: string
+          dedupe_key?: string
+          due_date?: string | null
+          emailed_at?: string | null
+          entity_id?: string | null
+          entity_table?: string | null
+          id?: string
+          kind?: Database["public"]["Enums"]["notification_kind"]
+          severity?: Database["public"]["Enums"]["severity_level"]
+          target_profile_id?: string | null
+          target_roles?: Database["public"]["Enums"]["user_role"][]
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_target_profile_id_fkey"
+            columns: ["target_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pilots: {
         Row: {
           created_at: string
@@ -609,6 +698,16 @@ export type Database = {
         | "battery"
         | "firmware"
       mission_outcome: "completed" | "aborted" | "partial"
+      notification_kind:
+        | "certification_expiring"
+        | "certification_expired"
+        | "medical_expiring"
+        | "medical_expired"
+        | "maintenance_due"
+        | "maintenance_overdue"
+        | "audit_upcoming"
+        | "audit_overdue"
+        | "finding_overdue"
       risk_level: "low" | "medium" | "high" | "critical"
       severity_level: "low" | "medium" | "high" | "critical"
       uav_status: "active" | "maintenance" | "grounded"
@@ -786,6 +885,17 @@ export const Constants = {
         "firmware",
       ],
       mission_outcome: ["completed", "aborted", "partial"],
+      notification_kind: [
+        "certification_expiring",
+        "certification_expired",
+        "medical_expiring",
+        "medical_expired",
+        "maintenance_due",
+        "maintenance_overdue",
+        "audit_upcoming",
+        "audit_overdue",
+        "finding_overdue",
+      ],
       risk_level: ["low", "medium", "high", "critical"],
       severity_level: ["low", "medium", "high", "critical"],
       uav_status: ["active", "maintenance", "grounded"],

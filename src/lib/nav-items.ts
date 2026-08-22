@@ -10,6 +10,7 @@ import {
   GraduationCap,
   FileText,
   BarChart3,
+  Bell,
 } from "lucide-react";
 
 export type NavItem = {
@@ -29,4 +30,5 @@ export const navItems: NavItem[] = [
   { title: "Training Portal", href: "/training", icon: GraduationCap },
   { title: "Documents", href: "/documents", icon: FileText },
   { title: "Analytics", href: "/analytics", icon: BarChart3 },
+  { title: "Notifications", href: "/notifications", icon: Bell },
 ];

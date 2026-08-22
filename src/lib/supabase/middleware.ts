@@ -33,6 +33,13 @@ export async function updateSession(request: NextRequest) {
 
   const { pathname } = request.nextUrl;
 
+  // API routes authenticate themselves — the scheduled reminders job carries a
+  // bearer secret, not a session cookie. Redirecting them to /login would turn
+  // every unauthenticated API call into a silent 307 to an HTML page.
+  if (pathname.startsWith("/api/")) {
+    return supabaseResponse;
+  }
+
   if (!user && pathname !== "/login") {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
