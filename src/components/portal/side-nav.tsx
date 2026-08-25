@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Plane, ChevronDown, LogOut, Menu, X } from "lucide-react";
+import { Plane, ChevronDown, LogOut, Menu, X, UserRound } from "lucide-react";
 import { navItems } from "@/lib/nav-items";
 import { roleLabels, type UserRole } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -13,7 +13,6 @@ import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
@@ -80,14 +79,25 @@ function UserMenu({
         <ChevronDown className="size-4 shrink-0 text-sidebar-foreground/60" />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" side="top" className="w-56">
-        <DropdownMenuLabel>
-          <div className="flex flex-col gap-1">
-            <span className="text-sm font-medium">{fullName || email}</span>
-            <Badge variant="secondary" className="w-fit text-xs">
-              {roleLabels[role]}
-            </Badge>
-          </div>
-        </DropdownMenuLabel>
+        {/*
+          A plain div, not DropdownMenuLabel. That maps to Base UI's
+          Menu.GroupLabel, which throws unless it sits inside a Menu.Group —
+          and this is a header for the menu, not a label for a group of items.
+        */}
+        <div className="flex flex-col gap-1 px-1.5 py-1">
+          <span className="truncate text-sm font-medium">{fullName || email}</span>
+          <Badge variant="secondary" className="w-fit text-xs">
+            {roleLabels[role]}
+          </Badge>
+        </div>
+        <DropdownMenuSeparator />
+        <Link
+          href="/profile"
+          className="flex w-full items-center gap-1.5 rounded-md px-1.5 py-1 text-sm hover:bg-accent hover:text-accent-foreground"
+        >
+          <UserRound className="size-4" />
+          Your profile
+        </Link>
         <DropdownMenuSeparator />
         {/*
           A form action rather than onClick. Wiring a Server Action straight to
