@@ -11,12 +11,19 @@ import {
   FileText,
   BarChart3,
   Bell,
+  ShieldCheck,
 } from "lucide-react";
 
 export type NavItem = {
   title: string;
   href: string;
   icon: LucideIcon;
+  /**
+   * Hidden from the sidebar for non-administrators. This is presentation only —
+   * the page itself redirects and RLS rejects the writes, so hiding the link is
+   * a convenience, never the access control.
+   */
+  adminOnly?: boolean;
 };
 
 export const navItems: NavItem[] = [
@@ -31,4 +38,5 @@ export const navItems: NavItem[] = [
   { title: "Documents", href: "/documents", icon: FileText },
   { title: "Analytics", href: "/analytics", icon: BarChart3 },
   { title: "Notifications", href: "/notifications", icon: Bell },
+  { title: "User Management", href: "/admin/users", icon: ShieldCheck, adminOnly: true },
 ];

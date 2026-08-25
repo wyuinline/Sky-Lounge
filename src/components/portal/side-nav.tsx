@@ -27,11 +27,12 @@ function initials(name: string) {
     .toUpperCase();
 }
 
-function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
+function NavLinks({ role, onNavigate }: { role: UserRole; onNavigate?: () => void }) {
   const pathname = usePathname();
+  const visible = navItems.filter((item) => !item.adminOnly || role === "uav_admin");
   return (
     <nav className="flex flex-1 flex-col gap-1 overflow-y-auto px-3 py-4">
-      {navItems.map((item) => {
+      {visible.map((item) => {
         const active = pathname === item.href;
         return (
           <Link
@@ -138,7 +139,7 @@ export function SideNav({
           <Plane className="size-5 shrink-0" />
           UAV Ops Portal
         </div>
-        <NavLinks />
+        <NavLinks role={role} />
         <div className="border-t border-sidebar-border p-3">
           <UserMenu fullName={fullName} email={email} role={role} />
         </div>
@@ -179,7 +180,7 @@ export function SideNav({
                 <X className="size-5" />
               </Button>
             </div>
-            <NavLinks onNavigate={() => setMobileOpen(false)} />
+            <NavLinks role={role} onNavigate={() => setMobileOpen(false)} />
             <div className="border-t border-sidebar-border p-3">
               <UserMenu fullName={fullName} email={email} role={role} />
             </div>
