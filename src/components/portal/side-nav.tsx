@@ -13,11 +13,11 @@ import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { signOut } from "@/app/(portal)/actions";
 
 function initials(name: string) {
   return name
@@ -60,12 +60,10 @@ function UserMenu({
   fullName,
   email,
   role,
-  onSignOut,
 }: {
   fullName: string;
   email: string;
   role: UserRole;
-  onSignOut: () => void;
 }) {
   return (
     <DropdownMenu>
@@ -91,10 +89,21 @@ function UserMenu({
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem variant="destructive" onClick={onSignOut}>
-          <LogOut className="size-4" />
-          Sign out
-        </DropdownMenuItem>
+        {/*
+          A form action rather than onClick. Wiring a Server Action straight to
+          onClick hands it React's synthetic MouseEvent as its first argument,
+          which cannot be serialised for the server call and throws in the
+          browser. A form also lets the action's redirect complete normally.
+        */}
+        <form action={signOut}>
+          <button
+            type="submit"
+            className="relative flex w-full cursor-default items-center gap-1.5 rounded-md px-1.5 py-1 text-sm text-destructive outline-hidden select-none hover:bg-destructive/10 focus-visible:bg-destructive/10"
+          >
+            <LogOut className="size-4" />
+            Sign out
+          </button>
+        </form>
       </DropdownMenuContent>
     </DropdownMenu>
   );
@@ -104,12 +113,10 @@ export function SideNav({
   fullName,
   email,
   role,
-  onSignOut,
 }: {
   fullName: string;
   email: string;
   role: UserRole;
-  onSignOut: () => void;
 }) {
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -123,7 +130,7 @@ export function SideNav({
         </div>
         <NavLinks />
         <div className="border-t border-sidebar-border p-3">
-          <UserMenu fullName={fullName} email={email} role={role} onSignOut={onSignOut} />
+          <UserMenu fullName={fullName} email={email} role={role} />
         </div>
       </aside>
 
@@ -164,7 +171,7 @@ export function SideNav({
             </div>
             <NavLinks onNavigate={() => setMobileOpen(false)} />
             <div className="border-t border-sidebar-border p-3">
-              <UserMenu fullName={fullName} email={email} role={role} onSignOut={onSignOut} />
+              <UserMenu fullName={fullName} email={email} role={role} />
             </div>
           </aside>
         </div>
