@@ -54,7 +54,7 @@ export async function GET(request: NextRequest) {
       .select("id, status, next_service_date, maintenance_type, uavs(drone_id)"),
     // Hours-since-service is derived by this view; the raw tables don't carry it.
     supabase
-      .from("uav_maintenance_status")
+      .from("uav_fleet_status")
       .select("uav_id, drone_id, maintenance_interval_hours, hours_since_service, hours_until_service"),
     supabase.from("audits").select("id, status, audit_date, audit_type"),
     supabase.from("audit_findings").select("id, status, due_date, description, severity, assigned_to"),
@@ -119,20 +119,33 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Could not record reminders." }, { status: 500 });
   }
 
-  // Only email reminders that are new in this run; anything already recorded
-  // was mailed on the day it first appeared.
   const newKeys = new Set((written ?? []).map((row) => row.dedupe_key));
-  const fresh = candidates.filter((c) => newKeys.has(c.dedupe_key));
+
+  // Email everything not yet successfully sent, not merely what was created in
+  // this run. Keying off "new this run" meant a failed send was never retried:
+  // the next run finds the row already present, so it would never be mailed.
+  const { data: unsent, error: unsentError } = await supabase
+    .from("notifications")
+    .select("dedupe_key")
+    .is("emailed_at", null);
+
+  if (unsentError) {
+    console.error("[reminders] could not determine unsent reminders", unsentError);
+  }
+
+  const unsentKeys = new Set((unsent ?? []).map((row) => row.dedupe_key));
+  const toEmail = candidates.filter((c) => unsentKeys.has(c.dedupe_key));
 
   let emailed = 0;
-  if (fresh.length > 0 && isEmailConfigured()) {
-    emailed = await emailDigests(supabase, fresh);
+  if (toEmail.length > 0 && isEmailConfigured()) {
+    emailed = await emailDigests(supabase, toEmail);
   }
 
   return NextResponse.json({
     scanned: true,
     candidates: candidates.length,
-    created: fresh.length,
+    created: newKeys.size,
+    pendingEmail: toEmail.length,
     emailed,
     emailConfigured: isEmailConfigured(),
   });
@@ -173,8 +186,13 @@ async function emailDigests(
   );
 
   const sent = results.filter(Boolean).length;
+  const allSucceeded = results.length > 0 && sent === results.length;
 
-  if (sent > 0) {
+  // Only mark as emailed when every recipient succeeded. On a partial failure
+  // the reminders stay unsent so the next run retries them: someone may then
+  // receive a duplicate, which is a far better outcome than a lapsed
+  // certificate that nobody is ever told about.
+  if (allSucceeded) {
     await supabase
       .from("notifications")
       .update({ emailed_at: new Date().toISOString() })
@@ -182,6 +200,10 @@ async function emailDigests(
         "dedupe_key",
         reminders.map((r) => r.dedupe_key),
       );
+  } else if (sent > 0) {
+    console.warn(
+      `[reminders] ${sent}/${results.length} digests sent; leaving reminders unsent for retry`,
+    );
   }
 
   return sent;

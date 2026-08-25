@@ -14,28 +14,36 @@ import {
 } from "@/components/ui/table";
 
 export type FleetRow = {
-  id: string;
-  drone_id: string;
+  id: string | null;
+  drone_id: string | null;
   registration_number: string | null;
   serial_number: string | null;
-  model: string;
+  model: string | null;
   manufacturer: string | null;
   weight_kg: number | null;
   purchased_date: string | null;
   location_site: string | null;
   notes: string | null;
   maintenance_interval_hours: number | null;
-  status: "airworthy" | "maintenance" | "grounded";
-  flight_hours: number;
+  status: 'airworthy' | 'maintenance' | 'grounded' | null;
+  flight_hours: number | null;
+  hours_until_service: number | null;
   next_inspection_date: string | null;
-  assigned_pilot: { full_name: string | null } | null;
+  assigned_pilot_name: string | null;
 };
 
-const statusTone: Record<FleetRow["status"], "good" | "warning" | "critical"> = {
+const statusTone: Record<
+  NonNullable<FleetRow["status"]>,
+  "good" | "warning" | "critical"
+> = {
   airworthy: "good",
   maintenance: "warning",
   grounded: "critical",
 };
+
+function round1(value: number) {
+  return Math.round(value * 10) / 10;
+}
 
 export function FleetTable({ rows }: { rows: FleetRow[] }) {
   const [search, setSearch] = useState("");
@@ -122,14 +130,37 @@ export function FleetTable({ rows }: { rows: FleetRow[] }) {
                   </TableCell>
                   <TableCell>{row.location_site ?? "—"}</TableCell>
                   <TableCell>
-                    <StatusDot tone={statusTone[row.status]} label={row.status} />
+                    {row.status ? (
+                      <StatusDot tone={statusTone[row.status]} label={row.status} />
+                    ) : (
+                      "—"
+                    )}
                   </TableCell>
-                  <TableCell>{row.assigned_pilot?.full_name ?? "Unassigned"}</TableCell>
-                  <TableCell className="text-right tabular-nums">{row.flight_hours}</TableCell>
+                  <TableCell>{row.assigned_pilot_name ?? "Unassigned"}</TableCell>
                   <TableCell className="text-right tabular-nums">
-                    {row.maintenance_interval_hours !== null
-                      ? `${row.maintenance_interval_hours} h`
-                      : "—"}
+                    {row.flight_hours !== null ? round1(row.flight_hours) : "—"}
+                  </TableCell>
+                  <TableCell className="text-right tabular-nums">
+                    {row.maintenance_interval_hours !== null ? (
+                      <>
+                        {row.maintenance_interval_hours} h
+                        {row.hours_until_service !== null ? (
+                          <span
+                            className={
+                              row.hours_until_service <= 0
+                                ? "block text-xs text-[var(--status-critical)]"
+                                : "block text-xs text-muted-foreground"
+                            }
+                          >
+                            {row.hours_until_service <= 0
+                              ? "service due"
+                              : `${round1(row.hours_until_service)} h left`}
+                          </span>
+                        ) : null}
+                      </>
+                    ) : (
+                      "—"
+                    )}
                   </TableCell>
                 </TableRow>
               ))

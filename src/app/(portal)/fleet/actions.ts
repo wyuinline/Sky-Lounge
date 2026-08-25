@@ -22,6 +22,7 @@ export async function addUav(formData: FormData) {
   const locationSite = String(formData.get("location_site") ?? "").trim();
   const notes = String(formData.get("notes") ?? "").trim();
   const intervalRaw = String(formData.get("maintenance_interval_hours") ?? "").trim();
+  const baselineRaw = String(formData.get("baseline_flight_hours") ?? "").trim();
 
   if (!droneId || !model) {
     return { error: "Drone ID and model are required." };
@@ -45,8 +46,14 @@ export async function addUav(formData: FormData) {
     };
   }
 
+  const baselineHours = baselineRaw === "" ? 0 : Number(baselineRaw);
+  if (!Number.isFinite(baselineHours) || baselineHours < 0) {
+    return { error: "Existing flight hours must be zero or more." };
+  }
+
   const { error } = await supabase.from("uavs").insert({
     drone_id: droneId,
+    baseline_flight_hours: baselineHours,
     model,
     manufacturer: manufacturer || null,
     firmware_version: firmwareVersion || null,

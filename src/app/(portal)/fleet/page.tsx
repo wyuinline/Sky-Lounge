@@ -9,10 +9,12 @@ export default async function FleetPage() {
   const supabase = await createClient();
   const [profile, { data: uavs }] = await Promise.all([
     getCurrentProfile(),
+    // The view carries derived total flight hours and hours-until-service, so
+    // the fleet page and the reminder scan read the same figures.
     supabase
-      .from("uavs")
+      .from("uav_fleet_status")
       .select(
-        "id, drone_id, registration_number, serial_number, model, manufacturer, weight_kg, purchased_date, location_site, notes, maintenance_interval_hours, status, flight_hours, next_inspection_date, assigned_pilot:assigned_pilot_id(full_name)",
+        "id, drone_id, registration_number, serial_number, model, manufacturer, weight_kg, purchased_date, location_site, notes, maintenance_interval_hours, status, flight_hours, hours_until_service, next_inspection_date, assigned_pilot_name",
       )
       .order("drone_id")
 ,

@@ -126,6 +126,22 @@ export function AddUavDialog() {
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-2">
+              <Label htmlFor="baseline_flight_hours">Existing Flight Hours</Label>
+              <Input
+                id="baseline_flight_hours"
+                name="baseline_flight_hours"
+                type="number"
+                min="0"
+                step="0.1"
+                placeholder="0"
+              />
+              <p className="text-xs text-muted-foreground">
+                Hours already on the airframe. Flights logged here are added to this.
+              </p>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="flex flex-col gap-2">
               <Label>Status</Label>
               <Select value={status} onValueChange={(value) => setStatus(value ?? "airworthy")}>
                 <SelectTrigger className="w-full">

@@ -230,7 +230,14 @@ export type Database = {
             foreignKeyName: "flight_logs_uav_id_fkey"
             columns: ["uav_id"]
             isOneToOne: false
-            referencedRelation: "uav_maintenance_status"
+            referencedRelation: "uav_fleet_status"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "flight_logs_uav_id_fkey"
+            columns: ["uav_id"]
+            isOneToOne: false
+            referencedRelation: "uav_fleet_status"
             referencedColumns: ["uav_id"]
           },
           {
@@ -305,7 +312,14 @@ export type Database = {
             foreignKeyName: "flight_requests_uav_id_fkey"
             columns: ["uav_id"]
             isOneToOne: false
-            referencedRelation: "uav_maintenance_status"
+            referencedRelation: "uav_fleet_status"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "flight_requests_uav_id_fkey"
+            columns: ["uav_id"]
+            isOneToOne: false
+            referencedRelation: "uav_fleet_status"
             referencedColumns: ["uav_id"]
           },
           {
@@ -383,7 +397,14 @@ export type Database = {
             foreignKeyName: "incidents_uav_id_fkey"
             columns: ["uav_id"]
             isOneToOne: false
-            referencedRelation: "uav_maintenance_status"
+            referencedRelation: "uav_fleet_status"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "incidents_uav_id_fkey"
+            columns: ["uav_id"]
+            isOneToOne: false
+            referencedRelation: "uav_fleet_status"
             referencedColumns: ["uav_id"]
           },
           {
@@ -444,7 +465,14 @@ export type Database = {
             foreignKeyName: "maintenance_records_uav_id_fkey"
             columns: ["uav_id"]
             isOneToOne: false
-            referencedRelation: "uav_maintenance_status"
+            referencedRelation: "uav_fleet_status"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "maintenance_records_uav_id_fkey"
+            columns: ["uav_id"]
+            isOneToOne: false
+            referencedRelation: "uav_fleet_status"
             referencedColumns: ["uav_id"]
           },
           {
@@ -685,11 +713,11 @@ export type Database = {
       uavs: {
         Row: {
           assigned_pilot_id: string | null
+          baseline_flight_hours: number
           battery_cycles: number
           created_at: string
           drone_id: string
           firmware_version: string | null
-          flight_hours: number
           id: string
           location_site: string | null
           maintenance_interval_hours: number | null
@@ -706,11 +734,11 @@ export type Database = {
         }
         Insert: {
           assigned_pilot_id?: string | null
+          baseline_flight_hours?: number
           battery_cycles?: number
           created_at?: string
           drone_id: string
           firmware_version?: string | null
-          flight_hours?: number
           id?: string
           location_site?: string | null
           maintenance_interval_hours?: number | null
@@ -727,11 +755,11 @@ export type Database = {
         }
         Update: {
           assigned_pilot_id?: string | null
+          baseline_flight_hours?: number
           battery_cycles?: number
           created_at?: string
           drone_id?: string
           firmware_version?: string | null
-          flight_hours?: number
           id?: string
           location_site?: string | null
           maintenance_interval_hours?: number | null
@@ -817,18 +845,40 @@ export type Database = {
           },
         ]
       }
-      uav_maintenance_status: {
+      uav_fleet_status: {
         Row: {
+          assigned_pilot_id: string | null
+          assigned_pilot_name: string | null
+          baseline_flight_hours: number | null
           drone_id: string | null
           flight_hours: number | null
           flight_hours_at_service: number | null
           hours_since_service: number | null
           hours_until_service: number | null
+          id: string | null
           last_maintenance_date: string | null
+          location_site: string | null
           maintenance_interval_hours: number | null
+          manufacturer: string | null
+          model: string | null
+          next_inspection_date: string | null
+          notes: string | null
+          purchased_date: string | null
+          registration_number: string | null
+          serial_number: string | null
+          status: Database["public"]["Enums"]["uav_status"] | null
           uav_id: string | null
+          weight_kg: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "uavs_assigned_pilot_id_fkey"
+            columns: ["assigned_pilot_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Functions: {
@@ -840,6 +890,7 @@ export type Database = {
         Args: { cat: Database["public"]["Enums"]["document_category"] }
         Returns: boolean
       }
+      pilot_has_roc_a: { Args: { p_pilot_id: string }; Returns: boolean }
     }
     Enums: {
       approval_status: "pending" | "approved" | "rejected"

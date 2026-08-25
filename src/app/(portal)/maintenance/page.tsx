@@ -27,7 +27,7 @@ export default async function MaintenancePage() {
     supabase.from("uavs").select("id, drone_id").order("drone_id"),
     supabase.from("profiles").select("id, full_name").order("full_name"),
     supabase
-      .from("uav_maintenance_status")
+      .from("uav_fleet_status")
       .select("uav_id, drone_id, maintenance_interval_hours, hours_since_service, hours_until_service")
       .not("maintenance_interval_hours", "is", null)
       .order("hours_until_service"),

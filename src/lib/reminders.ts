@@ -127,7 +127,7 @@ export type MaintenanceRecord = {
   drone_id: string | null;
 };
 
-/** A row of the uav_maintenance_status view. */
+/** A row of the uav_fleet_status view. */
 export type AirframeHoursRecord = {
   uav_id: string;
   drone_id: string;
