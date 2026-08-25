@@ -1,4 +1,5 @@
 import type { LucideIcon } from "lucide-react";
+import type { AccessArea } from "@/lib/access";
 import {
   LayoutDashboard,
   Plane,
@@ -12,6 +13,7 @@ import {
   BarChart3,
   Bell,
   ShieldCheck,
+  KeyRound,
 } from "lucide-react";
 
 export type NavItem = {
@@ -19,11 +21,11 @@ export type NavItem = {
   href: string;
   icon: LucideIcon;
   /**
-   * Hidden from the sidebar for non-administrators. This is presentation only —
-   * the page itself redirects and RLS rejects the writes, so hiding the link is
-   * a convenience, never the access control.
+   * Shown only to someone with full authority over this area. Presentation
+   * only — the page itself redirects and RLS rejects the writes, so hiding the
+   * link is a convenience, never the access control.
    */
-  adminOnly?: boolean;
+  manages?: AccessArea;
 };
 
 export const navItems: NavItem[] = [
@@ -38,5 +40,6 @@ export const navItems: NavItem[] = [
   { title: "Documents", href: "/documents", icon: FileText },
   { title: "Analytics", href: "/analytics", icon: BarChart3 },
   { title: "Notifications", href: "/notifications", icon: Bell },
-  { title: "User Management", href: "/admin/users", icon: ShieldCheck, adminOnly: true },
+  { title: "User Management", href: "/admin/users", icon: ShieldCheck, manages: "users" },
+  { title: "Roles & Access", href: "/admin/permissions", icon: KeyRound, manages: "users" },
 ];

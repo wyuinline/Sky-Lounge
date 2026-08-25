@@ -7,12 +7,12 @@ import { DocumentsTable, type DocumentRow } from "@/components/portal/documents/
 import { UploadDocumentDialog } from "@/components/portal/documents/upload-document-dialog";
 import { documentCategories } from "@/lib/document-categories";
 import { createClient } from "@/lib/supabase/server";
-import { getCurrentProfile } from "@/lib/supabase/profile";
+import { getAccess } from "@/lib/permissions";
 
 export default async function DocumentsPage() {
   const supabase = await createClient();
-  const [profile, documentsRes] = await Promise.all([
-    getCurrentProfile(),
+  const [access, documentsRes] = await Promise.all([
+    getAccess(),
     supabase
       .from("documents")
       .select("id, title, category, version, approval_status, storage_path, created_at, uploader:uploaded_by(full_name)")
@@ -21,7 +21,7 @@ export default async function DocumentsPage() {
   ]);
 
   const documents = documentsRes.data ?? [];
-  const canManage = profile ? ["uav_admin", "ops_manager"].includes(profile.role) : false;
+  const canManage = access?.canManage("docs_general") ?? false;
 
   const countsByCategory = documentCategories.map((c) => ({
     ...c,
@@ -62,7 +62,7 @@ export default async function DocumentsPage() {
         <CardContent>
           <ul className="list-disc space-y-1 pl-5 text-sm text-muted-foreground">
             <li>Every document is tagged with category, UAV model, and department metadata on upload</li>
-            <li>Regulatory Documents and Incident Reports are restricted to administrators, operations managers, and auditors</li>
+            <li>Regulatory Documents and Incident Reports follow the &ldquo;Documents — restricted&rdquo; row of the access matrix</li>
             <li>Each document tracks a version number and an approval status (draft, pending, approved, published)</li>
             <li>Search and filter by title or category from the library below</li>
           </ul>

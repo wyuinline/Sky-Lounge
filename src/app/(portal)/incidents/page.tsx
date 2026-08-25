@@ -7,12 +7,12 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { IncidentsTable, type IncidentRow } from "@/components/portal/incidents/incidents-table";
 import { ReportIncidentDialog } from "@/components/portal/incidents/report-incident-dialog";
 import { createClient } from "@/lib/supabase/server";
-import { getCurrentProfile } from "@/lib/supabase/profile";
+import { getAccess } from "@/lib/permissions";
 
 export default async function IncidentsPage() {
   const supabase = await createClient();
-  const [profile, incidentsRes, pilotsRes, uavsRes] = await Promise.all([
-    getCurrentProfile(),
+  const [access, incidentsRes, pilotsRes, uavsRes] = await Promise.all([
+    getAccess(),
     supabase
       .from("incidents")
       .select(
@@ -27,7 +27,7 @@ export default async function IncidentsPage() {
   const incidents = incidentsRes.data ?? [];
   const pilotOptions = (pilotsRes.data ?? []).map((p) => ({ id: p.id, label: p.full_name }));
   const uavOptions = (uavsRes.data ?? []).map((u) => ({ id: u.id, label: u.drone_id }));
-  const canManage = profile ? ["uav_admin", "ops_manager"].includes(profile.role) : false;
+  const canManage = access?.canManage("incidents") ?? false;
 
   const now = new Date();
   const currentYear = now.getFullYear();
@@ -90,8 +90,8 @@ export default async function IncidentsPage() {
         <Lock />
         <AlertTitle>Restricted data</AlertTitle>
         <AlertDescription>
-          Incident data is restricted to administrators, operations managers, auditors, and the
-          maintenance team. Anonymous reports are supported for safety hazards and near misses.
+          Who can see and act on incident data is set by the &ldquo;Incidents &amp; safety&rdquo; row
+          of the access matrix. Anonymous reports are supported for safety hazards and near misses.
         </AlertDescription>
       </Alert>
     </div>

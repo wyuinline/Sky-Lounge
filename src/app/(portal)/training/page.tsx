@@ -8,15 +8,15 @@ import {
 } from "@/components/portal/training/certifications-table";
 import { UploadCertificationDialog } from "@/components/portal/training/upload-certification-dialog";
 import { createClient } from "@/lib/supabase/server";
-import { getCurrentProfile } from "@/lib/supabase/profile";
+import { getAccess } from "@/lib/permissions";
 import { deriveExpiryStatus } from "@/lib/compliance";
 
 const competencyRank = { beginner: 0, intermediate: 1, advanced: 2, qualified: 3 } as const;
 
 export default async function TrainingPage() {
   const supabase = await createClient();
-  const [profile, recordsRes, pilotsRes] = await Promise.all([
-    getCurrentProfile(),
+  const [access, recordsRes, pilotsRes] = await Promise.all([
+    getAccess(),
     supabase
       .from("training_records")
       .select(
@@ -29,7 +29,7 @@ export default async function TrainingPage() {
 
   const records = recordsRes.data ?? [];
   const pilotOptions = (pilotsRes.data ?? []).map((p) => ({ id: p.id, label: p.full_name }));
-  const canManage = profile ? ["uav_admin", "ops_manager"].includes(profile.role) : false;
+  const canManage = access?.canManage("training") ?? false;
 
   const now = new Date();
   const in60Days = new Date(now.getTime() + 60 * 24 * 60 * 60 * 1000);
@@ -56,9 +56,7 @@ export default async function TrainingPage() {
   // RLS limits pilots to their own training records, so for them these figures
   // describe one person, not the programme. Label them accordingly rather than
   // presenting a personal count as an organisation-wide total.
-  const seesAllRecords = profile
-    ? ["uav_admin", "ops_manager"].includes(profile.role)
-    : false;
+  const seesAllRecords = access?.canReadAll("training") ?? false;
   const scope = seesAllRecords ? "" : "Your ";
 
   return (

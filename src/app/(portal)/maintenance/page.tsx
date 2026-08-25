@@ -5,7 +5,7 @@ import { AirframeHoursTable } from "@/components/portal/maintenance/hours-table"
 import { SectionLabel } from "@/components/portal/section-label";
 import { LogMaintenanceDialog } from "@/components/portal/maintenance/log-maintenance-dialog";
 import { createClient } from "@/lib/supabase/server";
-import { getCurrentProfile } from "@/lib/supabase/profile";
+import { getAccess } from "@/lib/permissions";
 import { isMaintenanceOverdue } from "@/lib/compliance";
 
 type FullMaintenanceRow = MaintenanceRow & {
@@ -15,8 +15,8 @@ type FullMaintenanceRow = MaintenanceRow & {
 
 export default async function MaintenancePage() {
   const supabase = await createClient();
-  const [profile, recordsRes, uavsRes, profilesRes, hoursRes] = await Promise.all([
-    getCurrentProfile(),
+  const [access, recordsRes, uavsRes, profilesRes, hoursRes] = await Promise.all([
+    getAccess(),
     supabase
       .from("maintenance_records")
       .select(
@@ -39,7 +39,7 @@ export default async function MaintenancePage() {
     id: p.id,
     label: p.full_name ?? "Unnamed",
   }));
-  const canManage = profile ? ["uav_admin", "maintenance_team"].includes(profile.role) : false;
+  const canManage = access?.canManage("maintenance") ?? false;
 
   const now = new Date();
   const scheduledThisMonth = records.filter(

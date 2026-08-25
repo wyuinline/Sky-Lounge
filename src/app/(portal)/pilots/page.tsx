@@ -6,13 +6,13 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { PilotsTable, type PilotRow } from "@/components/portal/pilots/pilots-table";
 import { AddPilotDialog } from "@/components/portal/pilots/add-pilot-dialog";
 import { createClient } from "@/lib/supabase/server";
-import { getCurrentProfile } from "@/lib/supabase/profile";
+import { getAccess } from "@/lib/permissions";
 import { derivePilotCertificateStatus, recencyDue, deriveExpiryStatus } from "@/lib/compliance";
 
 export default async function PilotsPage() {
   const supabase = await createClient();
-  const [profile, { data: pilots }] = await Promise.all([
-    getCurrentProfile(),
+  const [access, { data: pilots }] = await Promise.all([
+    getAccess(),
     // The view derives recency_due and the ROC-A flag, so the page and the
     // reminder scan read the same figures.
     supabase
@@ -24,7 +24,7 @@ export default async function PilotsPage() {
   ]);
 
   const rows = (pilots ?? []) as PilotRow[];
-  const canManagePilots = profile ? ["uav_admin", "ops_manager"].includes(profile.role) : false;
+  const canManagePilots = access?.canManage("pilots") ?? false;
 
   const now = new Date();
   const certificatesExpiring = rows.filter(
@@ -82,9 +82,9 @@ export default async function PilotsPage() {
         <Lock />
         <AlertTitle>Restricted data</AlertTitle>
         <AlertDescription>
-          Access to pilot records is restricted to authorized personnel (administrators, operations
-          managers, and auditors). Pilots can view only their own record. The ROC-A tick reflects a
-          certificate actually held on file, not a manual claim.
+          Who can see pilot records is set by the &ldquo;Pilots &amp; crew&rdquo; row of the access
+          matrix; a pilot given &ldquo;own record&rdquo; sees only themselves. The ROC-A tick
+          reflects a certificate actually held on file, not a manual claim.
         </AlertDescription>
       </Alert>
     </div>

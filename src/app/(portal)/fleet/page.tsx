@@ -3,12 +3,12 @@ import { MetricTile } from "@/components/portal/metric-tile";
 import { FleetTable, type FleetRow } from "@/components/portal/fleet/fleet-table";
 import { AddUavDialog } from "@/components/portal/fleet/add-uav-dialog";
 import { createClient } from "@/lib/supabase/server";
-import { getCurrentProfile } from "@/lib/supabase/profile";
+import { getAccess } from "@/lib/permissions";
 
 export default async function FleetPage() {
   const supabase = await createClient();
-  const [profile, { data: uavs }] = await Promise.all([
-    getCurrentProfile(),
+  const [access, { data: uavs }] = await Promise.all([
+    getAccess(),
     // The view carries derived total flight hours and hours-until-service, so
     // the fleet page and the reminder scan read the same figures.
     supabase
@@ -21,9 +21,7 @@ export default async function FleetPage() {
   ]);
 
   const rows = uavs ?? [];
-  const canManageFleet = profile
-    ? ["uav_admin", "ops_manager", "maintenance_team"].includes(profile.role)
-    : false;
+  const canManageFleet = access?.canManage("fleet") ?? false;
 
   const active = rows.filter((r) => r.status === "airworthy").length;
   const maintenance = rows.filter((r) => r.status === "maintenance").length;

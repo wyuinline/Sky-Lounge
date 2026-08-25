@@ -10,15 +10,16 @@ import {
 } from "@/components/portal/admin/users-table";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentProfile } from "@/lib/supabase/profile";
+import { getAccess } from "@/lib/permissions";
 
 export default async function UserManagementPage() {
   const supabase = await createClient();
-  const profile = await getCurrentProfile();
+  const [profile, access] = await Promise.all([getCurrentProfile(), getAccess()]);
 
   // Server-side gate as well as RLS: an administrator-only page should not
   // render at all for anyone else, rather than rendering and failing on write.
   if (!profile) redirect("/login");
-  if (profile.role !== "uav_admin") redirect("/");
+  if (!access?.canManage("users")) redirect("/");
 
   const [{ data: profiles }, { data: pilots }] = await Promise.all([
     supabase.from("profiles").select("id, full_name, email, role, active").order("created_at"),
@@ -44,7 +45,15 @@ export default async function UserManagementPage() {
     full_name: p.full_name,
   }));
 
-  const admins = rows.filter((r) => r.role === "uav_admin" && r.active).length;
+  // "Administrator" is whoever the matrix currently grants full authority over
+  // user management, not a hardcoded role name.
+  const { data: managerRows } = await supabase
+    .from("role_permissions")
+    .select("role")
+    .eq("area", "users")
+    .eq("level", "full");
+  const managerRoles = new Set((managerRows ?? []).map((r) => r.role));
+  const admins = rows.filter((r) => managerRoles.has(r.role) && r.active).length;
   const disabled = rows.filter((r) => !r.active).length;
   const unlinkedPilots = pilotList.filter((p) => !p.profile_id).length;
 

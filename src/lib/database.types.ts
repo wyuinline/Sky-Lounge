@@ -656,6 +656,38 @@ export type Database = {
         }
         Relationships: []
       }
+      role_permissions: {
+        Row: {
+          area: Database["public"]["Enums"]["access_area"]
+          level: Database["public"]["Enums"]["access_level"]
+          role: Database["public"]["Enums"]["user_role"]
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          area: Database["public"]["Enums"]["access_area"]
+          level?: Database["public"]["Enums"]["access_level"]
+          role: Database["public"]["Enums"]["user_role"]
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          area?: Database["public"]["Enums"]["access_area"]
+          level?: Database["public"]["Enums"]["access_level"]
+          role?: Database["public"]["Enums"]["user_role"]
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "role_permissions_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       training_records: {
         Row: {
           certification_name: string
@@ -882,6 +914,26 @@ export type Database = {
       }
     }
     Functions: {
+      access_level_for: {
+        Args: { p_area: Database["public"]["Enums"]["access_area"] }
+        Returns: Database["public"]["Enums"]["access_level"]
+      }
+      can_create: {
+        Args: { p_area: Database["public"]["Enums"]["access_area"] }
+        Returns: boolean
+      }
+      can_manage: {
+        Args: { p_area: Database["public"]["Enums"]["access_area"] }
+        Returns: boolean
+      }
+      can_read_all: {
+        Args: { p_area: Database["public"]["Enums"]["access_area"] }
+        Returns: boolean
+      }
+      can_read_own: {
+        Args: { p_area: Database["public"]["Enums"]["access_area"] }
+        Returns: boolean
+      }
       current_user_role: {
         Args: never
         Returns: Database["public"]["Enums"]["user_role"]
@@ -890,9 +942,32 @@ export type Database = {
         Args: { cat: Database["public"]["Enums"]["document_category"] }
         Returns: boolean
       }
+      map_legacy_role: {
+        Args: { t: string }
+        Returns: Database["public"]["Enums"]["user_role"]
+      }
+      map_legacy_roles: {
+        Args: { t: string[] }
+        Returns: Database["public"]["Enums"]["user_role"][]
+      }
       pilot_has_roc_a: { Args: { p_pilot_id: string }; Returns: boolean }
     }
     Enums: {
+      access_area:
+        | "fleet"
+        | "maintenance"
+        | "pilots"
+        | "training"
+        | "requests"
+        | "logs"
+        | "incidents"
+        | "audits"
+        | "docs_general"
+        | "docs_restricted"
+        | "roc_a"
+        | "notifications"
+        | "users"
+      access_level: "full" | "create" | "read" | "own" | "none"
       approval_status: "pending" | "approved" | "rejected"
       audit_status: "planned" | "in_progress" | "completed" | "overdue"
       audit_type: "internal" | "regulatory"
@@ -954,11 +1029,11 @@ export type Database = {
       severity_level: "low" | "medium" | "high" | "critical"
       uav_status: "airworthy" | "maintenance" | "grounded"
       user_role:
+        | "system_admin"
         | "uav_admin"
-        | "ops_manager"
-        | "pilot"
+        | "uav_lead"
         | "auditor"
-        | "maintenance_team"
+        | "pilot"
         | "read_only"
     }
     CompositeTypes: {
@@ -1087,6 +1162,22 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      access_area: [
+        "fleet",
+        "maintenance",
+        "pilots",
+        "training",
+        "requests",
+        "logs",
+        "incidents",
+        "audits",
+        "docs_general",
+        "docs_restricted",
+        "roc_a",
+        "notifications",
+        "users",
+      ],
+      access_level: ["full", "create", "read", "own", "none"],
       approval_status: ["pending", "approved", "rejected"],
       audit_status: ["planned", "in_progress", "completed", "overdue"],
       audit_type: ["internal", "regulatory"],
@@ -1154,11 +1245,11 @@ export const Constants = {
       severity_level: ["low", "medium", "high", "critical"],
       uav_status: ["airworthy", "maintenance", "grounded"],
       user_role: [
+        "system_admin",
         "uav_admin",
-        "ops_manager",
-        "pilot",
+        "uav_lead",
         "auditor",
-        "maintenance_team",
+        "pilot",
         "read_only",
       ],
     },

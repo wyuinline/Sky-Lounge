@@ -5,6 +5,7 @@ import {
   isFindingOverdue,
   isMaintenanceOverdue,
 } from "@/lib/compliance";
+import type { UserRole } from "@/lib/access";
 
 /**
  * Reminder scanning.
@@ -31,13 +32,7 @@ export type NotificationKind =
   | "finding_overdue";
 
 export type Severity = "low" | "medium" | "high" | "critical";
-export type UserRole =
-  | "uav_admin"
-  | "ops_manager"
-  | "pilot"
-  | "auditor"
-  | "maintenance_team"
-  | "read_only";
+export type { UserRole };
 
 export type ReminderCandidate = {
   dedupe_key: string;
@@ -152,9 +147,11 @@ export type FindingRecord = {
   assigned_to: string | null;
 };
 
-const COMPLIANCE_ROLES: UserRole[] = ["uav_admin", "ops_manager"];
-const MAINTENANCE_ROLES: UserRole[] = ["uav_admin", "maintenance_team"];
-const AUDIT_ROLES: UserRole[] = ["uav_admin", "ops_manager", "auditor"];
+// Who gets told. Each list is the set of roles that can actually act on the
+// reminder — telling someone about a lapse they cannot fix is just noise.
+const COMPLIANCE_ROLES: UserRole[] = ["system_admin", "uav_admin"];
+const MAINTENANCE_ROLES: UserRole[] = ["system_admin", "uav_admin", "uav_lead"];
+const AUDIT_ROLES: UserRole[] = ["system_admin", "uav_admin", "auditor"];
 
 /**
  * RPAS pilot credentials: the Transport Canada pilot certificate and the

@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { Plane, ChevronDown, LogOut, Menu, X, UserRound } from "lucide-react";
 import { navItems } from "@/lib/nav-items";
 import { roleLabels, type UserRole } from "@/lib/types";
+import type { AccessArea } from "@/lib/access";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -27,9 +28,15 @@ function initials(name: string) {
     .toUpperCase();
 }
 
-function NavLinks({ role, onNavigate }: { role: UserRole; onNavigate?: () => void }) {
+function NavLinks({
+  manages,
+  onNavigate,
+}: {
+  manages: AccessArea[];
+  onNavigate?: () => void;
+}) {
   const pathname = usePathname();
-  const visible = navItems.filter((item) => !item.adminOnly || role === "uav_admin");
+  const visible = navItems.filter((item) => !item.manages || manages.includes(item.manages));
   return (
     <nav className="flex flex-1 flex-col gap-1 overflow-y-auto px-3 py-4">
       {visible.map((item) => {
@@ -124,10 +131,13 @@ export function SideNav({
   fullName,
   email,
   role,
+  manages,
 }: {
   fullName: string;
   email: string;
   role: UserRole;
+  /** Areas this person has full authority over — drives which links appear. */
+  manages: AccessArea[];
 }) {
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -139,7 +149,7 @@ export function SideNav({
           <Plane className="size-5 shrink-0" />
           UAV Ops Portal
         </div>
-        <NavLinks role={role} />
+        <NavLinks manages={manages} />
         <div className="border-t border-sidebar-border p-3">
           <UserMenu fullName={fullName} email={email} role={role} />
         </div>
@@ -180,7 +190,7 @@ export function SideNav({
                 <X className="size-5" />
               </Button>
             </div>
-            <NavLinks role={role} onNavigate={() => setMobileOpen(false)} />
+            <NavLinks manages={manages} onNavigate={() => setMobileOpen(false)} />
             <div className="border-t border-sidebar-border p-3">
               <UserMenu fullName={fullName} email={email} role={role} />
             </div>

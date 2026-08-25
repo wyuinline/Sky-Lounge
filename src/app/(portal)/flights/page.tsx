@@ -8,11 +8,11 @@ import { FlightLogsTable, type FlightLogRow } from "@/components/portal/flights/
 import { SubmitFlightRequestDialog } from "@/components/portal/flights/submit-flight-request-dialog";
 import { LogFlightDialog } from "@/components/portal/flights/log-flight-dialog";
 import { createClient } from "@/lib/supabase/server";
-import { getCurrentProfile } from "@/lib/supabase/profile";
+import { getAccess } from "@/lib/permissions";
 
 const workflowSteps = [
   "Pilot submits flight request with mission details and risk assessment",
-  "Operations Manager reviews and approves or rejects",
+  "UAV Lead or Administrator reviews and approves or rejects",
   "Pilot receives approval notification",
   "Mission execution",
   "Post-flight report and flight log submitted",
@@ -20,8 +20,8 @@ const workflowSteps = [
 
 export default async function FlightsPage() {
   const supabase = await createClient();
-  const [profile, pilotsRes, uavsRes, requestsRes, logsRes] = await Promise.all([
-    getCurrentProfile(),
+  const [access, pilotsRes, uavsRes, requestsRes, logsRes] = await Promise.all([
+    getAccess(),
     supabase.from("pilots").select("id, full_name").order("full_name"),
     supabase.from("uavs").select("id, drone_id").order("drone_id"),
     supabase
@@ -39,7 +39,7 @@ export default async function FlightsPage() {
 
   const pilotOptions = (pilotsRes.data ?? []).map((p) => ({ id: p.id, label: p.full_name }));
   const uavOptions = (uavsRes.data ?? []).map((u) => ({ id: u.id, label: u.drone_id }));
-  const canApprove = profile ? ["uav_admin", "ops_manager"].includes(profile.role) : false;
+  const canApprove = access?.canManage("requests") ?? false;
 
   return (
     <div className="flex flex-col gap-6">
@@ -89,7 +89,7 @@ export default async function FlightsPage() {
         <Info />
         <AlertTitle>Approval required</AlertTitle>
         <AlertDescription>
-          All flight requests require Operations Manager or Administrator approval before mission
+          All flight requests require UAV Lead or Administrator approval before mission
           execution.
         </AlertDescription>
       </Alert>

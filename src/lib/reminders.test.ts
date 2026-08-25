@@ -69,7 +69,7 @@ describe("scanPilotCredentials — certificate", () => {
   it("targets the affected pilot as well as the compliance roles", () => {
     const [r] = scanPilotCredentials([pilot({ certificate_expires: inDays(10) })], NOW);
     expect(r.target_profile_id).toBe("prof-1");
-    expect(r.target_roles).toContain("ops_manager");
+    expect(r.target_roles).toContain("uav_admin");
   });
 
   it("still reminds compliance when the pilot has no linked account", () => {
@@ -210,7 +210,7 @@ describe("scanMaintenance", () => {
 
   it("routes to the maintenance team, not the pilots", () => {
     const [r] = scanMaintenance([record()], NOW);
-    expect(r.target_roles).toContain("maintenance_team");
+    expect(r.target_roles).toContain("uav_lead");
     expect(r.target_roles).not.toContain("pilot");
   });
 });
@@ -304,7 +304,7 @@ describe("scanMaintenanceHours", () => {
 
   it("routes to the maintenance team", () => {
     const [r] = scanMaintenanceHours([frame()]);
-    expect(r.target_roles).toContain("maintenance_team");
+    expect(r.target_roles).toContain("uav_lead");
   });
 });
 

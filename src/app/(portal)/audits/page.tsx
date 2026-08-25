@@ -7,13 +7,13 @@ import { FindingsTable, type FindingRow } from "@/components/portal/audits/findi
 import { ScheduleAuditDialog } from "@/components/portal/audits/schedule-audit-dialog";
 import { AddFindingDialog } from "@/components/portal/audits/add-finding-dialog";
 import { createClient } from "@/lib/supabase/server";
-import { getCurrentProfile } from "@/lib/supabase/profile";
+import { getAccess } from "@/lib/permissions";
 import { isFindingOverdue } from "@/lib/compliance";
 
 export default async function AuditsPage() {
   const supabase = await createClient();
-  const [profile, auditsRes, findingsRes, profilesRes] = await Promise.all([
-    getCurrentProfile(),
+  const [access, auditsRes, findingsRes, profilesRes] = await Promise.all([
+    getAccess(),
     supabase
       .from("audits")
       .select("id, audit_type, audit_date, status, compliance_status, auditor:auditor_id(full_name)")
@@ -39,7 +39,7 @@ export default async function AuditsPage() {
     label: `${a.audit_type === "internal" ? "Internal" : "Regulatory"} — ${a.audit_date}`,
   }));
 
-  const canManage = profile ? ["uav_admin", "ops_manager", "auditor"].includes(profile.role) : false;
+  const canManage = access?.canManage("audits") ?? false;
 
   const scored = audits.filter((a) => a.compliance_status !== null);
   const complianceScore =

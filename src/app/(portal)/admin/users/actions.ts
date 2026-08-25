@@ -3,58 +3,58 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { safeErrorMessage, parseEnum } from "@/lib/action-utils";
-import type { UserRole } from "@/lib/types";
-
-const ROLES = [
-  "uav_admin",
-  "ops_manager",
-  "pilot",
-  "auditor",
-  "maintenance_team",
-  "read_only",
-] as const;
+import { getAccess } from "@/lib/permissions";
+import { roleOrder, type UserRole } from "@/lib/access";
 
 type Supabase = Awaited<ReturnType<typeof createClient>>;
 
 /**
- * How many administrators can still sign in and administer.
+ * The roles that currently hold full authority over user management.
+ *
+ * Read from role_permissions rather than hardcoded, so that changing the
+ * matrix immediately changes who counts as an administrator here. A database
+ * trigger guarantees at least one role always keeps this level.
+ */
+async function userManagerRoles(supabase: Supabase): Promise<UserRole[]> {
+  const { data } = await supabase
+    .from("role_permissions")
+    .select("role")
+    .eq("area", "users")
+    .eq("level", "full");
+  return (data ?? []).map((r) => r.role);
+}
+
+/**
+ * How many people can still sign in and administer.
  *
  * Used to stop the app removing the last one. A locked-out organisation can
  * only be recovered through the SQL editor, which is a bad afternoon.
  */
-async function activeAdminCount(supabase: Supabase): Promise<number> {
+async function activeAdminCount(supabase: Supabase, managerRoles: UserRole[]): Promise<number> {
+  if (managerRoles.length === 0) return 0;
   const { count } = await supabase
     .from("profiles")
     .select("id", { count: "exact", head: true })
-    .eq("role", "uav_admin")
+    .in("role", managerRoles)
     .eq("active", true);
   return count ?? 0;
 }
 
-async function requireAdmin(supabase: Supabase) {
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return { error: "You are not signed in." as const };
-
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .single();
-
-  if (profile?.role !== "uav_admin") {
-    return { error: "Only administrators can manage users." as const };
+async function requireAdmin() {
+  const access = await getAccess();
+  if (!access) return { error: "You are not signed in." as const };
+  if (!access.canManage("users")) {
+    return { error: "You do not have permission to manage users." as const };
   }
-  return { error: null, userId: user.id };
+  return { error: null };
 }
 
 export async function updateUserRole(profileId: string, role: string) {
   const supabase = await createClient();
-  const guard = await requireAdmin(supabase);
+  const guard = await requireAdmin();
   if (guard.error) return { error: guard.error };
 
-  const nextRole = parseEnum<UserRole>(role, ROLES, "read_only");
+  const nextRole = parseEnum<UserRole>(role, roleOrder, "read_only");
 
   const { data: target } = await supabase
     .from("profiles")
@@ -66,8 +66,10 @@ export async function updateUserRole(profileId: string, role: string) {
 
   // Demoting the last active administrator would leave nobody able to manage
   // roles through the portal at all.
-  const losingAdmin = target.role === "uav_admin" && target.active && nextRole !== "uav_admin";
-  if (losingAdmin && (await activeAdminCount(supabase)) <= 1) {
+  const managerRoles = await userManagerRoles(supabase);
+  const losingAdmin =
+    managerRoles.includes(target.role) && target.active && !managerRoles.includes(nextRole);
+  if (losingAdmin && (await activeAdminCount(supabase, managerRoles)) <= 1) {
     return {
       error: "This is the last active administrator. Promote someone else first.",
     };
@@ -87,7 +89,7 @@ export async function updateUserRole(profileId: string, role: string) {
 
 export async function setUserActive(profileId: string, active: boolean) {
   const supabase = await createClient();
-  const guard = await requireAdmin(supabase);
+  const guard = await requireAdmin();
   if (guard.error) return { error: guard.error };
 
   const { data: target } = await supabase
@@ -98,8 +100,12 @@ export async function setUserActive(profileId: string, active: boolean) {
 
   if (!target) return { error: "That account no longer exists." };
 
-  if (!active && target.role === "uav_admin" && target.active) {
-    if ((await activeAdminCount(supabase)) <= 1) {
+  if (!active && target.active) {
+    const managerRoles = await userManagerRoles(supabase);
+    if (
+      managerRoles.includes(target.role) &&
+      (await activeAdminCount(supabase, managerRoles)) <= 1
+    ) {
       return {
         error: "This is the last active administrator. Promote someone else first.",
       };
@@ -123,7 +129,7 @@ export async function setUserActive(profileId: string, active: boolean) {
  */
 export async function linkPilotToProfile(profileId: string, pilotId: string | null) {
   const supabase = await createClient();
-  const guard = await requireAdmin(supabase);
+  const guard = await requireAdmin();
   if (guard.error) return { error: guard.error };
 
   // A profile owns at most one pilot record, so clear any previous link first.

@@ -108,7 +108,7 @@ export default async function ProfilePage() {
         <AlertTitle>What you can change here</AlertTitle>
         <AlertDescription>
           You can update your own name. Your role is set by an administrator, and pilot certificate
-          details are maintained by an operations manager so the compliance record stays
+          details are maintained by a UAV administrator so the compliance record stays
           authoritative — ask them if something is wrong.
         </AlertDescription>
       </Alert>
