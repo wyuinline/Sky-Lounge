@@ -22,8 +22,11 @@ export default async function FlightsPage() {
   const supabase = await createClient();
   const [access, pilotsRes, uavsRes, requestsRes, logsRes] = await Promise.all([
     getAccess(),
-    supabase.from("pilots").select("id, full_name").order("full_name"),
-    supabase.from("uavs").select("id, drone_id").order("drone_id"),
+    // Departed crew are not offered: you cannot assign new work to someone
+    // who has left, and their record stays only for the history.
+    supabase.from("pilots").select("id, full_name").eq("active", true).order("full_name"),
+    // Retired airframes likewise — they are kept for their logs, not to fly.
+    supabase.from("uavs").select("id, drone_id").neq("status", "retired").order("drone_id"),
     supabase
       .from("flight_requests")
       .select("id, location, requested_date, risk_level, approval_status, pilots(full_name), uavs(drone_id)")

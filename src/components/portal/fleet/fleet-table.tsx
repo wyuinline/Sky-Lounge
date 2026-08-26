@@ -12,6 +12,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { FleetRowActions } from "@/components/portal/fleet/fleet-row-actions";
 
 export type FleetRow = {
   id: string | null;
@@ -25,6 +26,7 @@ export type FleetRow = {
   location_site: string | null;
   notes: string | null;
   maintenance_interval_hours: number | null;
+  baseline_flight_hours: number | null;
   status: 'airworthy' | 'maintenance' | 'grounded' | 'retired' | null;
   flight_hours: number | null;
   hours_until_service: number | null;
@@ -47,7 +49,7 @@ function round1(value: number) {
   return Math.round(value * 10) / 10;
 }
 
-export function FleetTable({ rows }: { rows: FleetRow[] }) {
+export function FleetTable({ rows, canManage }: { rows: FleetRow[]; canManage: boolean }) {
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState<string>("all");
 
@@ -105,12 +107,16 @@ export function FleetTable({ rows }: { rows: FleetRow[] }) {
               <TableHead>Assigned Pilot</TableHead>
               <TableHead className="text-right">Flight Hrs</TableHead>
               <TableHead className="text-right">Interval</TableHead>
+              {canManage ? <TableHead className="w-10" /> : null}
             </TableRow>
           </TableHeader>
           <TableBody>
             {filtered.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={10} className="py-8 text-center text-sm text-muted-foreground">
+                <TableCell
+                  colSpan={canManage ? 11 : 10}
+                  className="py-8 text-center text-sm text-muted-foreground"
+                >
                   {rows.length === 0 ? "No UAVs in the fleet yet." : "No UAVs match your filters."}
                 </TableCell>
               </TableRow>
@@ -165,6 +171,28 @@ export function FleetTable({ rows }: { rows: FleetRow[] }) {
                       "—"
                     )}
                   </TableCell>
+                  {canManage ? (
+                    <TableCell className="text-right">
+                      <FleetRowActions
+                        uav={{
+                          id: row.id ?? "",
+                          drone_id: row.drone_id,
+                          model: row.model,
+                          manufacturer: row.manufacturer,
+                          registration_number: row.registration_number,
+                          serial_number: row.serial_number,
+                          weight_kg: row.weight_kg,
+                          purchased_date: row.purchased_date,
+                          location_site: row.location_site,
+                          maintenance_interval_hours: row.maintenance_interval_hours,
+                          next_inspection_date: row.next_inspection_date,
+                          notes: row.notes,
+                          status: row.status,
+                          baseline_flight_hours: row.baseline_flight_hours,
+                        }}
+                      />
+                    </TableCell>
+                  ) : null}
                 </TableRow>
               ))
             )}

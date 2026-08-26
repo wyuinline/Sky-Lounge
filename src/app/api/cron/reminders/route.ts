@@ -45,17 +45,25 @@ export async function GET(request: NextRequest) {
   const now = new Date();
 
   const [pilotsRes, certsRes, maintenanceRes, airframeHoursRes, auditsRes, findingsRes] = await Promise.all([
-    supabase.from("pilots").select("id, full_name, certificate_expires, last_recency_activity, profile_id"),
+    // Departed crew and retired airframes are excluded throughout: chasing a
+    // lapsed certificate for someone who left, or a service interval on an
+    // airframe that will never fly again, is noise that trains people to
+    // ignore the whole digest.
+    supabase
+      .from("pilots")
+      .select("id, full_name, certificate_expires, last_recency_activity, profile_id")
+      .eq("active", true),
     supabase
       .from("training_records")
-      .select("id, certification_name, expiry_date, pilot_id, pilots(full_name, profile_id)"),
+      .select("id, certification_name, expiry_date, pilot_id, pilots(full_name, profile_id, active)"),
     supabase
       .from("maintenance_records")
       .select("id, status, next_service_date, maintenance_type, uavs(drone_id)"),
     // Hours-since-service is derived by this view; the raw tables don't carry it.
     supabase
       .from("uav_fleet_status")
-      .select("uav_id, drone_id, maintenance_interval_hours, hours_since_service, hours_until_service"),
+      .select("uav_id, drone_id, maintenance_interval_hours, hours_since_service, hours_until_service")
+      .neq("status", "retired"),
     supabase.from("audits").select("id, status, audit_date, audit_type"),
     supabase.from("audit_findings").select("id, status, due_date, description, severity, assigned_to"),
   ]);
@@ -75,7 +83,11 @@ export async function GET(request: NextRequest) {
   const candidates = scanAll(
     {
       pilots: pilotsRes.data ?? [],
-      certifications: (certsRes.data ?? []).map((c) => ({
+      certifications: (certsRes.data ?? [])
+        // An orphaned record (no pilot linked) still matters; one belonging to
+        // someone who has left does not.
+        .filter((c) => c.pilots === null || c.pilots.active)
+        .map((c) => ({
         id: c.id,
         certification_name: c.certification_name,
         expiry_date: c.expiry_date,

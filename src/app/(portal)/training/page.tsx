@@ -24,7 +24,9 @@ export default async function TrainingPage() {
       )
       .order("expiry_date")
 ,
-    supabase.from("pilots").select("id, full_name").order("full_name"),
+    // Departed crew are not offered: you cannot assign new work to someone
+    // who has left, and their record stays only for the history.
+    supabase.from("pilots").select("id, full_name").eq("active", true).order("full_name"),
   ]);
 
   const records = recordsRes.data ?? [];

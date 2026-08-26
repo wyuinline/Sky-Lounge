@@ -24,7 +24,8 @@ export default async function MaintenancePage() {
       )
       .order("next_service_date")
 ,
-    supabase.from("uavs").select("id, drone_id").order("drone_id"),
+    // Retired airframes likewise — they are kept for their logs, not to fly.
+    supabase.from("uavs").select("id, drone_id").neq("status", "retired").order("drone_id"),
     supabase.from("profiles").select("id, full_name").order("full_name"),
     supabase
       .from("uav_fleet_status")

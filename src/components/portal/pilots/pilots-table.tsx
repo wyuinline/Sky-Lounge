@@ -21,6 +21,8 @@ import {
   expiryStatusTone,
   recencyDue,
 } from "@/lib/compliance";
+import { Badge } from "@/components/ui/badge";
+import { PilotRowActions } from "@/components/portal/pilots/pilot-row-actions";
 import { uploadRocA } from "@/app/(portal)/pilots/actions";
 
 export type PilotRow = {
@@ -33,6 +35,7 @@ export type PilotRow = {
   last_recency_activity: string | null;
   notes: string | null;
   has_roc_a: boolean;
+  active: boolean;
 };
 
 function RocACell({ pilot, canManage }: { pilot: PilotRow; canManage: boolean }) {
@@ -99,25 +102,44 @@ export function PilotsTable({
   canManage: boolean;
 }) {
   const [search, setSearch] = useState("");
+  // Departed crew are hidden by default: the registry is normally read as
+  // "who can fly", and a list padded with leavers answers a different question.
+  const [showDeparted, setShowDeparted] = useState(false);
 
   const filtered = useMemo(() => {
-    if (search.trim() === "") return rows;
-    const q = search.toLowerCase();
-    return rows.filter((row) =>
-      [row.full_name, row.certificate_number].some((field) =>
+    const q = search.trim().toLowerCase();
+    return rows.filter((row) => {
+      if (!showDeparted && !row.active) return false;
+      if (q === "") return true;
+      return [row.full_name, row.certificate_number].some((field) =>
         (field ?? "").toLowerCase().includes(q),
-      ),
-    );
-  }, [rows, search]);
+      );
+    });
+  }, [rows, search, showDeparted]);
+
+  const departedCount = rows.filter((r) => !r.active).length;
 
   return (
     <div className="flex flex-col gap-4">
-      <Input
-        placeholder="Search by name or certificate number..."
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        className="sm:max-w-xs"
-      />
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <Input
+          placeholder="Search by name or certificate number..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="sm:max-w-xs"
+        />
+        {departedCount > 0 ? (
+          <label className="flex items-center gap-2 text-sm text-muted-foreground">
+            <input
+              type="checkbox"
+              checked={showDeparted}
+              onChange={(e) => setShowDeparted(e.target.checked)}
+              className="size-4 accent-[var(--brand-teal)]"
+            />
+            Show departed ({departedCount})
+          </label>
+        ) : null}
+      </div>
 
       <div className="overflow-x-auto rounded-md border">
         <Table>
@@ -133,12 +155,16 @@ export function PilotsTable({
               <TableHead>ROC-A</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Notes</TableHead>
+              {canManage ? <TableHead className="w-10" /> : null}
             </TableRow>
           </TableHeader>
           <TableBody>
             {filtered.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={10} className="py-8 text-center text-sm text-muted-foreground">
+                <TableCell
+                  colSpan={canManage ? 11 : 10}
+                  className="py-8 text-center text-sm text-muted-foreground"
+                >
                   {rows.length === 0 ? "No pilots in the registry yet." : "No pilots match your search."}
                 </TableCell>
               </TableRow>
@@ -151,8 +177,15 @@ export function PilotsTable({
                 );
 
                 return (
-                  <TableRow key={row.id}>
-                    <TableCell className="font-medium">{row.full_name}</TableCell>
+                  <TableRow key={row.id} className={row.active ? undefined : "opacity-60"}>
+                    <TableCell className="font-medium">
+                      {row.full_name}
+                      {row.active ? null : (
+                        <Badge variant="secondary" className="ml-2 text-xs font-normal">
+                          Departed
+                        </Badge>
+                      )}
+                    </TableCell>
                     <TableCell className="font-mono text-xs">
                       {row.certificate_number ?? "—"}
                     </TableCell>
@@ -185,6 +218,23 @@ export function PilotsTable({
                     <TableCell className="max-w-48 truncate text-sm text-muted-foreground">
                       {row.notes ?? ""}
                     </TableCell>
+                    {canManage ? (
+                      <TableCell className="text-right">
+                        <PilotRowActions
+                          active={row.active}
+                          pilot={{
+                            id: row.id,
+                            full_name: row.full_name,
+                            certificate_number: row.certificate_number,
+                            certificate_type: row.certificate_type,
+                            certificate_issued: row.certificate_issued,
+                            certificate_expires: row.certificate_expires,
+                            last_recency_activity: row.last_recency_activity,
+                            notes: row.notes,
+                          }}
+                        />
+                      </TableCell>
+                    ) : null}
                   </TableRow>
                 );
               })

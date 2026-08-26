@@ -4,7 +4,7 @@ import { StatusDot } from "@/components/portal/status-dot";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { PilotsTable, type PilotRow } from "@/components/portal/pilots/pilots-table";
-import { AddPilotDialog } from "@/components/portal/pilots/add-pilot-dialog";
+import { AddPilotDialog } from "@/components/portal/pilots/pilot-dialog";
 import { createClient } from "@/lib/supabase/server";
 import { getAccess } from "@/lib/permissions";
 import { derivePilotCertificateStatus, recencyDue, deriveExpiryStatus } from "@/lib/compliance";
@@ -18,7 +18,7 @@ export default async function PilotsPage() {
     supabase
       .from("pilot_certificate_status")
       .select(
-        "id, full_name, certificate_number, certificate_type, certificate_issued, certificate_expires, last_recency_activity, notes, has_roc_a",
+        "id, full_name, certificate_number, certificate_type, certificate_issued, certificate_expires, last_recency_activity, notes, has_roc_a, active",
       )
       .order("full_name"),
   ]);
@@ -26,17 +26,22 @@ export default async function PilotsPage() {
   const rows = (pilots ?? []) as PilotRow[];
   const canManagePilots = access?.canManage("pilots") ?? false;
 
+  // Credential alerts describe who can fly. Someone who has left the company
+  // is not a compliance problem, and counting them would keep the page red
+  // forever over certificates nobody is relying on.
+  const crew = rows.filter((r) => r.active);
+
   const now = new Date();
-  const certificatesExpiring = rows.filter(
+  const certificatesExpiring = crew.filter(
     (r) => deriveExpiryStatus(r.certificate_expires, now) === "due_soon",
   ).length;
-  const recencyDueSoon = rows.filter(
+  const recencyDueSoon = crew.filter(
     (r) => deriveExpiryStatus(recencyDue(r.last_recency_activity), now) !== "current",
   ).length;
-  const notValid = rows.filter(
+  const notValid = crew.filter(
     (r) => derivePilotCertificateStatus(r.certificate_expires, r.last_recency_activity, now) === "expired",
   ).length;
-  const missingRocA = rows.filter((r) => !r.has_roc_a).length;
+  const missingRocA = crew.filter((r) => !r.has_roc_a).length;
 
   return (
     <div className="flex flex-col gap-6">

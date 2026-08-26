@@ -1,7 +1,7 @@
 import { HeroBand } from "@/components/portal/hero-band";
 import { MetricTile } from "@/components/portal/metric-tile";
 import { FleetTable, type FleetRow } from "@/components/portal/fleet/fleet-table";
-import { AddUavDialog } from "@/components/portal/fleet/add-uav-dialog";
+import { AddUavDialog } from "@/components/portal/fleet/uav-dialog";
 import { createClient } from "@/lib/supabase/server";
 import { getAccess } from "@/lib/permissions";
 
@@ -14,7 +14,7 @@ export default async function FleetPage() {
     supabase
       .from("uav_fleet_status")
       .select(
-        "id, drone_id, registration_number, serial_number, model, manufacturer, weight_kg, purchased_date, location_site, notes, maintenance_interval_hours, status, flight_hours, hours_until_service, next_inspection_date, assigned_pilot_name",
+        "id, drone_id, registration_number, serial_number, model, manufacturer, weight_kg, purchased_date, location_site, notes, maintenance_interval_hours, baseline_flight_hours, status, flight_hours, hours_until_service, next_inspection_date, assigned_pilot_name",
       )
       .order("drone_id")
 ,
@@ -46,7 +46,7 @@ export default async function FleetPage() {
         <MetricTile label="Retired" value={`${retired}`} tone="neutral" />
       </div>
 
-      <FleetTable rows={rows} />
+      <FleetTable rows={rows} canManage={canManageFleet} />
     </div>
   );
 }

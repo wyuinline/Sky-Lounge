@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { safeErrorMessage, parseEnum } from "@/lib/action-utils";
+import { getAccess } from "@/lib/permissions";
 
 const CERTIFICATE_TYPES = [
   "basic_operations",
@@ -18,9 +19,29 @@ const ALLOWED_MIME_TYPES = new Set([
   "image/jpeg",
 ]);
 
-export async function addPilot(formData: FormData) {
-  const supabase = await createClient();
+async function requirePilotManager() {
+  const access = await getAccess();
+  if (!access) return { error: "You are not signed in." as const };
+  if (!access.canManage("pilots")) {
+    return { error: "You do not have permission to change pilot records." as const };
+  }
+  return { error: null };
+}
 
+type PilotFields = {
+  full_name: string;
+  certificate_number: string | null;
+  certificate_type: (typeof CERTIFICATE_TYPES)[number] | null;
+  certificate_issued: string | null;
+  certificate_expires: string | null;
+  last_recency_activity: string | null;
+  notes: string | null;
+};
+
+/** Shared by add and edit so the two cannot accept different data. */
+function readPilotForm(
+  formData: FormData,
+): { error: string } | { error: null; fields: PilotFields } {
   const fullName = String(formData.get("full_name") ?? "").trim();
   const certificateNumber = String(formData.get("certificate_number") ?? "").trim();
   const certificateType = String(formData.get("certificate_type") ?? "");
@@ -37,17 +58,31 @@ export async function addPilot(formData: FormData) {
     return { error: "The expiry date can't be before the issue date." };
   }
 
-  const { error } = await supabase.from("pilots").insert({
-    full_name: fullName,
-    certificate_number: certificateNumber || null,
-    certificate_type: certificateType
-      ? parseEnum(certificateType, CERTIFICATE_TYPES, "basic_operations")
-      : null,
-    certificate_issued: certificateIssued || null,
-    certificate_expires: certificateExpires || null,
-    last_recency_activity: lastRecencyActivity || null,
-    notes: notes || null,
-  });
+  return {
+    error: null,
+    fields: {
+      full_name: fullName,
+      certificate_number: certificateNumber || null,
+      certificate_type: certificateType
+        ? parseEnum(certificateType, CERTIFICATE_TYPES, "basic_operations")
+        : null,
+      certificate_issued: certificateIssued || null,
+      certificate_expires: certificateExpires || null,
+      last_recency_activity: lastRecencyActivity || null,
+      notes: notes || null,
+    },
+  };
+}
+
+export async function addPilot(formData: FormData) {
+  const guard = await requirePilotManager();
+  if (guard.error) return { error: guard.error };
+
+  const parsed = readPilotForm(formData);
+  if (parsed.error !== null) return { error: parsed.error };
+
+  const supabase = await createClient();
+  const { error } = await supabase.from("pilots").insert(parsed.fields);
 
   if (error) return { error: safeErrorMessage(error, "save") };
 
@@ -55,6 +90,82 @@ export async function addPilot(formData: FormData) {
   revalidatePath("/");
   return { error: null };
 }
+
+/** Amends an existing pilot record. */
+export async function updatePilot(pilotId: string, formData: FormData) {
+  const guard = await requirePilotManager();
+  if (guard.error) return { error: guard.error };
+  if (!pilotId) return { error: "No pilot selected." };
+
+  const parsed = readPilotForm(formData);
+  if (parsed.error !== null) return { error: parsed.error };
+
+  const supabase = await createClient();
+  const { error, count } = await supabase
+    .from("pilots")
+    .update(parsed.fields, { count: "exact" })
+    .eq("id", pilotId);
+
+  if (error) return { error: safeErrorMessage(error, "update") };
+  if (count === 0) return { error: "That pilot record no longer exists. Refresh and try again." };
+
+  revalidatePath("/pilots");
+  revalidatePath("/");
+  return { error: null };
+}
+
+/**
+ * Marks a pilot as departed, or brings them back.
+ *
+ * Their record and its certificate history stay — an audit covering last year
+ * needs to see who was flying last year. They simply stop counting toward
+ * credential alerts and stop appearing when logging a flight.
+ */
+export async function setPilotActive(pilotId: string, active: boolean) {
+  const guard = await requirePilotManager();
+  if (guard.error) return { error: guard.error };
+  if (!pilotId) return { error: "No pilot selected." };
+
+  const supabase = await createClient();
+  const { error } = await supabase.from("pilots").update({ active }).eq("id", pilotId);
+
+  if (error) return { error: safeErrorMessage(error, "update") };
+
+  revalidatePath("/pilots");
+  revalidatePath("/");
+  return { error: null };
+}
+
+/**
+ * Removes a pilot record entirely — only while nothing references it.
+ *
+ * For a row added by mistake. Anyone who has flown, filed a report, or holds a
+ * training record is refused by the foreign keys, and should be marked as
+ * departed instead.
+ */
+export async function deletePilot(pilotId: string) {
+  const guard = await requirePilotManager();
+  if (guard.error) return { error: guard.error };
+  if (!pilotId) return { error: "No pilot selected." };
+
+  const supabase = await createClient();
+  const { error } = await supabase.from("pilots").delete().eq("id", pilotId);
+
+  if (error) {
+    if (error.code === "23503") {
+      return {
+        error:
+          "This pilot has flights, incidents, or training recorded against them, and that history has to be kept. Mark them as departed instead.",
+      };
+    }
+    return { error: safeErrorMessage(error, "delete") };
+  }
+
+  revalidatePath("/pilots");
+  revalidatePath("/");
+  return { error: null };
+}
+
 
 /**
  * Uploads a ROC-A certificate and links it to the pilot.
