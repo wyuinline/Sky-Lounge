@@ -44,7 +44,15 @@ export async function GET(request: NextRequest) {
 
   const now = new Date();
 
-  const [pilotsRes, certsRes, maintenanceRes, airframeHoursRes, auditsRes, findingsRes] = await Promise.all([
+  const [
+    pilotsRes,
+    certsRes,
+    documentsRes,
+    maintenanceRes,
+    airframeHoursRes,
+    auditsRes,
+    findingsRes,
+  ] = await Promise.all([
     // Departed crew and retired airframes are excluded throughout: chasing a
     // lapsed certificate for someone who left, or a service interval on an
     // airframe that will never fly again, is noise that trains people to
@@ -56,6 +64,13 @@ export async function GET(request: NextRequest) {
     supabase
       .from("training_records")
       .select("id, certification_name, expiry_date, pilot_id, pilots(full_name, profile_id, active)"),
+    // The view derives review_due, so the documents page and this scan cannot
+    // disagree about when something is due.
+    supabase
+      .from("document_review_status")
+      .select(
+        "id, title, category, review_interval_months, last_reviewed_at, effective_date, created_at, expires_at, pilot_name, pilot_profile_id, pilot_active",
+      ),
     supabase
       .from("maintenance_records")
       .select("id, status, next_service_date, maintenance_type, uavs(drone_id)"),
@@ -71,6 +86,7 @@ export async function GET(request: NextRequest) {
   const firstError =
     pilotsRes.error ??
     certsRes.error ??
+    documentsRes.error ??
     maintenanceRes.error ??
     airframeHoursRes.error ??
     auditsRes.error ??
@@ -95,6 +111,22 @@ export async function GET(request: NextRequest) {
         pilot_name: c.pilots?.full_name ?? null,
         pilot_profile_id: c.pilots?.profile_id ?? null,
       })),
+      documents: (documentsRes.data ?? [])
+        // A document belonging to someone who has left is not a live
+        // obligation; one belonging to nobody in particular still is.
+        .filter((d) => d.pilot_profile_id === null || d.pilot_active)
+        .map((d) => ({
+          id: d.id ?? "",
+          title: d.title ?? "Untitled document",
+          category: d.category ?? "",
+          review_interval_months: d.review_interval_months,
+          last_reviewed_at: d.last_reviewed_at,
+          effective_date: d.effective_date,
+          created_at: d.created_at,
+          expires_at: d.expires_at,
+          pilot_name: d.pilot_name,
+          pilot_profile_id: d.pilot_profile_id,
+        })),
       maintenance: (maintenanceRes.data ?? []).map((m) => ({
         id: m.id,
         status: m.status,

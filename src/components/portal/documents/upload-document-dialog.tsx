@@ -15,13 +15,30 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { documentCategories, type DocumentCategory } from "@/lib/document-categories";
+import { documentCategories, labelForCategory, type DocumentCategory } from "@/lib/document-categories";
+import { reviewCycleOptions, reviewCycleLabel, NEVER_REVIEW } from "@/lib/review-cycles";
 import { uploadDocument } from "@/app/(portal)/documents/actions";
 
-export function UploadDocumentDialog() {
+export function UploadDocumentDialog({
+  reviewDefaults,
+}: {
+  /** Per-category default review cycle, from the document_review_policy table. */
+  reviewDefaults: Record<string, number | null>;
+}) {
   const [open, setOpen] = useState(false);
   const [category, setCategory] = useState<DocumentCategory>("sop");
+  // Kept as a string so "never" is a first-class choice rather than a missing
+  // value that could be mistaken for "not filled in yet".
+  const [reviewCycle, setReviewCycle] = useState<string>(
+    String(reviewDefaults.sop ?? NEVER_REVIEW),
+  );
   const [loading, setLoading] = useState(false);
+
+  /** Following the category keeps the common case correct without forcing it. */
+  function chooseCategory(next: DocumentCategory) {
+    setCategory(next);
+    setReviewCycle(String(reviewDefaults[next] ?? NEVER_REVIEW));
+  }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -29,6 +46,7 @@ export function UploadDocumentDialog() {
 
     const formData = new FormData(event.currentTarget);
     formData.set("category", category);
+    formData.set("review_interval_months", reviewCycle === NEVER_REVIEW ? "" : reviewCycle);
     const result = await uploadDocument(formData);
 
     setLoading(false);
@@ -41,6 +59,7 @@ export function UploadDocumentDialog() {
     toast.success("Document uploaded.");
     setOpen(false);
     setCategory("sop");
+    setReviewCycle(String(reviewDefaults.sop ?? NEVER_REVIEW));
     event.currentTarget.reset();
   }
 
@@ -63,9 +82,14 @@ export function UploadDocumentDialog() {
           </div>
           <div className="flex flex-col gap-2">
             <Label>Category</Label>
-            <Select value={category} onValueChange={(v) => setCategory((v as DocumentCategory) ?? "sop")}>
+            <Select
+              value={category}
+              onValueChange={(v) => chooseCategory((v as DocumentCategory) ?? "sop")}
+            >
               <SelectTrigger className="w-full">
-                <SelectValue />
+                {/* Base UI renders the raw value unless told otherwise, and
+                    "sop" is not what anyone means to read. */}
+                <SelectValue>{(v) => labelForCategory(v as DocumentCategory)}</SelectValue>
               </SelectTrigger>
               <SelectContent>
                 {documentCategories.map((c) => (
@@ -86,6 +110,47 @@ export function UploadDocumentDialog() {
               <Input id="department" name="department" placeholder="Flight Operations" />
             </div>
           </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="effective_date">Effective From</Label>
+              <Input id="effective_date" name="effective_date" type="date" />
+              <p className="text-xs text-muted-foreground">
+                When this version took effect. Defaults to today; the review clock starts here.
+              </p>
+            </div>
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="expires_at">Expiry Date (optional)</Label>
+              <Input id="expires_at" name="expires_at" type="date" />
+              <p className="text-xs text-muted-foreground">
+                Only if a date is printed on the document itself.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <Label>Review Cycle</Label>
+            <Select value={reviewCycle} onValueChange={(v) => v && setReviewCycle(v)}>
+              <SelectTrigger className="w-full">
+                <SelectValue>
+                  {(v) =>
+                    v === NEVER_REVIEW ? "Never — no review needed" : reviewCycleLabel(Number(v))
+                  }
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                {reviewCycleOptions.map((o) => (
+                  <SelectItem key={o.value} value={o.value}>
+                    {o.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground">
+              Suggested by the category, and changeable. SOPs and manuals are read once a year; a
+              ROC-A never expires and needs no review.
+            </p>
+          </div>
+
           <div className="flex flex-col gap-2">
             <Label htmlFor="file">File</Label>
             <Input id="file" name="file" type="file" required />

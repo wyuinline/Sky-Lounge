@@ -5,11 +5,13 @@ import {
   scanAll,
   scanAudits,
   scanCertifications,
+  scanDocuments,
   scanFindings,
   scanMaintenance,
   scanMaintenanceHours,
   scanPilotCredentials,
   type AirframeHoursRecord,
+  type DocumentRecord,
   type PilotRecord,
 } from "./reminders";
 import { isoDaysFromNow } from "./compliance";
@@ -431,5 +433,105 @@ describe("scanAll", () => {
 
     expect(results).toHaveLength(5);
     expect(new Set(results.map((r) => r.dedupe_key)).size).toBe(5);
+  });
+});
+
+describe("scanDocuments", () => {
+  const now = new Date("2026-01-15T12:00:00Z");
+
+  function doc(overrides: Partial<DocumentRecord> = {}): DocumentRecord {
+    return {
+      id: "doc-1",
+      title: "Flight Operations SOP",
+      category: "sop",
+      review_interval_months: 12,
+      last_reviewed_at: null,
+      effective_date: "2025-01-15",
+      created_at: "2025-01-15T00:00:00Z",
+      expires_at: null,
+      pilot_name: null,
+      pilot_profile_id: null,
+      ...overrides,
+    };
+  }
+
+  it("raises an overdue review once the annual clock has run out", () => {
+    // Effective 2025-01-15, reviewed annually, so due 2026-01-15 — today.
+    const results = scanDocuments([doc({ effective_date: "2024-11-01" })], now);
+    const review = results.find((r) => r.kind === "document_review_overdue");
+    expect(review).toBeDefined();
+    expect(review?.due_date).toBe("2025-11-01");
+    expect(review?.severity).toBe("high");
+  });
+
+  it("warns ahead of the review date", () => {
+    const results = scanDocuments([doc({ effective_date: "2025-02-01" })], now);
+    const review = results.find((r) => r.kind === "document_review_due");
+    expect(review).toBeDefined();
+    expect(review?.due_date).toBe("2026-02-01");
+  });
+
+  it("says nothing about a document that never needs reviewing", () => {
+    // A ROC-A radio certificate does not expire and is never reviewed.
+    const results = scanDocuments(
+      [doc({ category: "roc_a", review_interval_months: null, effective_date: "2019-01-01" })],
+      now,
+    );
+    expect(results).toEqual([]);
+  });
+
+  it("reaches the linked pilot as well as the responsible roles", () => {
+    const results = scanDocuments(
+      [
+        doc({
+          effective_date: "2024-11-01",
+          pilot_name: "Jordan Reyes",
+          pilot_profile_id: "profile-9",
+        }),
+      ],
+      now,
+    );
+    expect(results[0].target_profile_id).toBe("profile-9");
+    expect(results[0].target_roles).toContain("uav_admin");
+  });
+
+  it("treats a printed expiry as separate from the review clock", () => {
+    // In date for review, but the document itself has expired: both facts
+    // matter and collapsing them would hide one.
+    const results = scanDocuments(
+      [doc({ effective_date: "2025-12-01", expires_at: "2025-12-31" })],
+      now,
+    );
+    expect(results.map((r) => r.kind)).toEqual(["document_expired"]);
+  });
+
+  it("can report a review and an expiry on the same document", () => {
+    const results = scanDocuments(
+      [doc({ effective_date: "2024-11-01", expires_at: "2026-01-20" })],
+      now,
+    );
+    expect(results.map((r) => r.kind).sort()).toEqual([
+      "document_expiring",
+      "document_review_overdue",
+    ]);
+  });
+
+  it("restarts the clock from the last review", () => {
+    const results = scanDocuments(
+      [doc({ effective_date: "2024-01-01", last_reviewed_at: "2025-12-01" })],
+      now,
+    );
+    expect(results).toEqual([]);
+  });
+
+  it("gives every candidate a distinct dedupe key", () => {
+    const results = scanDocuments(
+      [
+        doc({ id: "a", effective_date: "2024-11-01" }),
+        doc({ id: "b", effective_date: "2024-11-01", expires_at: "2025-06-01" }),
+      ],
+      now,
+    );
+    expect(new Set(results.map((r) => r.dedupe_key)).size).toBe(results.length);
   });
 });

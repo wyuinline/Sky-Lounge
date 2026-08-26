@@ -1,6 +1,8 @@
 import { describe, it, expect } from "vitest";
 import {
+  addMonths,
   daysUntil,
+  documentReviewDue,
   deriveExpiryStatus,
   derivePilotCertificateStatus,
   derivePilotCurrency,
@@ -203,5 +205,71 @@ describe("derivePilotCurrency", () => {
 
   it("treats a pilot with no recorded medical as current, not expired", () => {
     expect(derivePilotCurrency(null, [], NOW)).toBe("current");
+  });
+});
+
+describe("documentReviewDue", () => {
+  const base = {
+    last_reviewed_at: null,
+    effective_date: "2025-01-15",
+    created_at: "2025-03-01T10:00:00Z",
+    review_interval_months: 12,
+  };
+
+  it("runs the clock from the effective date when never reviewed", () => {
+    expect(documentReviewDue(base)).toBe("2026-01-15");
+  });
+
+  it("runs the clock from the last review once there is one", () => {
+    expect(documentReviewDue({ ...base, last_reviewed_at: "2025-06-30" })).toBe("2026-06-30");
+  });
+
+  it("falls back to the created date when no effective date is set", () => {
+    expect(documentReviewDue({ ...base, effective_date: null })).toBe("2026-03-01");
+  });
+
+  it("returns null when the document never needs reviewing", () => {
+    // A ROC-A radio certificate, or a report of something that already
+    // happened — no date should be produced for these at all.
+    expect(documentReviewDue({ ...base, review_interval_months: null })).toBeNull();
+  });
+
+  it("returns null when there is no date to count from", () => {
+    expect(
+      documentReviewDue({
+        last_reviewed_at: null,
+        effective_date: null,
+        created_at: null,
+        review_interval_months: 12,
+      }),
+    ).toBeNull();
+  });
+
+  it("handles the two-year cycle", () => {
+    expect(documentReviewDue({ ...base, review_interval_months: 24 })).toBe("2027-01-15");
+  });
+
+  it("clamps rather than overflowing into the next month", () => {
+    // 31 Aug + 6 months is "Feb 31", which Date rolls into March and which
+    // would push a compliance deadline later than it should be.
+    expect(
+      documentReviewDue({
+        ...base,
+        effective_date: "2025-08-31",
+        review_interval_months: 6,
+      }),
+    ).toBe("2026-02-28");
+  });
+});
+
+describe("addMonths", () => {
+  it("clamps to the last day of a shorter target month", () => {
+    expect(addMonths("2024-01-31", 1)).toBe("2024-02-29");
+    expect(addMonths("2025-01-31", 1)).toBe("2025-02-28");
+  });
+
+  it("returns null for a missing or unparseable date", () => {
+    expect(addMonths(null, 12)).toBeNull();
+    expect(addMonths("not-a-date", 12)).toBeNull();
   });
 });

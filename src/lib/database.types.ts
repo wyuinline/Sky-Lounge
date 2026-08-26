@@ -131,14 +131,37 @@ export type Database = {
           },
         ]
       }
+      document_review_policy: {
+        Row: {
+          category: Database["public"]["Enums"]["document_category"]
+          rationale: string | null
+          review_interval_months: number | null
+        }
+        Insert: {
+          category: Database["public"]["Enums"]["document_category"]
+          rationale?: string | null
+          review_interval_months?: number | null
+        }
+        Update: {
+          category?: Database["public"]["Enums"]["document_category"]
+          rationale?: string | null
+          review_interval_months?: number | null
+        }
+        Relationships: []
+      }
       documents: {
         Row: {
           approval_status: Database["public"]["Enums"]["document_workflow_status"]
           category: Database["public"]["Enums"]["document_category"]
           created_at: string
           department: string | null
+          effective_date: string | null
+          expires_at: string | null
           id: string
+          last_reviewed_at: string | null
+          last_reviewed_by: string | null
           pilot_id: string | null
+          review_interval_months: number | null
           storage_path: string
           title: string
           uav_model: string | null
@@ -150,8 +173,13 @@ export type Database = {
           category: Database["public"]["Enums"]["document_category"]
           created_at?: string
           department?: string | null
+          effective_date?: string | null
+          expires_at?: string | null
           id?: string
+          last_reviewed_at?: string | null
+          last_reviewed_by?: string | null
           pilot_id?: string | null
+          review_interval_months?: number | null
           storage_path: string
           title: string
           uav_model?: string | null
@@ -163,8 +191,13 @@ export type Database = {
           category?: Database["public"]["Enums"]["document_category"]
           created_at?: string
           department?: string | null
+          effective_date?: string | null
+          expires_at?: string | null
           id?: string
+          last_reviewed_at?: string | null
+          last_reviewed_by?: string | null
           pilot_id?: string | null
+          review_interval_months?: number | null
           storage_path?: string
           title?: string
           uav_model?: string | null
@@ -172,6 +205,13 @@ export type Database = {
           version?: number
         }
         Relationships: [
+          {
+            foreignKeyName: "documents_last_reviewed_by_fkey"
+            columns: ["last_reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "documents_pilot_id_fkey"
             columns: ["pilot_id"]
@@ -846,6 +886,61 @@ export type Database = {
       }
     }
     Views: {
+      document_review_status: {
+        Row: {
+          approval_status:
+            | Database["public"]["Enums"]["document_workflow_status"]
+            | null
+          category: Database["public"]["Enums"]["document_category"] | null
+          created_at: string | null
+          department: string | null
+          effective_date: string | null
+          expires_at: string | null
+          id: string | null
+          last_reviewed_at: string | null
+          pilot_active: boolean | null
+          pilot_id: string | null
+          pilot_name: string | null
+          pilot_profile_id: string | null
+          review_due: string | null
+          review_interval_months: number | null
+          storage_path: string | null
+          title: string | null
+          uav_model: string | null
+          uploaded_by: string | null
+          version: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "documents_pilot_id_fkey"
+            columns: ["pilot_id"]
+            isOneToOne: false
+            referencedRelation: "pilot_certificate_status"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documents_pilot_id_fkey"
+            columns: ["pilot_id"]
+            isOneToOne: false
+            referencedRelation: "pilots"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documents_uploaded_by_fkey"
+            columns: ["uploaded_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pilots_profile_id_fkey"
+            columns: ["pilot_profile_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pilot_certificate_status: {
         Row: {
           active: boolean | null
@@ -1053,6 +1148,10 @@ export type Database = {
         | "pilot_certificate_expired"
         | "recency_due"
         | "recency_overdue"
+        | "document_review_due"
+        | "document_review_overdue"
+        | "document_expiring"
+        | "document_expired"
       risk_level: "low" | "medium" | "high" | "critical"
       rpas_certificate_type:
         | "basic_operations"
@@ -1271,6 +1370,10 @@ export const Constants = {
         "pilot_certificate_expired",
         "recency_due",
         "recency_overdue",
+        "document_review_due",
+        "document_review_overdue",
+        "document_expiring",
+        "document_expired",
       ],
       risk_level: ["low", "medium", "high", "critical"],
       rpas_certificate_type: [

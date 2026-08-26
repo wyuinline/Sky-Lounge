@@ -1,4 +1,5 @@
 import {
+  documentReviewDue,
   recencyDue,
   daysUntil,
   isAuditOverdue,
@@ -27,6 +28,10 @@ export type NotificationKind =
   | "maintenance_overdue"
   | "maintenance_hours_due"
   | "maintenance_hours_overdue"
+  | "document_review_due"
+  | "document_review_overdue"
+  | "document_expiring"
+  | "document_expired"
   | "audit_upcoming"
   | "audit_overdue"
   | "finding_overdue";
@@ -103,6 +108,22 @@ export type PilotRecord = {
   certificate_expires: string | null;
   last_recency_activity: string | null;
   profile_id: string | null;
+};
+
+export type DocumentRecord = {
+  id: string;
+  title: string;
+  category: string;
+  /** Null when the document never needs reviewing — a ROC-A, an old report. */
+  review_interval_months: number | null;
+  last_reviewed_at: string | null;
+  effective_date: string | null;
+  created_at: string | null;
+  /** A hard date printed on the document, separate from the review clock. */
+  expires_at: string | null;
+  /** Set when the document belongs to one pilot, so they get told too. */
+  pilot_name: string | null;
+  pilot_profile_id: string | null;
 };
 
 export type CertificationRecord = {
@@ -458,10 +479,107 @@ export function scanFindings(findings: FindingRecord[], now = new Date()): Remin
   }));
 }
 
+/**
+ * Controlled documents: the review clock and any printed expiry.
+ *
+ * Two independent deadlines, reported separately. A manual can be perfectly in
+ * date and still overdue for its annual read, and saying "expiring" about a
+ * document that has no expiry would be wrong.
+ *
+ * A document tied to a pilot reaches that pilot as well as the responsible
+ * roles — they are the one who has to go and renew it.
+ */
+export function scanDocuments(
+  documents: DocumentRecord[],
+  now = new Date(),
+): ReminderCandidate[] {
+  const out: ReminderCandidate[] = [];
+
+  for (const doc of documents) {
+    const who = doc.pilot_name ? ` (${doc.pilot_name})` : "";
+
+    // --- Periodic review ---
+    const due = documentReviewDue(doc);
+    if (due !== null) {
+      const days = daysUntil(due, now);
+      if (days !== null) {
+        if (days < 0) {
+          out.push({
+            dedupe_key: `document_review_overdue:${doc.id}:${due}:0`,
+            kind: "document_review_overdue",
+            severity: "high",
+            title: `"${doc.title}" is overdue for review`,
+            body: `Review was due on ${due}. Read it against how the work is actually done now, then mark it reviewed to restart the clock.`,
+            entity_table: "documents",
+            entity_id: doc.id,
+            due_date: due,
+            target_roles: COMPLIANCE_ROLES,
+            target_profile_id: doc.pilot_profile_id,
+          });
+        } else {
+          const threshold = crossedThreshold(days);
+          if (threshold !== null) {
+            out.push({
+              dedupe_key: `document_review_due:${doc.id}:${due}:${threshold}`,
+              kind: "document_review_due",
+              severity: severityForDays(days),
+              title: `"${doc.title}"${who} is due for review in ${days} day${days === 1 ? "" : "s"}`,
+              body: `Its ${doc.review_interval_months}-month review falls due on ${due}.`,
+              entity_table: "documents",
+              entity_id: doc.id,
+              due_date: due,
+              target_roles: COMPLIANCE_ROLES,
+              target_profile_id: doc.pilot_profile_id,
+            });
+          }
+        }
+      }
+    }
+
+    // --- Printed expiry ---
+    const expiryDays = daysUntil(doc.expires_at, now);
+    if (expiryDays !== null) {
+      if (expiryDays < 0) {
+        out.push({
+          dedupe_key: `document_expired:${doc.id}:${doc.expires_at}:0`,
+          kind: "document_expired",
+          severity: "critical",
+          title: `"${doc.title}"${who} has expired`,
+          body: `It expired on ${doc.expires_at}. Replace it with a current copy.`,
+          entity_table: "documents",
+          entity_id: doc.id,
+          due_date: doc.expires_at,
+          target_roles: COMPLIANCE_ROLES,
+          target_profile_id: doc.pilot_profile_id,
+        });
+      } else {
+        const threshold = crossedThreshold(expiryDays);
+        if (threshold !== null) {
+          out.push({
+            dedupe_key: `document_expiring:${doc.id}:${doc.expires_at}:${threshold}`,
+            kind: "document_expiring",
+            severity: severityForDays(expiryDays),
+            title: `"${doc.title}"${who} expires in ${expiryDays} day${expiryDays === 1 ? "" : "s"}`,
+            body: `It expires on ${doc.expires_at}. Start the renewal.`,
+            entity_table: "documents",
+            entity_id: doc.id,
+            due_date: doc.expires_at,
+            target_roles: COMPLIANCE_ROLES,
+            target_profile_id: doc.pilot_profile_id,
+          });
+        }
+      }
+    }
+  }
+
+  return out;
+}
+
 export function scanAll(
   data: {
     pilots: PilotRecord[];
     certifications: CertificationRecord[];
+    documents?: DocumentRecord[];
     maintenance: MaintenanceRecord[];
     airframeHours?: AirframeHoursRecord[];
     audits: AuditRecord[];
@@ -472,6 +590,7 @@ export function scanAll(
   return [
     ...scanPilotCredentials(data.pilots, now),
     ...scanCertifications(data.certifications, now),
+    ...scanDocuments(data.documents ?? [], now),
     ...scanMaintenance(data.maintenance, now),
     ...scanMaintenanceHours(data.airframeHours ?? []),
     ...scanAudits(data.audits, now),

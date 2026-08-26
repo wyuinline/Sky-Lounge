@@ -123,18 +123,20 @@ export function derivePilotCurrency(
  */
 export const RECENCY_MONTHS = 24;
 
-/** Recency due date, or null when no activity has been recorded. */
-export function recencyDue(
-  lastActivity: string | null,
-  months: number = RECENCY_MONTHS,
-): string | null {
-  if (!lastActivity) return null;
-  const start = new Date(`${lastActivity.slice(0, 10)}T00:00:00`);
+/**
+ * Adds whole months to a date, clamping to the end of the target month.
+ *
+ * Date.setMonth overflows rather than clamping: 31 Aug + 6 months becomes
+ * "Feb 31" and rolls forward into March, pushing a compliance deadline later
+ * than it should be. Every derived deadline in the app goes through here so
+ * none of them can drift that way. Matches how Postgres adds an interval, so
+ * the view and the client agree.
+ */
+export function addMonths(date: string | null, months: number): string | null {
+  if (!date) return null;
+  const start = new Date(`${date.slice(0, 10)}T00:00:00`);
   if (Number.isNaN(start.getTime())) return null;
 
-  // Date.setMonth overflows rather than clamping: 31 Aug + 6 months becomes
-  // "Feb 31" and rolls forward into March, pushing a compliance deadline later
-  // than it should be. Clamp to the last valid day of the target month instead.
   const targetMonthStart = new Date(start.getFullYear(), start.getMonth() + months, 1);
   const lastDayOfTargetMonth = new Date(
     targetMonthStart.getFullYear(),
@@ -143,6 +145,35 @@ export function recencyDue(
   ).getDate();
   targetMonthStart.setDate(Math.min(start.getDate(), lastDayOfTargetMonth));
   return todayIso(targetMonthStart);
+}
+
+/** Recency due date, or null when no activity has been recorded. */
+export function recencyDue(
+  lastActivity: string | null,
+  months: number = RECENCY_MONTHS,
+): string | null {
+  return addMonths(lastActivity, months);
+}
+
+/**
+ * When a document is next due for review.
+ *
+ * The clock runs from the last actual review, falling back to the date the
+ * version took effect. A null interval means the document never needs
+ * reviewing — a ROC-A radio certificate, or a report of something that already
+ * happened — and returns null rather than a date nobody should act on.
+ */
+export function documentReviewDue(
+  doc: {
+    last_reviewed_at: string | null;
+    effective_date: string | null;
+    created_at?: string | null;
+    review_interval_months: number | null;
+  },
+): string | null {
+  if (!doc.review_interval_months) return null;
+  const start = doc.last_reviewed_at ?? doc.effective_date ?? doc.created_at ?? null;
+  return addMonths(start, doc.review_interval_months);
 }
 
 /**
