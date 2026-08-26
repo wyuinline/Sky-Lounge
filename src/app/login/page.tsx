@@ -100,14 +100,16 @@ export default function LoginPage() {
             <div className="flex flex-col gap-2">
               <div className="flex items-baseline justify-between gap-2">
                 <Label htmlFor="password">Password</Label>
-                <button
+<Button
                   type="button"
+                  variant="link"
+                  size="xs"
                   onClick={handleForgotPassword}
                   disabled={resetting}
-                  className="text-xs text-muted-foreground underline-offset-2 hover:text-foreground hover:underline disabled:opacity-50"
+                  className="h-auto px-0 text-xs"
                 >
                   {resetting ? "Sending..." : "Forgot password?"}
-                </button>
+                </Button>
               </div>
               <Input
                 id="password"

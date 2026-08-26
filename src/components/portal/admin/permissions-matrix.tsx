@@ -146,9 +146,14 @@ export function PermissionsMatrix({
                           editable ? " Click to change." : ""
                         }`}
                         className={cn(
-                          "w-full rounded-md border px-2 py-1.5 text-xs transition-colors",
+                          "w-full rounded-md border px-2 py-1.5 text-xs",
+                          "transition-[background-color,border-color,box-shadow,transform] duration-100 ease-out",
+                          "outline-none focus-visible:ring-2 focus-visible:ring-ring/60",
                           levelStyle[level],
-                          editable && "cursor-pointer hover:brightness-105",
+                          // 78 cells: a bezel on each would be noise, so the
+                          // affordance is in the lift on hover instead.
+                          editable &&
+                            "cursor-pointer hover:-translate-y-px hover:brightness-[1.06] hover:shadow-[var(--control-lift)] active:translate-y-0 active:shadow-none motion-reduce:transition-none motion-reduce:hover:translate-y-0",
                           !editable && "cursor-default",
                           pending === key && "opacity-50",
                         )}

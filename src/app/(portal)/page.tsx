@@ -70,8 +70,12 @@ export default async function DashboardPage() {
         <SectionLabel>Quick Actions</SectionLabel>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
           {quickActions.map((action) => (
-            <Link key={action.href} href={action.href}>
-              <Card className="group h-full gap-0 overflow-hidden rounded-md border-border py-0 transition-colors hover:border-brand-teal/50 hover:bg-brand-mist/50">
+            <Link
+              key={action.href}
+              href={action.href}
+              className="rounded-md outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+            >
+              <Card className="group h-full gap-0 overflow-hidden rounded-md border-[var(--control-edge)] bg-[var(--control-face)] py-0 shadow-[var(--control-lift)] transition-[background-color,border-color,box-shadow,transform] duration-100 ease-out hover:-translate-y-0.5 hover:border-[var(--control-edge-hover)] hover:bg-[var(--control-face-hover)] hover:shadow-[var(--control-lift-hover)] active:translate-y-0 active:shadow-none motion-reduce:transition-none motion-reduce:hover:translate-y-0">
                 <div className="h-1 w-full bg-brand-sage transition-colors group-hover:bg-brand-lime" />
                 <CardContent className="flex flex-col items-center gap-2 px-3 py-6 text-center">
                   <action.icon className="size-5 text-brand-teal" />
