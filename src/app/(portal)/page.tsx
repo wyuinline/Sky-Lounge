@@ -6,6 +6,7 @@ import { StatusDot } from "@/components/portal/status-dot";
 import { SectionLabel } from "@/components/portal/section-label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { DockGrid } from "@/components/portal/dock-grid";
 import { TodoList } from "@/components/portal/todo-list";
 import { getDashboardData } from "./dashboard-data";
 
@@ -68,14 +69,15 @@ export default async function DashboardPage() {
 
       <div>
         <SectionLabel>Quick Actions</SectionLabel>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+        {/* A row of equal tiles is the one place the Dock metaphor fits. */}
+        <DockGrid className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
           {quickActions.map((action) => (
             <Link
               key={action.href}
               href={action.href}
-              className="rounded-md outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+              className="rounded-md outline-none transition-transform duration-200 [transition-timing-function:var(--ease-pop)] will-change-transform focus-visible:ring-3 focus-visible:ring-ring/50 motion-reduce:transition-none"
             >
-              <Card className="group h-full gap-0 overflow-hidden rounded-md border-[var(--control-edge)] bg-[var(--control-face)] py-0 shadow-[var(--control-lift)] transition-[background-color,border-color,box-shadow,transform] duration-100 ease-out hover:-translate-y-0.5 hover:border-[var(--control-edge-hover)] hover:bg-[var(--control-face-hover)] hover:shadow-[var(--control-lift-hover)] active:translate-y-0 active:shadow-none motion-reduce:transition-none motion-reduce:hover:translate-y-0">
+              <Card className="group h-full gap-0 overflow-hidden rounded-md border-[var(--control-edge)] bg-[var(--control-face)] py-0 shadow-[var(--control-dome),var(--control-lift)] transition-[background-color,border-color,box-shadow] duration-150 ease-out group-hover:border-[var(--control-edge-hover)] hover:border-[var(--control-edge-hover)] hover:bg-[var(--control-face-hover)] hover:shadow-[var(--control-dome),var(--control-pop)] motion-reduce:transition-none">
                 <div className="h-1 w-full bg-brand-sage transition-colors group-hover:bg-brand-lime" />
                 <CardContent className="flex flex-col items-center gap-2 px-3 py-6 text-center">
                   <action.icon className="size-5 text-brand-teal" />
@@ -86,7 +88,7 @@ export default async function DashboardPage() {
               </Card>
             </Link>
           ))}
-        </div>
+        </DockGrid>
       </div>
 
       <div>

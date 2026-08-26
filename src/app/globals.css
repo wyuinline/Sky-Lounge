@@ -111,6 +111,24 @@
   --control-lift: 0 1px 0 0 var(--control-edge), 0 1px 2px -1px rgb(51 63 72 / 0.16);
   --control-lift-hover: 0 1px 0 0 var(--control-edge-hover), 0 2px 6px -2px rgb(51 63 72 / 0.22);
   --control-lift-solid: 0 1px 0 0 rgb(0 0 0 / 0.28), 0 2px 4px -2px rgb(51 63 72 / 0.35);
+
+  /* Depth on hover. Three layered shadows read as a lit object above a
+     surface rather than a rectangle with a blur behind it: a tight contact
+     shadow, a mid spread, and a wide ambient. The inset highlight domes the
+     top edge, which is what makes a control look pressable rather than
+     printed. */
+  --control-dome: inset 0 1px 0 0 rgb(255 255 255 / 0.85);
+  --control-pop:
+    0 1px 0 0 var(--control-edge-hover),
+    0 2px 4px -1px rgb(51 63 72 / 0.18),
+    0 8px 16px -6px rgb(51 63 72 / 0.28),
+    0 16px 32px -12px rgb(51 63 72 / 0.22);
+  --control-pop-solid:
+    0 1px 0 0 rgb(0 0 0 / 0.3),
+    0 4px 8px -2px rgb(51 63 72 / 0.4),
+    0 12px 24px -8px rgb(51 63 72 / 0.35);
+  /* Overshoots slightly, so the pop reads as sprung rather than eased. */
+  --ease-pop: cubic-bezier(0.34, 1.4, 0.64, 1);
   --sidebar: #333f48;
   --sidebar-foreground: #fffef8;
   --sidebar-primary: #a1d884;
@@ -174,6 +192,17 @@
   --control-lift: 0 1px 0 0 var(--control-edge), 0 1px 2px -1px rgb(0 0 0 / 0.5);
   --control-lift-hover: 0 1px 0 0 var(--control-edge-hover), 0 2px 6px -2px rgb(0 0 0 / 0.6);
   --control-lift-solid: 0 1px 0 0 rgb(0 0 0 / 0.5), 0 2px 4px -2px rgb(0 0 0 / 0.6);
+  /* A dark face is lit from above by lightening, not by a white highlight. */
+  --control-dome: inset 0 1px 0 0 rgb(255 255 255 / 0.09);
+  --control-pop:
+    0 1px 0 0 var(--control-edge-hover),
+    0 2px 4px -1px rgb(0 0 0 / 0.5),
+    0 8px 16px -6px rgb(0 0 0 / 0.6),
+    0 16px 32px -12px rgb(0 0 0 / 0.5);
+  --control-pop-solid:
+    0 1px 0 0 rgb(0 0 0 / 0.6),
+    0 4px 8px -2px rgb(0 0 0 / 0.65),
+    0 12px 24px -8px rgb(0 0 0 / 0.6);
 }
 
 @layer base {
