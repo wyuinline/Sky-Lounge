@@ -6,6 +6,7 @@ import { StatusDot } from "@/components/portal/status-dot";
 import { SectionLabel } from "@/components/portal/section-label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { TodoList } from "@/components/portal/todo-list";
 import { getDashboardData } from "./dashboard-data";
 
 const quickActions = [
@@ -82,6 +83,11 @@ export default async function DashboardPage() {
             </Link>
           ))}
         </div>
+      </div>
+
+      <div>
+        <SectionLabel>To Do</SectionLabel>
+        <TodoList items={data.todos} counts={data.todoCounts} />
       </div>
 
       <div>

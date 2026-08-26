@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { buildTodoList, countBySeverity, type TodoItem } from "@/lib/todo";
 
 type FlightLogActivityRow = {
   id: string;
@@ -48,6 +49,9 @@ export type DashboardData = {
   overdueMaintenance: number;
   recentIncidents: number;
   activity: ActivityItem[];
+  /** Everything currently flagged, most urgent first. */
+  todos: TodoItem[];
+  todoCounts: { overdue: number; attention: number };
 };
 
 export type ActivityItem = {
@@ -74,6 +78,8 @@ const empty: DashboardData = {
   overdueMaintenance: 0,
   recentIncidents: 0,
   activity: [],
+  todos: [],
+  todoCounts: { overdue: 0, attention: 0 },
 };
 
 export async function getDashboardData(): Promise<DashboardData> {
@@ -107,6 +113,13 @@ export async function getDashboardData(): Promise<DashboardData> {
     recentFlights,
     recentMaintenance,
     recentIncidentsList,
+    todoPilots,
+    todoUavs,
+    todoMaintenance,
+    todoRequests,
+    todoLogs,
+    todoIncidents,
+    todoDocuments,
   ] = await Promise.all([
     supabase.from("uavs").select("status"),
     supabase.from("pilots").select("id", { count: "exact", head: true }),
@@ -157,7 +170,112 @@ export async function getDashboardData(): Promise<DashboardData> {
       .order("created_at", { ascending: false })
       .limit(3)
 ,
+    // --- Sources for the to-do list ---
+    // RLS scopes each of these to what the viewer may see, so a pilot's list
+    // is naturally their own without a second code path.
+    supabase
+      .from("pilot_certificate_status")
+      .select(
+        "id, full_name, certificate_expires, last_recency_activity, has_roc_a, certificate_type, active",
+      ),
+    supabase
+      .from("uav_fleet_status")
+      .select("id, drone_id, status, next_inspection_date, hours_until_service"),
+    supabase
+      .from("maintenance_records")
+      .select("id, status, next_service_date, uavs(drone_id)")
+      .neq("status", "completed"),
+    supabase
+      .from("flight_requests")
+      .select("id, approval_status, requested_date, pilots(full_name)")
+      .eq("approval_status", "pending"),
+    supabase
+      .from("flight_logs")
+      .select("id, flight_date, acknowledged_at, pilots(full_name)")
+      .is("acknowledged_at", null),
+    supabase
+      .from("incidents")
+      .select("id, incident_date, incident_type, status, severity")
+      .neq("status", "closed"),
+    supabase
+      .from("document_review_status")
+      .select(
+        "id, title, last_reviewed_at, effective_date, created_at, review_interval_months, expires_at, approval_status",
+      ),
   ]);
+
+  // A failure in any one source drops that source from the list rather than
+  // emptying the dashboard. A short list is misleading, but a blank one after
+  // a transient outage is worse, and the error is logged either way.
+  for (const [name, res] of Object.entries({
+    pilots: todoPilots,
+    uavs: todoUavs,
+    maintenance: todoMaintenance,
+    requests: todoRequests,
+    logs: todoLogs,
+    incidents: todoIncidents,
+    documents: todoDocuments,
+  })) {
+    if (res.error) console.error(`[dashboard] to-do source "${name}" failed`, res.error);
+  }
+
+  const todos = buildTodoList(
+    {
+      pilots: (todoPilots.data ?? [])
+        .filter((p) => p.active !== false)
+        .map((p) => ({
+          id: p.id ?? "",
+          full_name: p.full_name ?? "Unnamed pilot",
+          certificate_expires: p.certificate_expires,
+          last_recency_activity: p.last_recency_activity,
+          has_roc_a: p.has_roc_a ?? false,
+          certificate_type: p.certificate_type,
+        })),
+      uavs: (todoUavs.data ?? []).map((u) => ({
+        id: u.id ?? "",
+        drone_id: u.drone_id ?? "Unnamed airframe",
+        status: u.status,
+        next_inspection_date: u.next_inspection_date,
+        hours_until_service: u.hours_until_service,
+      })),
+      maintenance: (todoMaintenance.data ?? []).map((m) => ({
+        id: m.id,
+        drone_id: m.uavs?.drone_id ?? null,
+        status: m.status,
+        next_service_date: m.next_service_date,
+      })),
+      requests: (todoRequests.data ?? []).map((r) => ({
+        id: r.id,
+        pilot_name: r.pilots?.full_name ?? null,
+        approval_status: r.approval_status,
+        requested_date: r.requested_date,
+      })),
+      logs: (todoLogs.data ?? []).map((l) => ({
+        id: l.id,
+        flight_date: l.flight_date,
+        pilot_name: l.pilots?.full_name ?? null,
+        acknowledged_at: l.acknowledged_at,
+      })),
+      incidents: (todoIncidents.data ?? []).map((i) => ({
+        id: i.id,
+        incident_date: i.incident_date,
+        incident_type: i.incident_type,
+        status: i.status,
+        severity: i.severity,
+      })),
+      documents: (todoDocuments.data ?? []).map((d) => ({
+        id: d.id ?? "",
+        title: d.title ?? "Untitled document",
+        last_reviewed_at: d.last_reviewed_at,
+        effective_date: d.effective_date,
+        created_at: d.created_at,
+        review_interval_months: d.review_interval_months,
+        expires_at: d.expires_at,
+        approval_status: d.approval_status,
+      })),
+    },
+    today,
+  );
 
   const fleet = fleetRows.data ?? [];
   const compliance = audits.data ?? [];
@@ -212,5 +330,7 @@ export async function getDashboardData(): Promise<DashboardData> {
     overdueMaintenance: overdueMaintenance.count ?? 0,
     recentIncidents: recentIncidentsCount.count ?? 0,
     activity,
+    todos,
+    todoCounts: countBySeverity(todos),
   };
 }
