@@ -312,3 +312,50 @@ export function batteryFlags(battery: BatteryFlagInput): Flag[] {
 
   return flags;
 }
+
+export type ComponentFlagInput = {
+  status: string;
+  /** Null when the part has no hours-based service life. */
+  hours_until_service: number | null;
+  /** The airframe it is currently fitted to, if any. */
+  fitted_to: string | null;
+};
+
+/**
+ * A part on an airframe is consuming its life every flight, so the lead is the
+ * same 25 hours used for airframe service intervals — roughly a fortnight of
+ * flying.
+ */
+export const COMPONENT_HOURS_LEAD = 25;
+
+export function componentFlags(component: ComponentFlagInput): Flag[] {
+  if (component.status === "retired") return [];
+
+  const flags: Flag[] = [];
+
+  if (component.hours_until_service !== null) {
+    const remaining = Math.round(component.hours_until_service * 10) / 10;
+    if (remaining <= 0) {
+      flags.push({
+        severity: "overdue",
+        label: `Service overdue by ${Math.abs(remaining)} flight hours`,
+      });
+    } else if (remaining <= COMPONENT_HOURS_LEAD) {
+      flags.push({
+        severity: "attention",
+        label: `${remaining} flight hours until service`,
+      });
+    }
+  }
+
+  // A part fitted to an aircraft while flagged as needing work is the case
+  // worth seeing: it is accruing hours it should not be.
+  if (component.status === "maintenance" && component.fitted_to) {
+    flags.push({
+      severity: "overdue",
+      label: `Marked for maintenance but still fitted to ${component.fitted_to}`,
+    });
+  }
+
+  return flags;
+}

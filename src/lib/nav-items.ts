@@ -15,6 +15,7 @@ import {
   ShieldCheck,
   KeyRound,
   FileSpreadsheet,
+  Briefcase,
 } from "lucide-react";
 
 export type NavItem = {
@@ -34,6 +35,7 @@ export const navItems: NavItem[] = [
   { title: "UAV Fleet", href: "/fleet", icon: Plane },
   { title: "Pilots & Crew", href: "/pilots", icon: Users },
   { title: "Flight Operations", href: "/flights", icon: Send },
+  { title: "Projects & Clients", href: "/projects", icon: Briefcase },
   { title: "Audits & Compliance", href: "/audits", icon: ClipboardCheck },
   { title: "Maintenance", href: "/maintenance", icon: Wrench },
   { title: "Incidents & Safety", href: "/incidents", icon: ShieldAlert },

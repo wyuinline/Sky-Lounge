@@ -20,7 +20,8 @@ const workflowSteps = [
 
 export default async function FlightsPage() {
   const supabase = await createClient();
-  const [access, pilotsRes, uavsRes, batteriesRes, requestsRes, logsRes] = await Promise.all([
+  const [access, pilotsRes, uavsRes, batteriesRes, projectsRes, requestsRes, logsRes] =
+    await Promise.all([
     getAccess(),
     // Departed crew are not offered: you cannot assign new work to someone
     // who has left, and their record stays only for the history.
@@ -34,6 +35,13 @@ export default async function FlightsPage() {
       .select("id, battery_id")
       .neq("status", "retired")
       .order("battery_id"),
+    // Completed and cancelled jobs are not offered — you cannot book new work
+    // against a project that has closed.
+    supabase
+      .from("projects")
+      .select("id, project_code, name")
+      .not("status", "in", "(complete,cancelled)")
+      .order("project_code", { ascending: false }),
     supabase
       .from("flight_requests")
       .select("id, location, requested_date, risk_level, approval_status, pilots(full_name), uavs(drone_id)")
@@ -52,6 +60,10 @@ export default async function FlightsPage() {
   const pilotOptions = (pilotsRes.data ?? []).map((p) => ({ id: p.id, label: p.full_name }));
   const uavOptions = (uavsRes.data ?? []).map((u) => ({ id: u.id, label: u.drone_id }));
   const batteryOptions = (batteriesRes.data ?? []).map((b) => ({ id: b.id, label: b.battery_id }));
+  const projectOptions = (projectsRes.data ?? []).map((p) => ({
+    id: p.id,
+    label: `${p.project_code} — ${p.name}`,
+  }));
   const canApprove = access?.canManage("requests") ?? false;
   const canReviewLogs = access?.canManage("logs") ?? false;
 
@@ -67,6 +79,7 @@ export default async function FlightsPage() {
               pilots={pilotOptions}
               uavs={uavOptions}
               batteries={batteryOptions}
+              projects={projectOptions}
             />
             <SubmitFlightRequestDialog pilots={pilotOptions} uavs={uavOptions} />
           </>

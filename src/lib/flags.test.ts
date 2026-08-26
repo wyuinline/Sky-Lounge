@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
   batteryFlags,
+  componentFlags,
   deadlineFlag,
   documentFlags,
   flightLogFlags,
@@ -291,6 +292,54 @@ describe("batteryFlags", () => {
   it("never flags a retired pack, whatever its numbers say", () => {
     expect(
       batteryFlags({ status: "retired", cycles_remaining: -99, age_months: 60 }),
+    ).toEqual([]);
+  });
+});
+
+describe("componentFlags", () => {
+  const ok = { status: "in_service", hours_until_service: 120, fitted_to: "UAV-001" };
+
+  it("is silent for a part with life left", () => {
+    expect(componentFlags(ok)).toEqual([]);
+  });
+
+  it("warns in the last stretch of the interval", () => {
+    const flags = componentFlags({ ...ok, hours_until_service: 20 });
+    expect(flags).toHaveLength(1);
+    expect(flags[0].severity).toBe("attention");
+    expect(flags[0].label).toContain("20 flight hours");
+  });
+
+  it("stays quiet outside the window", () => {
+    expect(componentFlags({ ...ok, hours_until_service: 26 })).toEqual([]);
+  });
+
+  it("escalates once the interval is used up", () => {
+    const flags = componentFlags({ ...ok, hours_until_service: -4.2 });
+    expect(flags[0].severity).toBe("overdue");
+    expect(flags[0].label).toContain("4.2 flight hours");
+  });
+
+  it("says nothing about hours for a part with no service life", () => {
+    // A case or an antenna wears out on nobody's schedule; claiming otherwise
+    // would be a fabricated deadline.
+    expect(componentFlags({ ...ok, hours_until_service: null })).toEqual([]);
+  });
+
+  it("flags a part still flying while marked for maintenance", () => {
+    const flags = componentFlags({ ...ok, status: "maintenance", fitted_to: "UAV-002" });
+    expect(flags).toHaveLength(1);
+    expect(flags[0].severity).toBe("overdue");
+    expect(flags[0].label).toContain("UAV-002");
+  });
+
+  it("does not flag a spare awaiting maintenance on the shelf", () => {
+    expect(componentFlags({ ...ok, status: "maintenance", fitted_to: null })).toEqual([]);
+  });
+
+  it("never flags a retired part", () => {
+    expect(
+      componentFlags({ status: "retired", hours_until_service: -500, fitted_to: null }),
     ).toEqual([]);
   });
 });

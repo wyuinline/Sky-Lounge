@@ -185,6 +185,369 @@ export type Database = {
         }
         Relationships: []
       }
+      checklist_completions: {
+        Row: {
+          all_critical_passed: boolean
+          completed_at: string
+          completed_by: string | null
+          created_at: string
+          flight_log_id: string | null
+          flight_request_id: string | null
+          id: string
+          notes: string | null
+          template_id: string
+          uav_id: string | null
+        }
+        Insert: {
+          all_critical_passed: boolean
+          completed_at?: string
+          completed_by?: string | null
+          created_at?: string
+          flight_log_id?: string | null
+          flight_request_id?: string | null
+          id?: string
+          notes?: string | null
+          template_id: string
+          uav_id?: string | null
+        }
+        Update: {
+          all_critical_passed?: boolean
+          completed_at?: string
+          completed_by?: string | null
+          created_at?: string
+          flight_log_id?: string | null
+          flight_request_id?: string | null
+          id?: string
+          notes?: string | null
+          template_id?: string
+          uav_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "checklist_completions_completed_by_fkey"
+            columns: ["completed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "checklist_completions_flight_log_id_fkey"
+            columns: ["flight_log_id"]
+            isOneToOne: false
+            referencedRelation: "flight_logs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "checklist_completions_flight_request_id_fkey"
+            columns: ["flight_request_id"]
+            isOneToOne: false
+            referencedRelation: "flight_requests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "checklist_completions_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "checklist_templates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "checklist_completions_uav_id_fkey"
+            columns: ["uav_id"]
+            isOneToOne: false
+            referencedRelation: "uav_fleet_status"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "checklist_completions_uav_id_fkey"
+            columns: ["uav_id"]
+            isOneToOne: false
+            referencedRelation: "uav_fleet_status"
+            referencedColumns: ["uav_id"]
+          },
+          {
+            foreignKeyName: "checklist_completions_uav_id_fkey"
+            columns: ["uav_id"]
+            isOneToOne: false
+            referencedRelation: "uavs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      checklist_items: {
+        Row: {
+          created_at: string
+          critical: boolean
+          id: string
+          prompt: string
+          sort_order: number
+          template_id: string
+        }
+        Insert: {
+          created_at?: string
+          critical?: boolean
+          id?: string
+          prompt: string
+          sort_order?: number
+          template_id: string
+        }
+        Update: {
+          created_at?: string
+          critical?: boolean
+          id?: string
+          prompt?: string
+          sort_order?: number
+          template_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "checklist_items_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "checklist_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      checklist_responses: {
+        Row: {
+          checked: boolean
+          comment: string | null
+          completion_id: string
+          id: string
+          item_id: string
+        }
+        Insert: {
+          checked?: boolean
+          comment?: string | null
+          completion_id: string
+          id?: string
+          item_id: string
+        }
+        Update: {
+          checked?: boolean
+          comment?: string | null
+          completion_id?: string
+          id?: string
+          item_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "checklist_responses_completion_id_fkey"
+            columns: ["completion_id"]
+            isOneToOne: false
+            referencedRelation: "checklist_completion_summary"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "checklist_responses_completion_id_fkey"
+            columns: ["completion_id"]
+            isOneToOne: false
+            referencedRelation: "checklist_completions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "checklist_responses_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "checklist_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      checklist_templates: {
+        Row: {
+          active: boolean
+          applies_to_model: string | null
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          applies_to_model?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          applies_to_model?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      clients: {
+        Row: {
+          active: boolean
+          contact_email: string | null
+          contact_name: string | null
+          created_at: string
+          id: string
+          name: string
+          notes: string | null
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          contact_email?: string | null
+          contact_name?: string | null
+          created_at?: string
+          id?: string
+          name: string
+          notes?: string | null
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          contact_email?: string | null
+          contact_name?: string | null
+          created_at?: string
+          id?: string
+          name?: string
+          notes?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      component_installations: {
+        Row: {
+          component_id: string
+          created_at: string
+          id: string
+          installed_by: string | null
+          installed_on: string
+          notes: string | null
+          removed_on: string | null
+          uav_id: string
+        }
+        Insert: {
+          component_id: string
+          created_at?: string
+          id?: string
+          installed_by?: string | null
+          installed_on?: string
+          notes?: string | null
+          removed_on?: string | null
+          uav_id: string
+        }
+        Update: {
+          component_id?: string
+          created_at?: string
+          id?: string
+          installed_by?: string | null
+          installed_on?: string
+          notes?: string | null
+          removed_on?: string | null
+          uav_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "component_installations_component_id_fkey"
+            columns: ["component_id"]
+            isOneToOne: false
+            referencedRelation: "component_status_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "component_installations_component_id_fkey"
+            columns: ["component_id"]
+            isOneToOne: false
+            referencedRelation: "components"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "component_installations_installed_by_fkey"
+            columns: ["installed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "component_installations_uav_id_fkey"
+            columns: ["uav_id"]
+            isOneToOne: false
+            referencedRelation: "uav_fleet_status"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "component_installations_uav_id_fkey"
+            columns: ["uav_id"]
+            isOneToOne: false
+            referencedRelation: "uav_fleet_status"
+            referencedColumns: ["uav_id"]
+          },
+          {
+            foreignKeyName: "component_installations_uav_id_fkey"
+            columns: ["uav_id"]
+            isOneToOne: false
+            referencedRelation: "uavs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      components: {
+        Row: {
+          baseline_hours: number
+          category: Database["public"]["Enums"]["component_category"]
+          component_id: string
+          created_at: string
+          id: string
+          location_site: string | null
+          manufacturer: string | null
+          model: string | null
+          name: string
+          notes: string | null
+          purchased_date: string | null
+          serial_number: string | null
+          service_interval_hours: number | null
+          status: Database["public"]["Enums"]["component_status"]
+          updated_at: string
+        }
+        Insert: {
+          baseline_hours?: number
+          category: Database["public"]["Enums"]["component_category"]
+          component_id: string
+          created_at?: string
+          id?: string
+          location_site?: string | null
+          manufacturer?: string | null
+          model?: string | null
+          name: string
+          notes?: string | null
+          purchased_date?: string | null
+          serial_number?: string | null
+          service_interval_hours?: number | null
+          status?: Database["public"]["Enums"]["component_status"]
+          updated_at?: string
+        }
+        Update: {
+          baseline_hours?: number
+          category?: Database["public"]["Enums"]["component_category"]
+          component_id?: string
+          created_at?: string
+          id?: string
+          location_site?: string | null
+          manufacturer?: string | null
+          model?: string | null
+          name?: string
+          notes?: string | null
+          purchased_date?: string | null
+          serial_number?: string | null
+          service_interval_hours?: number | null
+          status?: Database["public"]["Enums"]["component_status"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
       document_review_policy: {
         Row: {
           category: Database["public"]["Enums"]["document_category"]
@@ -403,6 +766,7 @@ export type Database = {
           max_altitude_m: number | null
           mission_outcome: Database["public"]["Enums"]["mission_outcome"]
           pilot_id: string | null
+          project_id: string | null
           sfoc_reference: string | null
           takeoff_at: string | null
           uav_id: string | null
@@ -429,6 +793,7 @@ export type Database = {
           max_altitude_m?: number | null
           mission_outcome?: Database["public"]["Enums"]["mission_outcome"]
           pilot_id?: string | null
+          project_id?: string | null
           sfoc_reference?: string | null
           takeoff_at?: string | null
           uav_id?: string | null
@@ -455,6 +820,7 @@ export type Database = {
           max_altitude_m?: number | null
           mission_outcome?: Database["public"]["Enums"]["mission_outcome"]
           pilot_id?: string | null
+          project_id?: string | null
           sfoc_reference?: string | null
           takeoff_at?: string | null
           uav_id?: string | null
@@ -490,6 +856,20 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "flight_logs_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "project_summary"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "flight_logs_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "flight_logs_uav_id_fkey"
             columns: ["uav_id"]
             isOneToOne: false
@@ -514,36 +894,45 @@ export type Database = {
       }
       flight_requests: {
         Row: {
+          airspace_authorisation: string | null
+          airspace_authorisation_expires: string | null
           approval_status: Database["public"]["Enums"]["approval_status"]
           approved_by: string | null
           created_at: string
           id: string
           location: string | null
           pilot_id: string | null
+          project_id: string | null
           requested_date: string
           risk_assessment: string | null
           risk_level: Database["public"]["Enums"]["risk_level"]
           uav_id: string | null
         }
         Insert: {
+          airspace_authorisation?: string | null
+          airspace_authorisation_expires?: string | null
           approval_status?: Database["public"]["Enums"]["approval_status"]
           approved_by?: string | null
           created_at?: string
           id?: string
           location?: string | null
           pilot_id?: string | null
+          project_id?: string | null
           requested_date?: string
           risk_assessment?: string | null
           risk_level?: Database["public"]["Enums"]["risk_level"]
           uav_id?: string | null
         }
         Update: {
+          airspace_authorisation?: string | null
+          airspace_authorisation_expires?: string | null
           approval_status?: Database["public"]["Enums"]["approval_status"]
           approved_by?: string | null
           created_at?: string
           id?: string
           location?: string | null
           pilot_id?: string | null
+          project_id?: string | null
           requested_date?: string
           risk_assessment?: string | null
           risk_level?: Database["public"]["Enums"]["risk_level"]
@@ -569,6 +958,20 @@ export type Database = {
             columns: ["pilot_id"]
             isOneToOne: false
             referencedRelation: "pilots"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "flight_requests_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "project_summary"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "flight_requests_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
             referencedColumns: ["id"]
           },
           {
@@ -922,6 +1325,65 @@ export type Database = {
         }
         Relationships: []
       }
+      projects: {
+        Row: {
+          client_id: string | null
+          created_at: string
+          end_date: string | null
+          hourly_rate: number | null
+          id: string
+          latitude: number | null
+          longitude: number | null
+          name: string
+          notes: string | null
+          project_code: string
+          site_name: string | null
+          start_date: string | null
+          status: Database["public"]["Enums"]["project_status"]
+          updated_at: string
+        }
+        Insert: {
+          client_id?: string | null
+          created_at?: string
+          end_date?: string | null
+          hourly_rate?: number | null
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          name: string
+          notes?: string | null
+          project_code: string
+          site_name?: string | null
+          start_date?: string | null
+          status?: Database["public"]["Enums"]["project_status"]
+          updated_at?: string
+        }
+        Update: {
+          client_id?: string | null
+          created_at?: string
+          end_date?: string | null
+          hourly_rate?: number | null
+          id?: string
+          latitude?: number | null
+          longitude?: number | null
+          name?: string
+          notes?: string | null
+          project_code?: string
+          site_name?: string | null
+          start_date?: string | null
+          status?: Database["public"]["Enums"]["project_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "projects_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       role_permissions: {
         Row: {
           area: Database["public"]["Enums"]["access_area"]
@@ -1104,6 +1566,121 @@ export type Database = {
         }
         Relationships: []
       }
+      checklist_completion_summary: {
+        Row: {
+          all_critical_passed: boolean | null
+          checked_count: number | null
+          completed_at: string | null
+          completed_by: string | null
+          completed_by_name: string | null
+          drone_id: string | null
+          flight_log_id: string | null
+          flight_request_id: string | null
+          id: string | null
+          item_count: number | null
+          notes: string | null
+          template_id: string | null
+          template_name: string | null
+          uav_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "checklist_completions_completed_by_fkey"
+            columns: ["completed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "checklist_completions_flight_log_id_fkey"
+            columns: ["flight_log_id"]
+            isOneToOne: false
+            referencedRelation: "flight_logs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "checklist_completions_flight_request_id_fkey"
+            columns: ["flight_request_id"]
+            isOneToOne: false
+            referencedRelation: "flight_requests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "checklist_completions_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "checklist_templates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "checklist_completions_uav_id_fkey"
+            columns: ["uav_id"]
+            isOneToOne: false
+            referencedRelation: "uav_fleet_status"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "checklist_completions_uav_id_fkey"
+            columns: ["uav_id"]
+            isOneToOne: false
+            referencedRelation: "uav_fleet_status"
+            referencedColumns: ["uav_id"]
+          },
+          {
+            foreignKeyName: "checklist_completions_uav_id_fkey"
+            columns: ["uav_id"]
+            isOneToOne: false
+            referencedRelation: "uavs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      component_status_view: {
+        Row: {
+          baseline_hours: number | null
+          category: Database["public"]["Enums"]["component_category"] | null
+          component_id: string | null
+          created_at: string | null
+          fitted_on: string | null
+          fitted_to: string | null
+          fitted_to_uav_id: string | null
+          hours_until_service: number | null
+          id: string | null
+          location_site: string | null
+          manufacturer: string | null
+          model: string | null
+          name: string | null
+          notes: string | null
+          purchased_date: string | null
+          serial_number: string | null
+          service_interval_hours: number | null
+          status: Database["public"]["Enums"]["component_status"] | null
+          total_hours: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "component_installations_uav_id_fkey"
+            columns: ["fitted_to_uav_id"]
+            isOneToOne: false
+            referencedRelation: "uav_fleet_status"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "component_installations_uav_id_fkey"
+            columns: ["fitted_to_uav_id"]
+            isOneToOne: false
+            referencedRelation: "uav_fleet_status"
+            referencedColumns: ["uav_id"]
+          },
+          {
+            foreignKeyName: "component_installations_uav_id_fkey"
+            columns: ["fitted_to_uav_id"]
+            isOneToOne: false
+            referencedRelation: "uavs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       document_review_status: {
         Row: {
           approval_status:
@@ -1221,6 +1798,40 @@ export type Database = {
           },
         ]
       }
+      project_summary: {
+        Row: {
+          aircraft_used: number | null
+          client_id: string | null
+          client_name: string | null
+          created_at: string | null
+          end_date: string | null
+          estimated_cost: number | null
+          first_flight: string | null
+          flight_count: number | null
+          flight_hours: number | null
+          hourly_rate: number | null
+          id: string | null
+          last_flight: string | null
+          latitude: number | null
+          longitude: number | null
+          name: string | null
+          notes: string | null
+          pilots_used: number | null
+          project_code: string | null
+          site_name: string | null
+          start_date: string | null
+          status: Database["public"]["Enums"]["project_status"] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "projects_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       uav_fleet_status: {
         Row: {
           assigned_pilot_id: string | null
@@ -1320,6 +1931,20 @@ export type Database = {
       battery_status: "serviceable" | "monitor" | "retired"
       competency_level: "beginner" | "intermediate" | "advanced" | "qualified"
       compliance_status: "compliant" | "at_risk" | "non_compliant"
+      component_category:
+        | "motor"
+        | "propeller"
+        | "esc"
+        | "gimbal"
+        | "camera"
+        | "payload"
+        | "rtk_base"
+        | "controller"
+        | "antenna"
+        | "charger"
+        | "case"
+        | "other"
+      component_status: "in_service" | "spare" | "maintenance" | "retired"
       crew_role: "visual_observer" | "payload_operator" | "trainee"
       currency_status: "current" | "due_soon" | "expired"
       document_category:
@@ -1373,6 +1998,12 @@ export type Database = {
         | "document_review_overdue"
         | "document_expiring"
         | "document_expired"
+      project_status:
+        | "planned"
+        | "active"
+        | "on_hold"
+        | "complete"
+        | "cancelled"
       risk_level: "low" | "medium" | "high" | "critical"
       rpas_certificate_type:
         | "basic_operations"
@@ -1541,6 +2172,21 @@ export const Constants = {
       battery_status: ["serviceable", "monitor", "retired"],
       competency_level: ["beginner", "intermediate", "advanced", "qualified"],
       compliance_status: ["compliant", "at_risk", "non_compliant"],
+      component_category: [
+        "motor",
+        "propeller",
+        "esc",
+        "gimbal",
+        "camera",
+        "payload",
+        "rtk_base",
+        "controller",
+        "antenna",
+        "charger",
+        "case",
+        "other",
+      ],
+      component_status: ["in_service", "spare", "maintenance", "retired"],
       crew_role: ["visual_observer", "payload_operator", "trainee"],
       currency_status: ["current", "due_soon", "expired"],
       document_category: [
@@ -1599,6 +2245,7 @@ export const Constants = {
         "document_expiring",
         "document_expired",
       ],
+      project_status: ["planned", "active", "on_hold", "complete", "cancelled"],
       risk_level: ["low", "medium", "high", "critical"],
       rpas_certificate_type: [
         "basic_operations",

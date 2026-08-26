@@ -27,6 +27,7 @@ import { logFlight } from "@/app/(portal)/flights/actions";
 type Option = { id: string; label: string };
 
 const NO_AIRSPACE = "__unset__";
+const NO_PROJECT = "__none__";
 
 const airspaceLabel: Record<string, string> = {
   [NO_AIRSPACE]: "Not recorded",
@@ -52,16 +53,19 @@ export function LogFlightDialog({
   pilots,
   uavs,
   batteries,
+  projects,
 }: {
   pilots: Option[];
   uavs: Option[];
   batteries: Option[];
+  projects: Option[];
 }) {
   const [open, setOpen] = useState(false);
   const [pilotId, setPilotId] = useState("");
   const [uavId, setUavId] = useState("");
   const [outcome, setOutcome] = useState("completed");
   const [airspace, setAirspace] = useState(NO_AIRSPACE);
+  const [projectId, setProjectId] = useState(NO_PROJECT);
   const [selectedBatteries, setSelectedBatteries] = useState<string[]>([]);
   const [observers, setObservers] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
@@ -75,6 +79,7 @@ export function LogFlightDialog({
     setUavId("");
     setOutcome("completed");
     setAirspace(NO_AIRSPACE);
+    setProjectId(NO_PROJECT);
     setSelectedBatteries([]);
     setObservers([]);
   }
@@ -89,6 +94,7 @@ export function LogFlightDialog({
     formData.set("uav_id", uavId);
     formData.set("mission_outcome", outcome);
     formData.set("airspace", airspace === NO_AIRSPACE ? "" : airspace);
+    formData.set("project_id", projectId === NO_PROJECT ? "" : projectId);
     for (const id of selectedBatteries) formData.append("battery_ids", id);
     for (const id of observers) formData.append("observer_ids", id);
 
@@ -189,6 +195,28 @@ export function LogFlightDialog({
           </div>
 
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+            <div className="flex flex-col gap-2 sm:col-span-2">
+              <Label>Project</Label>
+              <Select value={projectId} onValueChange={(v) => v && setProjectId(v)}>
+                <SelectTrigger className="w-full">
+                  <SelectValue>
+                    {(v) =>
+                      v === NO_PROJECT
+                        ? "Not attributed"
+                        : (projects.find((p) => p.id === v)?.label ?? "Not attributed")
+                    }
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={NO_PROJECT}>Not attributed</SelectItem>
+                  {projects.map((p) => (
+                    <SelectItem key={p.id} value={p.id}>
+                      {p.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
             <div className="flex flex-col gap-2 sm:col-span-2">
               <Label htmlFor="location_name">Site / Location</Label>
               <Input id="location_name" name="location_name" placeholder="Acheson pit, north cell" />

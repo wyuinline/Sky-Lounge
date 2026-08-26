@@ -67,6 +67,9 @@ export async function submitFlightRequest(formData: FormData) {
   const requestedDate = String(formData.get("requested_date") ?? "");
   const riskLevel = parseEnum(formData.get("risk_level"), RISK_LEVELS, "low");
   const riskAssessment = String(formData.get("risk_assessment") ?? "").trim();
+  const projectId = String(formData.get("project_id") ?? "").trim();
+  const airspaceAuth = String(formData.get("airspace_authorisation") ?? "").trim();
+  const airspaceAuthExpires = String(formData.get("airspace_authorisation_expires") ?? "");
 
   if (!pilotId || !uavId || !requestedDate) {
     return { error: "Choose a pilot and UAV, and set the requested date." };
@@ -82,6 +85,9 @@ export async function submitFlightRequest(formData: FormData) {
     requested_date: requestedDate,
     risk_level: riskLevel,
     risk_assessment: riskAssessment || null,
+    project_id: projectId || null,
+    airspace_authorisation: airspaceAuth || null,
+    airspace_authorisation_expires: airspaceAuthExpires || null,
   });
 
   if (error) return { error: safeErrorMessage(error, "request") };
@@ -163,6 +169,7 @@ export async function logFlight(formData: FormData) {
   const isOverPeople = formData.get("is_over_people") === "on";
   const isSheltered = formData.get("is_sheltered") === "on";
 
+  const projectId = String(formData.get("project_id") ?? "").trim();
   const batteryIds = formData.getAll("battery_ids").map(String).filter(Boolean);
   const observerIds = formData.getAll("observer_ids").map(String).filter(Boolean);
 
@@ -240,6 +247,7 @@ export async function logFlight(formData: FormData) {
       is_over_people: isOverPeople,
       is_sheltered: isSheltered,
       sfoc_reference: sfocReference || null,
+      project_id: projectId || null,
     })
     .select("id")
     .single();
@@ -277,6 +285,7 @@ export async function logFlight(formData: FormData) {
 
   revalidatePath("/flights");
   revalidatePath("/fleet");
+  revalidatePath("/projects");
   revalidatePath("/");
   return { error: null };
 }
