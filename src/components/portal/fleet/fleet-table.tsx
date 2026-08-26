@@ -13,6 +13,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { FleetRowActions } from "@/components/portal/fleet/fleet-row-actions";
+import { AttentionFlag } from "@/components/portal/attention-flag";
+import { uavFlags } from "@/lib/flags";
 
 export type FleetRow = {
   id: string | null;
@@ -52,6 +54,8 @@ function round1(value: number) {
 export function FleetTable({ rows, canManage }: { rows: FleetRow[]; canManage: boolean }) {
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState<string>("all");
+
+  const now = useMemo(() => new Date(), []);
 
   const filtered = useMemo(() => {
     return rows.filter((row) => {
@@ -97,6 +101,7 @@ export function FleetTable({ rows, canManage }: { rows: FleetRow[]; canManage: b
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead className="w-8" />
               <TableHead>Drone ID</TableHead>
               <TableHead>Registration</TableHead>
               <TableHead>Make / Model</TableHead>
@@ -114,7 +119,7 @@ export function FleetTable({ rows, canManage }: { rows: FleetRow[]; canManage: b
             {filtered.length === 0 ? (
               <TableRow>
                 <TableCell
-                  colSpan={canManage ? 11 : 10}
+                  colSpan={canManage ? 12 : 11}
                   className="py-8 text-center text-sm text-muted-foreground"
                 >
                   {rows.length === 0 ? "No UAVs in the fleet yet." : "No UAVs match your filters."}
@@ -123,6 +128,9 @@ export function FleetTable({ rows, canManage }: { rows: FleetRow[]; canManage: b
             ) : (
               filtered.map((row) => (
                 <TableRow key={row.id}>
+                  <TableCell className="pr-0">
+                    <AttentionFlag flags={uavFlags(row, now)} />
+                  </TableCell>
                   <TableCell className="font-medium">{row.drone_id}</TableCell>
                   <TableCell className="font-mono text-xs">
                     {row.registration_number ?? "—"}

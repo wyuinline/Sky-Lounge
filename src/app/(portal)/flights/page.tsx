@@ -34,7 +34,7 @@ export default async function FlightsPage() {
 ,
     supabase
       .from("flight_logs")
-      .select("id, flight_date, duration_minutes, weather_conditions, mission_outcome, pilots(full_name), uavs(drone_id)")
+      .select("id, flight_date, duration_minutes, weather_conditions, mission_outcome, acknowledged_at, pilots(full_name), uavs(drone_id)")
       .order("flight_date", { ascending: false })
       .limit(20)
 ,
@@ -43,6 +43,7 @@ export default async function FlightsPage() {
   const pilotOptions = (pilotsRes.data ?? []).map((p) => ({ id: p.id, label: p.full_name }));
   const uavOptions = (uavsRes.data ?? []).map((u) => ({ id: u.id, label: u.drone_id }));
   const canApprove = access?.canManage("requests") ?? false;
+  const canReviewLogs = access?.canManage("logs") ?? false;
 
   return (
     <div className="flex flex-col gap-6">
@@ -85,7 +86,7 @@ export default async function FlightsPage() {
 
       <div>
         <SectionLabel>Flight Logs</SectionLabel>
-        <FlightLogsTable rows={logsRes.data ?? []} />
+        <FlightLogsTable rows={logsRes.data ?? []} canAcknowledge={canReviewLogs} />
       </div>
 
       <Alert>

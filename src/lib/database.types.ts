@@ -237,6 +237,8 @@ export type Database = {
       }
       flight_logs: {
         Row: {
+          acknowledged_at: string | null
+          acknowledged_by: string | null
           created_at: string
           duration_minutes: number | null
           flight_date: string
@@ -248,6 +250,8 @@ export type Database = {
           weather_conditions: string | null
         }
         Insert: {
+          acknowledged_at?: string | null
+          acknowledged_by?: string | null
           created_at?: string
           duration_minutes?: number | null
           flight_date?: string
@@ -259,6 +263,8 @@ export type Database = {
           weather_conditions?: string | null
         }
         Update: {
+          acknowledged_at?: string | null
+          acknowledged_by?: string | null
           created_at?: string
           duration_minutes?: number | null
           flight_date?: string
@@ -270,6 +276,13 @@ export type Database = {
           weather_conditions?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "flight_logs_acknowledged_by_fkey"
+            columns: ["acknowledged_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "flight_logs_flight_request_id_fkey"
             columns: ["flight_request_id"]

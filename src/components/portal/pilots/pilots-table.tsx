@@ -23,6 +23,8 @@ import {
 } from "@/lib/compliance";
 import { Badge } from "@/components/ui/badge";
 import { PilotRowActions } from "@/components/portal/pilots/pilot-row-actions";
+import { AttentionFlag } from "@/components/portal/attention-flag";
+import { pilotFlags } from "@/lib/flags";
 import { uploadRocA } from "@/app/(portal)/pilots/actions";
 
 export type PilotRow = {
@@ -119,6 +121,10 @@ export function PilotsTable({
 
   const departedCount = rows.filter((r) => !r.active).length;
 
+  // One clock for the whole table, so every row judges "two weeks out"
+  // against the same instant rather than drifting mid-render.
+  const now = useMemo(() => new Date(), []);
+
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
@@ -145,6 +151,7 @@ export function PilotsTable({
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead className="w-8" />
               <TableHead>Pilot Name</TableHead>
               <TableHead>Certificate #</TableHead>
               <TableHead>Certificate Type</TableHead>
@@ -162,7 +169,7 @@ export function PilotsTable({
             {filtered.length === 0 ? (
               <TableRow>
                 <TableCell
-                  colSpan={canManage ? 11 : 10}
+                  colSpan={canManage ? 12 : 11}
                   className="py-8 text-center text-sm text-muted-foreground"
                 >
                   {rows.length === 0 ? "No pilots in the registry yet." : "No pilots match your search."}
@@ -178,6 +185,9 @@ export function PilotsTable({
 
                 return (
                   <TableRow key={row.id} className={row.active ? undefined : "opacity-60"}>
+                    <TableCell className="pr-0">
+                      <AttentionFlag flags={pilotFlags(row, now)} />
+                    </TableCell>
                     <TableCell className="font-medium">
                       {row.full_name}
                       {row.active ? null : (

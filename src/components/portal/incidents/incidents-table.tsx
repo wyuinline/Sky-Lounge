@@ -13,6 +13,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { updateIncidentStatus } from "@/app/(portal)/incidents/actions";
+import { AttentionFlag } from "@/components/portal/attention-flag";
+import { incidentFlags } from "@/lib/flags";
 
 export type IncidentRow = {
   id: string;
@@ -61,6 +63,7 @@ export function IncidentsTable({ rows, canManage }: { rows: IncidentRow[]; canMa
       <Table>
         <TableHeader>
           <TableRow>
+            <TableHead className="w-8" />
             <TableHead>Incident Date</TableHead>
             <TableHead>Type</TableHead>
             <TableHead>UAV</TableHead>
@@ -73,13 +76,16 @@ export function IncidentsTable({ rows, canManage }: { rows: IncidentRow[]; canMa
         <TableBody>
           {rows.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={canManage ? 7 : 6} className="py-8 text-center text-sm text-muted-foreground">
+              <TableCell colSpan={canManage ? 8 : 7} className="py-8 text-center text-sm text-muted-foreground">
                 No incidents reported.
               </TableCell>
             </TableRow>
           ) : (
             rows.map((row) => (
               <TableRow key={row.id}>
+                <TableCell className="pr-0">
+                  <AttentionFlag flags={incidentFlags(row)} />
+                </TableCell>
                 <TableCell className="font-medium">{row.incident_date}</TableCell>
                 <TableCell className="capitalize">{row.incident_type.replace("_", " ")}</TableCell>
                 <TableCell>{row.uavs?.drone_id ?? "—"}</TableCell>

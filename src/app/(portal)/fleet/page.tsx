@@ -4,6 +4,8 @@ import { FleetTable, type FleetRow } from "@/components/portal/fleet/fleet-table
 import { AddUavDialog } from "@/components/portal/fleet/uav-dialog";
 import { createClient } from "@/lib/supabase/server";
 import { getAccess } from "@/lib/permissions";
+import { AttentionSummary } from "@/components/portal/attention-flag";
+import { uavFlags, worstSeverity } from "@/lib/flags";
 
 export default async function FleetPage() {
   const supabase = await createClient();
@@ -30,6 +32,10 @@ export default async function FleetPage() {
   // as fleet would overstate what the company can actually put in the air.
   const retired = rows.filter((r) => r.status === "retired").length;
 
+  const flagged = rows.map((r) => worstSeverity(uavFlags(r)));
+  const overdueCount = flagged.filter((s) => s === "overdue").length;
+  const attentionCount = flagged.filter((s) => s === "attention").length;
+
   return (
     <div className="flex flex-col gap-6">
       <HeroBand
@@ -45,6 +51,8 @@ export default async function FleetPage() {
         <MetricTile label="Grounded" value={`${grounded}`} tone={grounded > 0 ? "critical" : "good"} />
         <MetricTile label="Retired" value={`${retired}`} tone="neutral" />
       </div>
+
+      <AttentionSummary overdue={overdueCount} attention={attentionCount} noun="fleet" />
 
       <FleetTable rows={rows} canManage={canManageFleet} />
     </div>

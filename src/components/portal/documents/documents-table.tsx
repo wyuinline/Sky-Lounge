@@ -19,6 +19,8 @@ import { documentCategories, labelForCategory, type DocumentCategory } from "@/l
 import { reviewCycleShort } from "@/lib/review-cycles";
 import { deriveExpiryStatus, daysUntil, type ExpiryStatus } from "@/lib/compliance";
 import { getDownloadUrl, markDocumentReviewed } from "@/app/(portal)/documents/actions";
+import { AttentionFlag } from "@/components/portal/attention-flag";
+import { documentFlags } from "@/lib/flags";
 
 export type DocumentRow = {
   id: string;
@@ -161,6 +163,7 @@ export function DocumentsTable({
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead className="w-8" />
               <TableHead>Title</TableHead>
               <TableHead>Category</TableHead>
               <TableHead>Version</TableHead>
@@ -175,7 +178,7 @@ export function DocumentsTable({
           <TableBody>
             {filtered.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={9} className="py-8 text-center text-sm text-muted-foreground">
+                <TableCell colSpan={10} className="py-8 text-center text-sm text-muted-foreground">
                   {rows.length === 0 ? "No documents uploaded yet." : "No documents match your filters."}
                 </TableCell>
               </TableRow>
@@ -189,6 +192,9 @@ export function DocumentsTable({
 
                 return (
                   <TableRow key={row.id}>
+                    <TableCell className="pr-0">
+                      <AttentionFlag flags={documentFlags(row, now)} />
+                    </TableCell>
                     <TableCell className="font-medium">
                       {row.title}
                       {row.pilot_name ? (

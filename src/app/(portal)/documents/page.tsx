@@ -9,6 +9,8 @@ import { UploadDocumentDialog } from "@/components/portal/documents/upload-docum
 import { documentCategories } from "@/lib/document-categories";
 import { reviewCycleLabel } from "@/lib/review-cycles";
 import { deriveExpiryStatus, documentReviewDue } from "@/lib/compliance";
+import { AttentionSummary } from "@/components/portal/attention-flag";
+import { documentFlags, worstSeverity } from "@/lib/flags";
 import { createClient } from "@/lib/supabase/server";
 import { getAccess } from "@/lib/permissions";
 
@@ -75,6 +77,10 @@ export default async function DocumentsPage() {
     (d) => deriveExpiryStatus(d.review_due, now) === "due_soon",
   ).length;
   const neverReviewed = onCycle.filter((d) => d.last_reviewed_at === null).length;
+
+  const flagged = documents.map((d) => worstSeverity(documentFlags(d, now)));
+  const overdueCount = flagged.filter((s) => s === "overdue").length;
+  const attentionCount = flagged.filter((s) => s === "attention").length;
 
   // Categories that carry a cycle, described once rather than repeated per row.
   const cyclePolicy = (policyRes.data ?? []).filter((p) => p.review_interval_months !== null);
@@ -167,6 +173,13 @@ export default async function DocumentsPage() {
 
       <div>
         <SectionLabel>All Documents</SectionLabel>
+        <div className="mb-3">
+          <AttentionSummary
+            overdue={overdueCount}
+            attention={attentionCount}
+            noun="document library"
+          />
+        </div>
         <DocumentsTable rows={documents} canReview={canManage} />
       </div>
 

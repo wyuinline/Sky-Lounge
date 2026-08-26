@@ -8,6 +8,8 @@ import { AddPilotDialog } from "@/components/portal/pilots/pilot-dialog";
 import { createClient } from "@/lib/supabase/server";
 import { getAccess } from "@/lib/permissions";
 import { derivePilotCertificateStatus, recencyDue, deriveExpiryStatus } from "@/lib/compliance";
+import { AttentionSummary } from "@/components/portal/attention-flag";
+import { pilotFlags, worstSeverity } from "@/lib/flags";
 
 export default async function PilotsPage() {
   const supabase = await createClient();
@@ -42,6 +44,12 @@ export default async function PilotsPage() {
     (r) => derivePilotCertificateStatus(r.certificate_expires, r.last_recency_activity, now) === "expired",
   ).length;
   const missingRocA = crew.filter((r) => !r.has_roc_a).length;
+
+  // Counted per pilot, not per flag: the question at the top of the page is
+  // how many people need attention, not how many problems exist.
+  const flagged = crew.map((r) => worstSeverity(pilotFlags(r, now)));
+  const overdueCount = flagged.filter((s) => s === "overdue").length;
+  const attentionCount = flagged.filter((s) => s === "attention").length;
 
   return (
     <div className="flex flex-col gap-6">
@@ -80,6 +88,8 @@ export default async function PilotsPage() {
           </div>
         </CardContent>
       </Card>
+
+      <AttentionSummary overdue={overdueCount} attention={attentionCount} noun="crew" />
 
       <PilotsTable rows={rows} canManage={canManagePilots} />
 

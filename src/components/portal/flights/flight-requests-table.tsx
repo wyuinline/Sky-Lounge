@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useMemo, useState, useTransition } from "react";
 import { Check, X } from "lucide-react";
 import { toast } from "sonner";
 import { StatusDot } from "@/components/portal/status-dot";
@@ -14,6 +14,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { updateFlightRequestStatus } from "@/app/(portal)/flights/actions";
+import { AttentionFlag } from "@/components/portal/attention-flag";
+import { flightRequestFlags } from "@/lib/flags";
 
 export type FlightRequestRow = {
   id: string;
@@ -45,6 +47,9 @@ export function FlightRequestsTable({
   rows: FlightRequestRow[];
   canApprove: boolean;
 }) {
+  // One clock for the table, so every row judges the two-week window against
+  // the same instant.
+  const now = useMemo(() => new Date(), []);
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
@@ -66,6 +71,7 @@ export function FlightRequestsTable({
       <Table>
         <TableHeader>
           <TableRow>
+            <TableHead className="w-8" />
             <TableHead>Pilot</TableHead>
             <TableHead>UAV</TableHead>
             <TableHead>Location</TableHead>
@@ -78,13 +84,16 @@ export function FlightRequestsTable({
         <TableBody>
           {rows.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={canApprove ? 7 : 6} className="py-8 text-center text-sm text-muted-foreground">
+              <TableCell colSpan={canApprove ? 8 : 7} className="py-8 text-center text-sm text-muted-foreground">
                 No flight requests yet.
               </TableCell>
             </TableRow>
           ) : (
             rows.map((row) => (
               <TableRow key={row.id}>
+                <TableCell className="pr-0">
+                  <AttentionFlag flags={flightRequestFlags(row, now)} />
+                </TableCell>
                 <TableCell className="font-medium">{row.pilots?.full_name ?? "—"}</TableCell>
                 <TableCell>{row.uavs?.drone_id ?? "—"}</TableCell>
                 <TableCell>{row.location ?? "—"}</TableCell>

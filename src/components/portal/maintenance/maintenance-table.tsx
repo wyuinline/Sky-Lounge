@@ -15,6 +15,8 @@ import {
 } from "@/components/ui/table";
 import { completeMaintenance } from "@/app/(portal)/maintenance/actions";
 import { isMaintenanceOverdue } from "@/lib/compliance";
+import { AttentionFlag } from "@/components/portal/attention-flag";
+import { maintenanceFlags } from "@/lib/flags";
 
 export type MaintenanceRow = {
   id: string;
@@ -54,6 +56,7 @@ export function MaintenanceTable({ rows, canManage }: { rows: MaintenanceRow[]; 
       <Table>
         <TableHeader>
           <TableRow>
+            <TableHead className="w-8" />
             <TableHead>UAV ID</TableHead>
             <TableHead>Maintenance Type</TableHead>
             <TableHead>Next Service Date</TableHead>
@@ -65,13 +68,16 @@ export function MaintenanceTable({ rows, canManage }: { rows: MaintenanceRow[]; 
         <TableBody>
           {rows.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={canManage ? 6 : 5} className="py-8 text-center text-sm text-muted-foreground">
+              <TableCell colSpan={canManage ? 7 : 6} className="py-8 text-center text-sm text-muted-foreground">
                 No maintenance records yet.
               </TableCell>
             </TableRow>
           ) : (
             rows.map((row) => (
               <TableRow key={row.id}>
+                <TableCell className="pr-0">
+                  <AttentionFlag flags={maintenanceFlags(row)} />
+                </TableCell>
                 <TableCell className="font-medium">{row.uavs?.drone_id ?? "—"}</TableCell>
                 <TableCell className="capitalize">{row.maintenance_type}</TableCell>
                 <TableCell>{row.next_service_date ?? "—"}</TableCell>
