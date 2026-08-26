@@ -250,3 +250,65 @@ export function worstSeverity(flags: Flag[]): FlagSeverity | null {
   if (flags.length === 0) return null;
   return flags.some((f) => f.severity === "overdue") ? "overdue" : "attention";
 }
+
+export type BatteryFlagInput = {
+  status: string;
+  /** Null when the manufacturer's rated life is unknown. */
+  cycles_remaining: number | null;
+  age_months: number | null;
+};
+
+/**
+ * How many cycles from the limit a pack starts flagging.
+ *
+ * Not a fortnight-equivalent like the date thresholds — a pack near its rated
+ * life needs replacing before it is on the aircraft again, and lead time on a
+ * replacement is weeks. Twenty is roughly a month of ordinary use.
+ */
+export const BATTERY_CYCLE_LEAD = 20;
+
+/**
+ * Lithium polymer packs age whether or not they are flown, so a pack past
+ * this is worth inspecting even with cycles to spare.
+ */
+export const BATTERY_AGE_MONTHS = 24;
+
+export function batteryFlags(battery: BatteryFlagInput): Flag[] {
+  // A retired pack has left service; its numbers stopped mattering the day it
+  // did, exactly as with a retired airframe.
+  if (battery.status === "retired") return [];
+
+  const flags: Flag[] = [];
+
+  if (battery.cycles_remaining !== null) {
+    if (battery.cycles_remaining <= 0) {
+      const over = Math.abs(battery.cycles_remaining);
+      flags.push({
+        severity: "overdue",
+        label:
+          over === 0
+            ? "At its rated cycle limit"
+            : `${over} cycle${over === 1 ? "" : "s"} past its rated limit`,
+      });
+    } else if (battery.cycles_remaining <= BATTERY_CYCLE_LEAD) {
+      flags.push({
+        severity: "attention",
+        label: `${battery.cycles_remaining} cycle${battery.cycles_remaining === 1 ? "" : "s"} until its rated limit`,
+      });
+    }
+  }
+
+  if (battery.age_months !== null && battery.age_months >= BATTERY_AGE_MONTHS) {
+    flags.push({
+      severity: "attention",
+      label: `${battery.age_months} months old — inspect for swelling and capacity loss`,
+    });
+  }
+
+  // Someone has already judged this pack suspect; the row should say so.
+  if (battery.status === "monitor") {
+    flags.push({ severity: "attention", label: "Flagged for monitoring" });
+  }
+
+  return flags;
+}

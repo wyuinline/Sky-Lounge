@@ -131,6 +131,60 @@ export type Database = {
           },
         ]
       }
+      batteries: {
+        Row: {
+          baseline_cycles: number
+          battery_id: string
+          capacity_mah: number | null
+          cell_count: number | null
+          created_at: string
+          cycle_limit: number | null
+          id: string
+          location_site: string | null
+          manufacturer: string | null
+          model: string | null
+          notes: string | null
+          purchased_date: string | null
+          serial_number: string | null
+          status: Database["public"]["Enums"]["battery_status"]
+          updated_at: string
+        }
+        Insert: {
+          baseline_cycles?: number
+          battery_id: string
+          capacity_mah?: number | null
+          cell_count?: number | null
+          created_at?: string
+          cycle_limit?: number | null
+          id?: string
+          location_site?: string | null
+          manufacturer?: string | null
+          model?: string | null
+          notes?: string | null
+          purchased_date?: string | null
+          serial_number?: string | null
+          status?: Database["public"]["Enums"]["battery_status"]
+          updated_at?: string
+        }
+        Update: {
+          baseline_cycles?: number
+          battery_id?: string
+          capacity_mah?: number | null
+          cell_count?: number | null
+          created_at?: string
+          cycle_limit?: number | null
+          id?: string
+          location_site?: string | null
+          manufacturer?: string | null
+          model?: string | null
+          notes?: string | null
+          purchased_date?: string | null
+          serial_number?: string | null
+          status?: Database["public"]["Enums"]["battery_status"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
       document_review_policy: {
         Row: {
           category: Database["public"]["Enums"]["document_category"]
@@ -235,43 +289,174 @@ export type Database = {
           },
         ]
       }
+      flight_battery_usage: {
+        Row: {
+          battery_id: string
+          created_at: string
+          cycles: number
+          flight_log_id: string
+          id: string
+        }
+        Insert: {
+          battery_id: string
+          created_at?: string
+          cycles?: number
+          flight_log_id: string
+          id?: string
+        }
+        Update: {
+          battery_id?: string
+          created_at?: string
+          cycles?: number
+          flight_log_id?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "flight_battery_usage_battery_id_fkey"
+            columns: ["battery_id"]
+            isOneToOne: false
+            referencedRelation: "batteries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "flight_battery_usage_battery_id_fkey"
+            columns: ["battery_id"]
+            isOneToOne: false
+            referencedRelation: "battery_status_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "flight_battery_usage_flight_log_id_fkey"
+            columns: ["flight_log_id"]
+            isOneToOne: false
+            referencedRelation: "flight_logs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      flight_crew: {
+        Row: {
+          created_at: string
+          flight_log_id: string
+          id: string
+          pilot_id: string
+          role: Database["public"]["Enums"]["crew_role"]
+        }
+        Insert: {
+          created_at?: string
+          flight_log_id: string
+          id?: string
+          pilot_id: string
+          role: Database["public"]["Enums"]["crew_role"]
+        }
+        Update: {
+          created_at?: string
+          flight_log_id?: string
+          id?: string
+          pilot_id?: string
+          role?: Database["public"]["Enums"]["crew_role"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "flight_crew_flight_log_id_fkey"
+            columns: ["flight_log_id"]
+            isOneToOne: false
+            referencedRelation: "flight_logs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "flight_crew_pilot_id_fkey"
+            columns: ["pilot_id"]
+            isOneToOne: false
+            referencedRelation: "pilot_certificate_status"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "flight_crew_pilot_id_fkey"
+            columns: ["pilot_id"]
+            isOneToOne: false
+            referencedRelation: "pilots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       flight_logs: {
         Row: {
           acknowledged_at: string | null
           acknowledged_by: string | null
+          airspace: Database["public"]["Enums"]["airspace_class"] | null
           created_at: string
           duration_minutes: number | null
+          effective_duration_minutes: number | null
           flight_date: string
           flight_request_id: string | null
           id: string
+          is_bvlos: boolean
+          is_night: boolean
+          is_over_people: boolean
+          is_sheltered: boolean
+          landing_at: string | null
+          latitude: number | null
+          location_name: string | null
+          longitude: number | null
+          max_altitude_m: number | null
           mission_outcome: Database["public"]["Enums"]["mission_outcome"]
           pilot_id: string | null
+          sfoc_reference: string | null
+          takeoff_at: string | null
           uav_id: string | null
           weather_conditions: string | null
         }
         Insert: {
           acknowledged_at?: string | null
           acknowledged_by?: string | null
+          airspace?: Database["public"]["Enums"]["airspace_class"] | null
           created_at?: string
           duration_minutes?: number | null
+          effective_duration_minutes?: number | null
           flight_date?: string
           flight_request_id?: string | null
           id?: string
+          is_bvlos?: boolean
+          is_night?: boolean
+          is_over_people?: boolean
+          is_sheltered?: boolean
+          landing_at?: string | null
+          latitude?: number | null
+          location_name?: string | null
+          longitude?: number | null
+          max_altitude_m?: number | null
           mission_outcome?: Database["public"]["Enums"]["mission_outcome"]
           pilot_id?: string | null
+          sfoc_reference?: string | null
+          takeoff_at?: string | null
           uav_id?: string | null
           weather_conditions?: string | null
         }
         Update: {
           acknowledged_at?: string | null
           acknowledged_by?: string | null
+          airspace?: Database["public"]["Enums"]["airspace_class"] | null
           created_at?: string
           duration_minutes?: number | null
+          effective_duration_minutes?: number | null
           flight_date?: string
           flight_request_id?: string | null
           id?: string
+          is_bvlos?: boolean
+          is_night?: boolean
+          is_over_people?: boolean
+          is_sheltered?: boolean
+          landing_at?: string | null
+          latitude?: number | null
+          location_name?: string | null
+          longitude?: number | null
+          max_altitude_m?: number | null
           mission_outcome?: Database["public"]["Enums"]["mission_outcome"]
           pilot_id?: string | null
+          sfoc_reference?: string | null
+          takeoff_at?: string | null
           uav_id?: string | null
           weather_conditions?: string | null
         }
@@ -827,7 +1012,6 @@ export type Database = {
         Row: {
           assigned_pilot_id: string | null
           baseline_flight_hours: number
-          battery_cycles: number
           created_at: string
           drone_id: string
           firmware_version: string | null
@@ -848,7 +1032,6 @@ export type Database = {
         Insert: {
           assigned_pilot_id?: string | null
           baseline_flight_hours?: number
-          battery_cycles?: number
           created_at?: string
           drone_id: string
           firmware_version?: string | null
@@ -869,7 +1052,6 @@ export type Database = {
         Update: {
           assigned_pilot_id?: string | null
           baseline_flight_hours?: number
-          battery_cycles?: number
           created_at?: string
           drone_id?: string
           firmware_version?: string | null
@@ -899,6 +1081,29 @@ export type Database = {
       }
     }
     Views: {
+      battery_status_view: {
+        Row: {
+          age_months: number | null
+          baseline_cycles: number | null
+          battery_id: string | null
+          capacity_mah: number | null
+          cell_count: number | null
+          created_at: string | null
+          cycle_limit: number | null
+          cycles_remaining: number | null
+          id: string | null
+          last_used_on: string | null
+          location_site: string | null
+          manufacturer: string | null
+          model: string | null
+          notes: string | null
+          purchased_date: string | null
+          serial_number: string | null
+          status: Database["public"]["Enums"]["battery_status"] | null
+          total_cycles: number | null
+        }
+        Relationships: []
+      }
       document_review_status: {
         Row: {
           approval_status:
@@ -1108,11 +1313,14 @@ export type Database = {
         | "users"
         | "permissions"
       access_level: "full" | "create" | "read" | "own" | "none"
+      airspace_class: "uncontrolled" | "controlled" | "restricted" | "advisory"
       approval_status: "pending" | "approved" | "rejected"
       audit_status: "planned" | "in_progress" | "completed" | "overdue"
       audit_type: "internal" | "regulatory"
+      battery_status: "serviceable" | "monitor" | "retired"
       competency_level: "beginner" | "intermediate" | "advanced" | "qualified"
       compliance_status: "compliant" | "at_risk" | "non_compliant"
+      crew_role: "visual_observer" | "payload_operator" | "trainee"
       currency_status: "current" | "due_soon" | "expired"
       document_category:
         | "sop"
@@ -1326,11 +1534,14 @@ export const Constants = {
         "permissions",
       ],
       access_level: ["full", "create", "read", "own", "none"],
+      airspace_class: ["uncontrolled", "controlled", "restricted", "advisory"],
       approval_status: ["pending", "approved", "rejected"],
       audit_status: ["planned", "in_progress", "completed", "overdue"],
       audit_type: ["internal", "regulatory"],
+      battery_status: ["serviceable", "monitor", "retired"],
       competency_level: ["beginner", "intermediate", "advanced", "qualified"],
       compliance_status: ["compliant", "at_risk", "non_compliant"],
+      crew_role: ["visual_observer", "payload_operator", "trainee"],
       currency_status: ["current", "due_soon", "expired"],
       document_category: [
         "sop",

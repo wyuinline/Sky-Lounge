@@ -14,6 +14,7 @@ import {
   Bell,
   ShieldCheck,
   KeyRound,
+  FileSpreadsheet,
 } from "lucide-react";
 
 export type NavItem = {
@@ -39,6 +40,7 @@ export const navItems: NavItem[] = [
   { title: "Training Portal", href: "/training", icon: GraduationCap },
   { title: "Documents", href: "/documents", icon: FileText },
   { title: "Analytics", href: "/analytics", icon: BarChart3 },
+  { title: "Reports", href: "/reports", icon: FileSpreadsheet },
   { title: "Notifications", href: "/notifications", icon: Bell },
   { title: "User Management", href: "/admin/users", icon: ShieldCheck, manages: "users" },
   { title: "Roles & Access", href: "/admin/permissions", icon: KeyRound, manages: "permissions" },

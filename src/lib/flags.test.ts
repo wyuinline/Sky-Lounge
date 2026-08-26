@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import {
+  batteryFlags,
   deadlineFlag,
   documentFlags,
   flightLogFlags,
@@ -239,5 +240,57 @@ describe("worstSeverity", () => {
 
   it("is null when there is nothing to report", () => {
     expect(worstSeverity([])).toBeNull();
+  });
+});
+
+describe("batteryFlags", () => {
+  const ok = { status: "serviceable", cycles_remaining: 120, age_months: 6 };
+
+  it("is silent for a healthy pack", () => {
+    expect(batteryFlags(ok)).toEqual([]);
+  });
+
+  it("warns as the pack approaches its rated limit", () => {
+    const flags = batteryFlags({ ...ok, cycles_remaining: 20 });
+    expect(flags).toHaveLength(1);
+    expect(flags[0].severity).toBe("attention");
+    expect(flags[0].label).toContain("20 cycles");
+  });
+
+  it("stays quiet one cycle outside the window", () => {
+    expect(batteryFlags({ ...ok, cycles_remaining: 21 })).toEqual([]);
+  });
+
+  it("escalates once the limit is reached or passed", () => {
+    expect(batteryFlags({ ...ok, cycles_remaining: 0 })[0].severity).toBe("overdue");
+    const over = batteryFlags({ ...ok, cycles_remaining: -7 });
+    expect(over[0].severity).toBe("overdue");
+    expect(over[0].label).toContain("7 cycles past");
+  });
+
+  it("says nothing about cycles when no rated limit is known", () => {
+    // Reporting "0 remaining" for an unknown limit would be a fabricated
+    // deadline, which is worse than no deadline at all.
+    expect(batteryFlags({ ...ok, cycles_remaining: null })).toEqual([]);
+  });
+
+  it("flags age even on a pack with cycles to spare", () => {
+    const flags = batteryFlags({ ...ok, age_months: 26 });
+    expect(flags).toHaveLength(1);
+    expect(flags[0].label).toContain("26 months old");
+  });
+
+  it("reports cycles and age separately when both apply", () => {
+    expect(batteryFlags({ ...ok, cycles_remaining: 5, age_months: 30 })).toHaveLength(2);
+  });
+
+  it("surfaces a pack someone has marked for monitoring", () => {
+    expect(batteryFlags({ ...ok, status: "monitor" })[0].label).toBe("Flagged for monitoring");
+  });
+
+  it("never flags a retired pack, whatever its numbers say", () => {
+    expect(
+      batteryFlags({ status: "retired", cycles_remaining: -99, age_months: 60 }),
+    ).toEqual([]);
   });
 });

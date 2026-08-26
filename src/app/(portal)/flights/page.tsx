@@ -20,13 +20,20 @@ const workflowSteps = [
 
 export default async function FlightsPage() {
   const supabase = await createClient();
-  const [access, pilotsRes, uavsRes, requestsRes, logsRes] = await Promise.all([
+  const [access, pilotsRes, uavsRes, batteriesRes, requestsRes, logsRes] = await Promise.all([
     getAccess(),
     // Departed crew are not offered: you cannot assign new work to someone
     // who has left, and their record stays only for the history.
     supabase.from("pilots").select("id, full_name").eq("active", true).order("full_name"),
     // Retired airframes likewise — they are kept for their logs, not to fly.
     supabase.from("uavs").select("id, drone_id").neq("status", "retired").order("drone_id"),
+    // Retired packs are not offered either — a cycle cannot be added to
+    // something that has left service.
+    supabase
+      .from("batteries")
+      .select("id, battery_id")
+      .neq("status", "retired")
+      .order("battery_id"),
     supabase
       .from("flight_requests")
       .select("id, location, requested_date, risk_level, approval_status, pilots(full_name), uavs(drone_id)")
@@ -34,7 +41,9 @@ export default async function FlightsPage() {
 ,
     supabase
       .from("flight_logs")
-      .select("id, flight_date, duration_minutes, weather_conditions, mission_outcome, acknowledged_at, pilots(full_name), uavs(drone_id)")
+      .select(
+        "id, flight_date, effective_duration_minutes, weather_conditions, mission_outcome, acknowledged_at, takeoff_at, landing_at, location_name, airspace, is_night, is_bvlos, is_over_people, is_sheltered, sfoc_reference, pilots(full_name), uavs(drone_id)",
+      )
       .order("flight_date", { ascending: false })
       .limit(20)
 ,
@@ -42,6 +51,7 @@ export default async function FlightsPage() {
 
   const pilotOptions = (pilotsRes.data ?? []).map((p) => ({ id: p.id, label: p.full_name }));
   const uavOptions = (uavsRes.data ?? []).map((u) => ({ id: u.id, label: u.drone_id }));
+  const batteryOptions = (batteriesRes.data ?? []).map((b) => ({ id: b.id, label: b.battery_id }));
   const canApprove = access?.canManage("requests") ?? false;
   const canReviewLogs = access?.canManage("logs") ?? false;
 
@@ -53,7 +63,11 @@ export default async function FlightsPage() {
         subtitle="Flight requests, approvals, mission planning, and post-flight reporting — all in one place."
         actions={
           <>
-            <LogFlightDialog pilots={pilotOptions} uavs={uavOptions} />
+            <LogFlightDialog
+              pilots={pilotOptions}
+              uavs={uavOptions}
+              batteries={batteryOptions}
+            />
             <SubmitFlightRequestDialog pilots={pilotOptions} uavs={uavOptions} />
           </>
         }

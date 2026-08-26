@@ -216,3 +216,57 @@
     @apply font-sans;
   }
 }
+/* ---------------------------------------------------------------------------
+   Print.
+
+   A report is meant to leave the building as paper or a PDF, so printing has
+   to produce a document rather than a screenshot of an application: no
+   navigation, no controls, black text on white, and a table whose headings
+   repeat on every page. Without display:table-header-group a table breaking
+   across pages leaves the reader guessing what column four was.
+   --------------------------------------------------------------------------- */
+@media print {
+  @page {
+    margin: 16mm 12mm;
+  }
+
+  html,
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+
+  /* The portal chrome: sidebar, mobile bar, drawer, toasts. */
+  aside,
+  header.sm\:hidden,
+  [data-sonner-toaster],
+  .print\:hidden {
+    display: none !important;
+  }
+
+  main {
+    padding: 0 !important;
+  }
+
+  .report {
+    font-size: 10pt;
+  }
+  .report table {
+    width: 100%;
+  }
+  /* Repeat the heading row on every printed page. */
+  .report thead {
+    display: table-header-group;
+  }
+  .report tr {
+    break-inside: avoid;
+  }
+  .report th,
+  .report td {
+    border-color: #999 !important;
+  }
+  .report a {
+    text-decoration: none;
+    color: inherit;
+  }
+}
