@@ -23,8 +23,8 @@ import {
 export async function setRolePermission(role: string, area: string, level: string) {
   const access = await getAccess();
   if (!access) return { error: "You are not signed in." };
-  if (!access.canManage("users")) {
-    return { error: "Only a role with full access to user management can edit this matrix." };
+  if (!access.canManage("permissions")) {
+    return { error: "Only a role with full access to the roles & access matrix can edit it." };
   }
 
   const nextRole = parseEnum<UserRole>(role, roleOrder, "read_only");
@@ -36,13 +36,13 @@ export async function setRolePermission(role: string, area: string, level: strin
     return { error: "That is not a permission this portal recognises." };
   }
 
-  // Taking user management away from your own role locks you out of this page,
-  // and only a database console could put it back. The trigger downstream only
+  // Taking this matrix away from your own role locks you out of this page, and
+  // only a database console could put it back. The trigger downstream only
   // guarantees *some* role keeps it, which is not the same thing.
-  if (nextArea === "users" && nextRole === access.role && nextLevel !== "full") {
+  if (nextArea === "permissions" && nextRole === access.role && nextLevel !== "full") {
     return {
       error:
-        "That would remove your own access to user management. Grant it to another role first, then change yours.",
+        "That would remove your own access to this matrix. Grant it to another role first, then change yours.",
     };
   }
 

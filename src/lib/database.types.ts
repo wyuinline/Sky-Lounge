@@ -10,7 +10,32 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.5"
+    PostgrestVersion: "14.17"
+  }
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json
+          operationName?: string
+          query?: string
+          variables?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
   }
   public: {
     Tables: {
@@ -575,6 +600,7 @@ export type Database = {
       }
       pilots: {
         Row: {
+          active: boolean
           certificate_expires: string | null
           certificate_issued: string | null
           certificate_number: string | null
@@ -590,6 +616,7 @@ export type Database = {
           profile_id: string | null
         }
         Insert: {
+          active?: boolean
           certificate_expires?: string | null
           certificate_issued?: string | null
           certificate_number?: string | null
@@ -605,6 +632,7 @@ export type Database = {
           profile_id?: string | null
         }
         Update: {
+          active?: boolean
           certificate_expires?: string | null
           certificate_issued?: string | null
           certificate_number?: string | null
@@ -820,6 +848,7 @@ export type Database = {
     Views: {
       pilot_certificate_status: {
         Row: {
+          active: boolean | null
           certificate_expires: string | null
           certificate_issued: string | null
           certificate_number: string | null
@@ -836,6 +865,7 @@ export type Database = {
           recency_due: string | null
         }
         Insert: {
+          active?: boolean | null
           certificate_expires?: string | null
           certificate_issued?: string | null
           certificate_number?: string | null
@@ -852,6 +882,7 @@ export type Database = {
           recency_due?: never
         }
         Update: {
+          active?: boolean | null
           certificate_expires?: string | null
           certificate_issued?: string | null
           certificate_number?: string | null
@@ -967,6 +998,7 @@ export type Database = {
         | "roc_a"
         | "notifications"
         | "users"
+        | "permissions"
       access_level: "full" | "create" | "read" | "own" | "none"
       approval_status: "pending" | "approved" | "rejected"
       audit_status: "planned" | "in_progress" | "completed" | "overdue"
@@ -1027,7 +1059,7 @@ export type Database = {
         | "advanced_operations"
         | "level_1_complex"
       severity_level: "low" | "medium" | "high" | "critical"
-      uav_status: "airworthy" | "maintenance" | "grounded"
+      uav_status: "airworthy" | "maintenance" | "grounded" | "retired"
       user_role:
         | "system_admin"
         | "uav_admin"
@@ -1160,6 +1192,9 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {
       access_area: [
@@ -1176,6 +1211,7 @@ export const Constants = {
         "roc_a",
         "notifications",
         "users",
+        "permissions",
       ],
       access_level: ["full", "create", "read", "own", "none"],
       approval_status: ["pending", "approved", "rejected"],
@@ -1243,7 +1279,7 @@ export const Constants = {
         "level_1_complex",
       ],
       severity_level: ["low", "medium", "high", "critical"],
-      uav_status: ["airworthy", "maintenance", "grounded"],
+      uav_status: ["airworthy", "maintenance", "grounded", "retired"],
       user_role: [
         "system_admin",
         "uav_admin",

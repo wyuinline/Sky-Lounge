@@ -45,6 +45,7 @@ export const accessAreaLabel: Record<AccessArea, string> = {
   roc_a: "ROC-A certificates",
   notifications: "Notifications",
   users: "User management",
+  permissions: "Roles & access matrix",
 };
 
 /** Display order for the matrix — grouped by the part of the operation. */
@@ -62,6 +63,7 @@ export const accessAreaOrder: AccessArea[] = [
   "roc_a",
   "notifications",
   "users",
+  "permissions",
 ];
 
 export const roleLabel: Record<UserRole, string> = {

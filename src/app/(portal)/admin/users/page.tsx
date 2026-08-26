@@ -8,6 +8,7 @@ import {
   type PilotOption,
   type UserRow,
 } from "@/components/portal/admin/users-table";
+import { InviteUserDialog } from "@/components/portal/admin/invite-user-dialog";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentProfile } from "@/lib/supabase/profile";
 import { getAccess } from "@/lib/permissions";
@@ -62,7 +63,8 @@ export default async function UserManagementPage() {
       <HeroBand
         eyebrow="Administration"
         title="User Management"
-        subtitle="Assign roles, link pilot records to accounts, and control who can sign in."
+        subtitle="Invite people, assign roles, link pilot records to accounts, and control who can sign in."
+        actions={<InviteUserDialog />}
       />
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
@@ -94,10 +96,12 @@ export default async function UserManagementPage() {
         <ShieldCheck />
         <AlertTitle>How access works</AlertTitle>
         <AlertDescription>
-          New accounts start as read-only. Linking a pilot record lets that person see their own
-          certificate and recency details, and sends reminders about them to the individual as well
-          as to the responsible role. Roles are enforced by the database, not just hidden in the
-          interface, so a disabled or read-only account cannot write even outside this portal.
+          Invitations and reset links let people set their own password — nobody here ever handles
+          one. Linking a pilot record lets that person see their own certificate and recency
+          details, and sends reminders about them to the individual as well as to the responsible
+          role. Roles are enforced by the database, not just hidden in the interface, so a disabled
+          or read-only account cannot write even outside this portal. Nobody can change their own
+          role, whatever they hold.
         </AlertDescription>
       </Alert>
     </div>

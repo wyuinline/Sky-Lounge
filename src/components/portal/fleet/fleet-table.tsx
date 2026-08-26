@@ -25,7 +25,7 @@ export type FleetRow = {
   location_site: string | null;
   notes: string | null;
   maintenance_interval_hours: number | null;
-  status: 'airworthy' | 'maintenance' | 'grounded' | null;
+  status: 'airworthy' | 'maintenance' | 'grounded' | 'retired' | null;
   flight_hours: number | null;
   hours_until_service: number | null;
   next_inspection_date: string | null;
@@ -34,11 +34,13 @@ export type FleetRow = {
 
 const statusTone: Record<
   NonNullable<FleetRow["status"]>,
-  "good" | "warning" | "critical"
+  "good" | "warning" | "critical" | "muted"
 > = {
   airworthy: "good",
   maintenance: "warning",
   grounded: "critical",
+  // Retired is not a fault, it is an absence — it should not read as an alarm.
+  retired: "muted",
 };
 
 function round1(value: number) {
@@ -84,6 +86,7 @@ export function FleetTable({ rows }: { rows: FleetRow[] }) {
             <SelectItem value="airworthy">Airworthy</SelectItem>
             <SelectItem value="maintenance">Maintenance</SelectItem>
             <SelectItem value="grounded">Grounded</SelectItem>
+            <SelectItem value="retired">Retired</SelectItem>
           </SelectContent>
         </Select>
       </div>

@@ -26,6 +26,9 @@ export default async function FleetPage() {
   const active = rows.filter((r) => r.status === "airworthy").length;
   const maintenance = rows.filter((r) => r.status === "maintenance").length;
   const grounded = rows.filter((r) => r.status === "grounded").length;
+  // Retired airframes stay in the registry for their history, but counting them
+  // as fleet would overstate what the company can actually put in the air.
+  const retired = rows.filter((r) => r.status === "retired").length;
 
   return (
     <div className="flex flex-col gap-6">
@@ -36,10 +39,11 @@ export default async function FleetPage() {
         actions={canManageFleet ? <AddUavDialog /> : undefined}
       />
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <MetricTile label="Airworthy" value={`${active}`} tone="good" />
         <MetricTile label="In Maintenance" value={`${maintenance}`} tone="warning" />
         <MetricTile label="Grounded" value={`${grounded}`} tone={grounded > 0 ? "critical" : "good"} />
+        <MetricTile label="Retired" value={`${retired}`} tone="neutral" />
       </div>
 
       <FleetTable rows={rows} />

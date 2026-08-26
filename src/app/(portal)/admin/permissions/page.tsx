@@ -24,7 +24,7 @@ export default async function PermissionsPage() {
   const access = await getAccess();
 
   if (!access) redirect("/login");
-  if (!access.canManage("users")) redirect("/");
+  if (!access.canManage("permissions")) redirect("/");
 
   const [{ data: permissions }, { data: profiles }] = await Promise.all([
     supabase.from("role_permissions").select("role, area, level"),

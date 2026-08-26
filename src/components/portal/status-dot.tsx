@@ -6,6 +6,9 @@ const toneColor = {
   serious: "var(--status-serious)",
   critical: "var(--status-critical)",
   neutral: "#a1d884",
+  // For states that are an absence rather than a condition — a retired
+  // airframe is not healthy, unhealthy, or anything in between.
+  muted: "var(--muted-foreground)",
 };
 
 export function StatusDot({

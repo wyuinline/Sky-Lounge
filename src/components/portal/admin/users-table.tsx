@@ -16,6 +16,7 @@ import {
 import { roleLabels, type UserRole } from "@/lib/types";
 import {
   linkPilotToProfile,
+  sendPasswordReset,
   setUserActive,
   updateUserRole,
 } from "@/app/(portal)/admin/users/actions";
@@ -69,13 +70,14 @@ export function UsersTable({
             <TableHead>Linked Pilot</TableHead>
             <TableHead>Status</TableHead>
             <TableHead className="text-right">Access</TableHead>
+            <TableHead className="text-right">Password</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {rows.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={6} className="py-8 text-center text-sm text-muted-foreground">
-                No accounts yet. People appear here once they sign up.
+              <TableCell colSpan={7} className="py-8 text-center text-sm text-muted-foreground">
+                No accounts yet. Use Invite User to send someone a sign-in link.
               </TableCell>
             </TableRow>
           ) : (
@@ -94,9 +96,10 @@ export function UsersTable({
                   <TableCell className="text-sm text-muted-foreground">{row.email ?? "—"}</TableCell>
 
                   <TableCell>
+                    {/* Nobody edits their own role — the database refuses it too. */}
                     <Select
                       value={row.role}
-                      disabled={busy}
+                      disabled={busy || isSelf}
                       onValueChange={(v) =>
                         v &&
                         v !== row.role &&
@@ -169,6 +172,28 @@ export function UsersTable({
                       }
                     >
                       {row.active ? "Disable" : "Enable"}
+                    </Button>
+                  </TableCell>
+
+                  <TableCell className="text-right">
+                    {/*
+                      Sends a link rather than setting a password. An
+                      administrator who can read a colleague's password can also
+                      sign in as them, and the audit trail stops meaning much.
+                    */}
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      disabled={busy || !row.active || !row.email}
+                      onClick={() =>
+                        run(
+                          row.id,
+                          () => sendPasswordReset(row.id),
+                          `Reset link sent to ${row.email}.`,
+                        )
+                      }
+                    >
+                      Send reset link
                     </Button>
                   </TableCell>
                 </TableRow>

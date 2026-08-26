@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { Plane } from "lucide-react";
 import { toast } from "sonner";
@@ -9,12 +9,32 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { requestPasswordReset } from "./actions";
+
+/** Messages the auth callback route can hand back on a failed link. */
+const LINK_ERRORS: Record<string, string> = {
+  link_expired: "That link has expired or was already used. Request a new one below.",
+  link_invalid: "That link is not valid. Request a new one below.",
+};
 
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [resetting, setResetting] = useState(false);
+
+  // Read from the URL directly rather than useSearchParams: that hook forces
+  // the page under a Suspense boundary to stay statically rendered, and this is
+  // a one-shot client-side announcement either way.
+  useEffect(() => {
+    const code = new URLSearchParams(window.location.search).get("error");
+    if (code && LINK_ERRORS[code]) {
+      toast.error(LINK_ERRORS[code]);
+      // Clear it so a refresh does not re-announce a problem already dealt with.
+      router.replace("/login");
+    }
+  }, [router]);
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
@@ -32,6 +52,26 @@ export default function LoginPage() {
 
     router.replace("/");
     router.refresh();
+  }
+
+  async function handleForgotPassword() {
+    if (!email.trim()) {
+      toast.error("Enter your email address first, then choose Forgot password.");
+      return;
+    }
+
+    setResetting(true);
+    const result = await requestPasswordReset(email);
+    setResetting(false);
+
+    if (result.error) {
+      toast.error(result.error);
+      return;
+    }
+
+    // Deliberately unconditional: confirming whether an address is registered
+    // would make this form an account-enumeration tool.
+    toast.success("If that address has an account, a reset link is on its way.");
   }
 
   return (
@@ -58,7 +98,17 @@ export default function LoginPage() {
               />
             </div>
             <div className="flex flex-col gap-2">
-              <Label htmlFor="password">Password</Label>
+              <div className="flex items-baseline justify-between gap-2">
+                <Label htmlFor="password">Password</Label>
+                <button
+                  type="button"
+                  onClick={handleForgotPassword}
+                  disabled={resetting}
+                  className="text-xs text-muted-foreground underline-offset-2 hover:text-foreground hover:underline disabled:opacity-50"
+                >
+                  {resetting ? "Sending..." : "Forgot password?"}
+                </button>
+              </div>
               <Input
                 id="password"
                 type="password"

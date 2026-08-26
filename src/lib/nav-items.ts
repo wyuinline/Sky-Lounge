@@ -41,5 +41,5 @@ export const navItems: NavItem[] = [
   { title: "Analytics", href: "/analytics", icon: BarChart3 },
   { title: "Notifications", href: "/notifications", icon: Bell },
   { title: "User Management", href: "/admin/users", icon: ShieldCheck, manages: "users" },
-  { title: "Roles & Access", href: "/admin/permissions", icon: KeyRound, manages: "users" },
+  { title: "Roles & Access", href: "/admin/permissions", icon: KeyRound, manages: "permissions" },
 ];

@@ -5,6 +5,7 @@ import { accessAreaOrder, type AccessArea, type AccessLevel, type UserRole } fro
 export * from "@/lib/access";
 
 export type Access = {
+  userId: string;
   role: UserRole;
   levels: Record<AccessArea, AccessLevel>;
   /** Sees every record in the area. */
@@ -49,6 +50,7 @@ export const getAccess = cache(async function getAccess(): Promise<Access | null
   }
 
   return {
+    userId: user.id,
     role,
     levels,
     canReadAll: (area) => ["full", "create", "read"].includes(levels[area]),

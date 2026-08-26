@@ -40,6 +40,13 @@ export async function updateSession(request: NextRequest) {
     return supabaseResponse;
   }
 
+  // The landing point for emailed invite and password-reset links. It has to be
+  // reachable while signed out — that is the whole point of it — and it does its
+  // own verification, redirecting to /login when the token is expired or used.
+  if (pathname === "/auth/confirm") {
+    return supabaseResponse;
+  }
+
   if (!user && pathname !== "/login") {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
