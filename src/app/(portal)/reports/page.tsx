@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { FileSpreadsheet, FileText, ArrowRight } from "lucide-react";
+import { FileSpreadsheet, FileText, ArrowRight, ShieldCheck } from "lucide-react";
 import { HeroBand } from "@/components/portal/hero-band";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Card, CardContent } from "@/components/ui/card";
@@ -24,6 +24,37 @@ export default async function ReportsPage() {
         title="Reports"
         subtitle="The evidence a Transport Canada review asks for, assembled from the records you already keep."
       />
+
+      {/* The pack sits above the individual reports because it is the one a
+          regulator asks for, and the others are its parts. */}
+      <Card className="gap-0 rounded-md border-[var(--control-edge)] py-0">
+        <div className="h-1 w-full bg-brand-lime" />
+        <CardContent className="flex flex-col gap-3 p-4">
+          <div className="flex items-start gap-3">
+            <ShieldCheck className="mt-0.5 size-5 shrink-0 text-brand-teal" />
+            <div className="flex flex-col gap-1">
+              <h2 className="text-base font-semibold tracking-[-0.01em]">
+                RPAS Operator Certificate — evidence pack
+              </h2>
+              <p className="max-w-prose text-sm text-muted-foreground">
+                Everything an RPOC application or review asks for, assembled from records the
+                portal already keeps: documented procedures at their current revision, crew
+                credentials and authorisations, airworthiness, the hazard register, checklists,
+                corrective actions and the occurrence record. Empty sections are marked as gaps
+                rather than omitted.
+              </p>
+            </div>
+          </div>
+          <div className="flex flex-wrap gap-2 pt-1">
+            <Link href="/reports/rpoc">
+              <Button size="sm">
+                Open evidence pack
+                <ArrowRight className="size-4" />
+              </Button>
+            </Link>
+          </div>
+        </CardContent>
+      </Card>
 
       <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
         {available.map(({ def, allowed }) => (

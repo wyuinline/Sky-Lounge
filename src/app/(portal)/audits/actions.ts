@@ -40,6 +40,11 @@ export async function addFinding(formData: FormData) {
   const description = String(formData.get("description") ?? "").trim();
   const assignedTo = String(formData.get("assigned_to") ?? "");
   const dueDate = String(formData.get("due_date") ?? "");
+  // The safety loop: what raised this, what it addresses, what it changed.
+  const incidentId = String(formData.get("incident_id") ?? "").trim();
+  const hazardId = String(formData.get("hazard_id") ?? "").trim();
+  const documentId = String(formData.get("resulting_document_id") ?? "").trim();
+  const trainingRequired = formData.get("training_required") === "on";
 
   if (!auditId || !description) {
     return { error: "Choose an audit and describe the finding." };
@@ -51,6 +56,10 @@ export async function addFinding(formData: FormData) {
     description,
     assigned_to: assignedTo || null,
     due_date: dueDate || null,
+    incident_id: incidentId || null,
+    hazard_id: hazardId || null,
+    resulting_document_id: documentId || null,
+    training_required: trainingRequired,
   });
 
   if (error) return { error: safeErrorMessage(error, "save") };

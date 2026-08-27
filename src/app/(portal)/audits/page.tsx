@@ -12,7 +12,8 @@ import { isFindingOverdue } from "@/lib/compliance";
 
 export default async function AuditsPage() {
   const supabase = await createClient();
-  const [access, auditsRes, findingsRes, profilesRes] = await Promise.all([
+  const [access, auditsRes, findingsRes, profilesRes, incidentsRes, hazardsRes, documentsRes] =
+    await Promise.all([
     getAccess(),
     supabase
       .from("audits")
@@ -26,6 +27,22 @@ export default async function AuditsPage() {
       .order("due_date")
 ,
     supabase.from("profiles").select("id, full_name").order("full_name"),
+    // Sources for the safety loop on a finding.
+    supabase
+      .from("incidents")
+      .select("id, incident_date, incident_type")
+      .order("incident_date", { ascending: false })
+      .limit(50),
+    supabase
+      .from("hazards")
+      .select("id, hazard_code, title")
+      .neq("status", "closed")
+      .order("hazard_code"),
+    supabase
+      .from("documents")
+      .select("id, title, version")
+      .order("title")
+      .limit(100),
   ]);
 
   const audits = auditsRes.data ?? [];
@@ -40,6 +57,19 @@ export default async function AuditsPage() {
   }));
 
   const canManage = access?.canManage("audits") ?? false;
+
+  const incidentOptions = (incidentsRes.data ?? []).map((i) => ({
+    id: i.id,
+    label: `${i.incident_date} — ${i.incident_type.replace(/_/g, " ")}`,
+  }));
+  const hazardOptions = (hazardsRes.data ?? []).map((h) => ({
+    id: h.id,
+    label: `${h.hazard_code} — ${h.title}`,
+  }));
+  const documentOptions = (documentsRes.data ?? []).map((d) => ({
+    id: d.id,
+    label: `${d.title} (v${d.version})`,
+  }));
 
   const scored = audits.filter((a) => a.compliance_status !== null);
   const complianceScore =
@@ -66,7 +96,13 @@ export default async function AuditsPage() {
         actions={
           canManage ? (
             <>
-              <AddFindingDialog audits={auditOptions} assignees={profileOptions} />
+              <AddFindingDialog
+                audits={auditOptions}
+                assignees={profileOptions}
+                incidents={incidentOptions}
+                hazards={hazardOptions}
+                documents={documentOptions}
+              />
               <ScheduleAuditDialog auditors={profileOptions} />
             </>
           ) : undefined
