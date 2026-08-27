@@ -5,6 +5,12 @@ import { createClient } from "@/lib/supabase/server";
 import { safeErrorMessage, parseEnum } from "@/lib/action-utils";
 import { getAccess } from "@/lib/permissions";
 import { todayIso } from "@/lib/compliance";
+import {
+  checkAuthorisations,
+  refusalMessage,
+  operationOrder,
+  type OperationType,
+} from "@/lib/operations";
 
 const RISK_LEVELS = ["low", "medium", "high", "critical"] as const;
 const MISSION_OUTCOMES = ["completed", "aborted", "partial"] as const;
@@ -58,6 +64,50 @@ async function airworthinessRefusal(
   return null;
 }
 
+/**
+ * Refuses a pilot who is not cleared for what the flight is doing.
+ *
+ * A current certificate says a pilot may fly; an authorisation says what they
+ * may fly. The portal has checked the first since the beginning and could not
+ * check the second, because nothing on a request said which rules the flight
+ * was operating under.
+ *
+ * Returns a reason to show the requester, or null when the pilot is cleared.
+ */
+async function authorisationRefusal(
+  supabase: Supabase,
+  pilotId: string,
+  operations: OperationType[],
+): Promise<string | null> {
+  if (operations.length === 0) return null;
+
+  const [{ data: pilot }, { data: held }] = await Promise.all([
+    supabase.from("pilots").select("full_name").eq("id", pilotId).maybeSingle(),
+    supabase
+      .from("pilot_authorisation_status")
+      .select("operation, currently_valid")
+      .eq("pilot_id", pilotId),
+  ]);
+
+  if (!pilot) return "That pilot no longer exists. Refresh and try again.";
+
+  const verdict = checkAuthorisations(
+    operations,
+    (held ?? []).map((h) => ({
+      operation: h.operation as OperationType,
+      currently_valid: h.currently_valid ?? false,
+    })),
+  );
+
+  return refusalMessage(pilot.full_name, verdict);
+}
+
+/** The operation types submitted with a request, filtered to ones we know. */
+function readOperations(formData: FormData): OperationType[] {
+  const raw = formData.getAll("operations").map(String);
+  return operationOrder.filter((o) => raw.includes(o));
+}
+
 export async function submitFlightRequest(formData: FormData) {
   const supabase = await createClient();
 
@@ -78,6 +128,14 @@ export async function submitFlightRequest(formData: FormData) {
   const refusal = await airworthinessRefusal(supabase, uavId);
   if (refusal) return { error: refusal };
 
+  // Every flight is at least VLOS, so an empty selection still checks the
+  // baseline rather than waving the request through unexamined.
+  const operations = readOperations(formData);
+  const effectiveOperations = operations.length > 0 ? operations : (["vlos"] as OperationType[]);
+
+  const authRefusal = await authorisationRefusal(supabase, pilotId, effectiveOperations);
+  if (authRefusal) return { error: authRefusal };
+
   const { error } = await supabase.from("flight_requests").insert({
     pilot_id: pilotId,
     uav_id: uavId,
@@ -88,6 +146,7 @@ export async function submitFlightRequest(formData: FormData) {
     project_id: projectId || null,
     airspace_authorisation: airspaceAuth || null,
     airspace_authorisation_expires: airspaceAuthExpires || null,
+    operations: effectiveOperations,
   });
 
   if (error) return { error: safeErrorMessage(error, "request") };
@@ -113,7 +172,7 @@ export async function updateFlightRequestStatus(
   if (safeStatus === "approved") {
     const { data: request } = await supabase
       .from("flight_requests")
-      .select("uav_id")
+      .select("uav_id, pilot_id, operations")
       .eq("id", id)
       .maybeSingle();
 
@@ -121,6 +180,17 @@ export async function updateFlightRequestStatus(
 
     const refusal = await airworthinessRefusal(supabase, request.uav_id);
     if (refusal) return { error: refusal };
+
+    // An authorisation can lapse while a request waits in the queue, exactly
+    // as an aircraft can go out of service.
+    if (request.pilot_id) {
+      const authRefusal = await authorisationRefusal(
+        supabase,
+        request.pilot_id,
+        (request.operations ?? []) as OperationType[],
+      );
+      if (authRefusal) return { error: authRefusal };
+    }
   }
 
   const { error } = await supabase

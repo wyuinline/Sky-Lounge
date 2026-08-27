@@ -17,6 +17,12 @@ import {
 } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { submitFlightRequest } from "@/app/(portal)/flights/actions";
+import {
+  operationOrder,
+  operationLabel,
+  operationDescription,
+  type OperationType,
+} from "@/lib/operations";
 
 type Option = { id: string; label: string };
 
@@ -36,7 +42,21 @@ export function SubmitFlightRequestDialog({
   const [uavId, setUavId] = useState("");
   const [riskLevel, setRiskLevel] = useState("low");
   const [projectId, setProjectId] = useState(NO_PROJECT);
+  // VLOS is the baseline every flight needs, so it starts selected rather
+  // than being something a requester has to remember to tick.
+  const [operations, setOperations] = useState<OperationType[]>(["vlos"]);
   const [loading, setLoading] = useState(false);
+
+  function toggleOperation(op: OperationType) {
+    setOperations((current) => {
+      if (current.includes(op)) return current.filter((o) => o !== op);
+      // The three sight categories are mutually exclusive: a flight is in
+      // sight, in sight through an observer, or out of sight.
+      const sight: OperationType[] = ["vlos", "evlos", "bvlos"];
+      const next = sight.includes(op) ? current.filter((o) => !sight.includes(o)) : current;
+      return [...next, op];
+    });
+  }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -47,6 +67,7 @@ export function SubmitFlightRequestDialog({
     formData.set("uav_id", uavId);
     formData.set("risk_level", riskLevel);
     formData.set("project_id", projectId === NO_PROJECT ? "" : projectId);
+    for (const op of operations) formData.append("operations", op);
     const result = await submitFlightRequest(formData);
 
     setLoading(false);
@@ -62,6 +83,7 @@ export function SubmitFlightRequestDialog({
     setUavId("");
     setRiskLevel("low");
     setProjectId(NO_PROJECT);
+    setOperations(["vlos"]);
     event.currentTarget.reset();
   }
 
@@ -157,6 +179,35 @@ export function SubmitFlightRequestDialog({
               </SelectContent>
             </Select>
           </div>
+          <fieldset className="flex flex-col gap-3 rounded-md border border-border p-3">
+            <legend className="px-1 text-xs font-semibold tracking-[0.06em] text-brand-teal uppercase">
+              What the flight is doing
+            </legend>
+            <p className="text-xs text-muted-foreground">
+              Checked against the pilot&apos;s authorisations before the request is accepted, and
+              again before it is approved. A current certificate says they may fly; an
+              authorisation says what they may fly.
+            </p>
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+              {operationOrder.map((op) => (
+                <label key={op} className="flex items-start gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={operations.includes(op)}
+                    onChange={() => toggleOperation(op)}
+                    className="mt-0.5 size-4 shrink-0 accent-[var(--brand-teal)]"
+                  />
+                  <span>
+                    {operationLabel[op]}
+                    <span className="block text-xs text-muted-foreground">
+                      {operationDescription[op]}
+                    </span>
+                  </span>
+                </label>
+              ))}
+            </div>
+          </fieldset>
+
           <fieldset className="flex flex-col gap-3 rounded-md border border-border p-3">
             <legend className="px-1 text-xs font-semibold tracking-[0.06em] text-brand-teal uppercase">
               Controlled airspace

@@ -5,6 +5,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { PilotsTable, type PilotRow } from "@/components/portal/pilots/pilots-table";
 import { AddPilotDialog } from "@/components/portal/pilots/pilot-dialog";
+import { SectionLabel } from "@/components/portal/section-label";
+import {
+  AuthorisationMatrix,
+  type AuthorisationCell,
+  type CrewMember,
+} from "@/components/portal/pilots/authorisation-matrix";
+import type { OperationType } from "@/lib/operations";
 import { createClient } from "@/lib/supabase/server";
 import { getAccess } from "@/lib/permissions";
 import { derivePilotCertificateStatus, recencyDue, deriveExpiryStatus } from "@/lib/compliance";
@@ -13,7 +20,7 @@ import { pilotFlags, worstSeverity } from "@/lib/flags";
 
 export default async function PilotsPage() {
   const supabase = await createClient();
-  const [access, { data: pilots }] = await Promise.all([
+  const [access, { data: pilots }, { data: authorisations }] = await Promise.all([
     getAccess(),
     // The view derives recency_due and the ROC-A flag, so the page and the
     // reminder scan read the same figures.
@@ -23,6 +30,11 @@ export default async function PilotsPage() {
         "id, full_name, certificate_number, certificate_type, certificate_issued, certificate_expires, last_recency_activity, notes, has_roc_a, active",
       )
       .order("full_name"),
+    // currently_valid is derived by the view, so the matrix and the flight
+    // request gate agree on whether a clearance has lapsed.
+    supabase
+      .from("pilot_authorisation_status")
+      .select("pilot_id, operation, expires_on, evidence, currently_valid, pilot_active"),
   ]);
 
   const rows = (pilots ?? []) as PilotRow[];
@@ -44,6 +56,18 @@ export default async function PilotsPage() {
     (r) => derivePilotCertificateStatus(r.certificate_expires, r.last_recency_activity, now) === "expired",
   ).length;
   const missingRocA = crew.filter((r) => !r.has_roc_a).length;
+
+  const crewMembers: CrewMember[] = crew.map((p) => ({ id: p.id, name: p.full_name }));
+  const authCells: AuthorisationCell[] = (authorisations ?? [])
+    .filter((a) => a.pilot_active !== false)
+    .map((a) => ({
+      pilot_id: a.pilot_id ?? "",
+      operation: a.operation as OperationType,
+      expires_on: a.expires_on,
+      evidence: a.evidence,
+      currently_valid: a.currently_valid ?? false,
+    }));
+  const lapsed = authCells.filter((a) => !a.currently_valid).length;
 
   // Counted per pilot, not per flag: the question at the top of the page is
   // how many people need attention, not how many problems exist.
@@ -92,6 +116,27 @@ export default async function PilotsPage() {
       <AttentionSummary overdue={overdueCount} attention={attentionCount} noun="crew" />
 
       <PilotsTable rows={rows} canManage={canManagePilots} />
+
+      <div>
+        <div className="flex flex-wrap items-baseline justify-between gap-2 pb-1">
+          <SectionLabel>Operational Authorisations</SectionLabel>
+          {lapsed > 0 ? (
+            <span className="text-xs text-[var(--status-critical)]">
+              {lapsed} authorisation{lapsed === 1 ? " has" : "s have"} lapsed
+            </span>
+          ) : null}
+        </div>
+        <AuthorisationMatrix
+          crew={crewMembers}
+          authorisations={authCells}
+          canManage={canManagePilots}
+        />
+        <p className="pt-2 text-xs text-muted-foreground">
+          A current certificate says a pilot may fly; an authorisation says what they may fly.
+          Flight requests are checked against this before they are accepted and again before they
+          are approved, since a clearance can lapse while a request waits in the queue.
+        </p>
+      </div>
 
       <Alert>
         <Lock />
