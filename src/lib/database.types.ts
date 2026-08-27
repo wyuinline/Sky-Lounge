@@ -1626,6 +1626,119 @@ export type Database = {
           },
         ]
       }
+      manual_sections: {
+        Row: {
+          body: string | null
+          created_at: string
+          document_id: string | null
+          heading: string
+          id: string
+          manual_id: string
+          parent_id: string | null
+          sort_order: number
+        }
+        Insert: {
+          body?: string | null
+          created_at?: string
+          document_id?: string | null
+          heading: string
+          id?: string
+          manual_id: string
+          parent_id?: string | null
+          sort_order?: number
+        }
+        Update: {
+          body?: string | null
+          created_at?: string
+          document_id?: string | null
+          heading?: string
+          id?: string
+          manual_id?: string
+          parent_id?: string | null
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "manual_sections_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "document_review_status"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "manual_sections_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "manual_sections_manual_id_fkey"
+            columns: ["manual_id"]
+            isOneToOne: false
+            referencedRelation: "manual_summary"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "manual_sections_manual_id_fkey"
+            columns: ["manual_id"]
+            isOneToOne: false
+            referencedRelation: "manuals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "manual_sections_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "manual_sections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      manuals: {
+        Row: {
+          approval_status: Database["public"]["Enums"]["document_workflow_status"]
+          created_at: string
+          created_by: string | null
+          description: string | null
+          effective_date: string | null
+          id: string
+          revision: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          approval_status?: Database["public"]["Enums"]["document_workflow_status"]
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          effective_date?: string | null
+          id?: string
+          revision?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          approval_status?: Database["public"]["Enums"]["document_workflow_status"]
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          effective_date?: string | null
+          id?: string
+          revision?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "manuals_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notification_reads: {
         Row: {
           notification_id: string
@@ -2508,6 +2621,49 @@ export type Database = {
           plan_name: string | null
           sort_order: number | null
           uav_id: string | null
+        }
+        Relationships: []
+      }
+      manual_contents: {
+        Row: {
+          body: string | null
+          depth: number | null
+          document_approval_status:
+            | Database["public"]["Enums"]["document_workflow_status"]
+            | null
+          document_category:
+            | Database["public"]["Enums"]["document_category"]
+            | null
+          document_effective_date: string | null
+          document_id: string | null
+          document_storage_path: string | null
+          document_title: string | null
+          document_version: number | null
+          heading: string | null
+          manual_id: string | null
+          parent_id: string | null
+          section_id: string | null
+          section_number: string | null
+          sort_order: number | null
+          sort_path: string | null
+        }
+        Relationships: []
+      }
+      manual_summary: {
+        Row: {
+          approval_status:
+            | Database["public"]["Enums"]["document_workflow_status"]
+            | null
+          created_at: string | null
+          description: string | null
+          document_count: number | null
+          effective_date: string | null
+          empty_section_count: number | null
+          id: string | null
+          revision: string | null
+          section_count: number | null
+          title: string | null
+          updated_at: string | null
         }
         Relationships: []
       }

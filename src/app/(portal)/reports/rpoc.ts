@@ -73,6 +73,7 @@ export async function buildEvidencePack(): Promise<
     incidents,
     training,
     checklists,
+    manuals,
   ] = await Promise.all([
     supabase
       .from("document_review_status")
@@ -115,9 +116,38 @@ export async function buildEvidencePack(): Promise<
       .select("name, applies_to_model, active, checklist_items(id, critical)")
       .eq("active", true)
       .order("name"),
+    supabase.from("manual_summary").select("*").order("title"),
   ]);
 
   const sections: EvidenceSection[] = [
+    {
+      id: "manuals",
+      title: "Operations manuals",
+      purpose:
+        "The bound manuals the operation is run to, at their current revision. A reviewer cites a section number, so this is what makes a finding answerable.",
+      columns: [
+        { key: "title", label: "Manual" },
+        { key: "revision", label: "Revision" },
+        { key: "effective", label: "Effective" },
+        { key: "status", label: "Approval" },
+        { key: "sections", label: "Sections", numeric: true },
+        { key: "controlled", label: "Controlled docs", numeric: true },
+        { key: "empty", label: "Empty sections", numeric: true },
+      ],
+      rows: (manuals.data ?? []).map((m) => ({
+        title: m.title,
+        revision: m.revision,
+        effective: m.effective_date ?? "Not set",
+        status: m.approval_status?.replace(/_/g, " ") ?? null,
+        sections: m.section_count,
+        controlled: m.document_count,
+        // Surfaced rather than hidden: an empty section is the gap a reviewer
+        // finds first, and finding it here is cheaper than finding it there.
+        empty: m.empty_section_count,
+      })),
+      gapWarning:
+        "No operations manual on file. A certificate rests on one; a set of loose procedures is not the same thing.",
+    },
     {
       id: "procedures",
       title: "Documented procedures",

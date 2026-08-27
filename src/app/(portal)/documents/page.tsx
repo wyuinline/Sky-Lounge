@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { DocumentsTable, type DocumentRow } from "@/components/portal/documents/documents-table";
 import { UploadDocumentDialog } from "@/components/portal/documents/upload-document-dialog";
+import { ManualsPanel, type ManualSummary } from "@/components/portal/documents/manuals-panel";
 import { documentCategories } from "@/lib/document-categories";
 import { reviewCycleLabel } from "@/lib/review-cycles";
 import { deriveExpiryStatus, documentReviewDue } from "@/lib/compliance";
@@ -16,7 +17,7 @@ import { getAccess } from "@/lib/permissions";
 
 export default async function DocumentsPage() {
   const supabase = await createClient();
-  const [access, documentsRes, policyRes] = await Promise.all([
+  const [access, documentsRes, policyRes, manualsRes] = await Promise.all([
     getAccess(),
     // The view joins the pilot and exposes review_due for anything querying
     // SQL directly. This page derives the date itself, through the same tested
@@ -32,6 +33,9 @@ export default async function DocumentsPage() {
       .from("document_review_policy")
       .select("category, review_interval_months, rationale")
       .order("category"),
+    // Section and document counts are derived by the view, so a manual's
+    // completeness cannot drift from its actual contents.
+    supabase.from("manual_summary").select("*").order("title"),
   ]);
 
   // Mapped rather than cast: a view carries no NOT NULL, so every column
@@ -111,6 +115,14 @@ export default async function DocumentsPage() {
           label="Never Reviewed"
           value={`${neverReviewed}`}
           tone={neverReviewed > 0 ? "warning" : "good"}
+        />
+      </div>
+
+      <div>
+        <SectionLabel>Operations Manuals</SectionLabel>
+        <ManualsPanel
+          manuals={(manualsRes.data ?? []) as unknown as ManualSummary[]}
+          canManage={canManage}
         />
       </div>
 
