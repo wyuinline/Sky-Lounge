@@ -7,6 +7,9 @@ import { getAccess } from "@/lib/permissions";
 import { mintKey, apiScopes, type ApiScope } from "@/lib/api-keys";
 import { mintSigningSecret, webhookEvents, type WebhookEvent } from "@/lib/webhooks";
 import { dispatchWebhook } from "@/lib/webhook-dispatch";
+import { isMirrorable } from "@/lib/sharepoint";
+import { mirrorDocument, checkSharePointConnection } from "@/lib/sharepoint-client";
+import { bucketForCategory } from "@/lib/document-categories";
 
 /**
  * Minting an API key.
@@ -201,4 +204,85 @@ export async function testWebhook(id: string) {
     return { error: "The receiver did not accept the delivery. The log below says why." };
   }
   return { error: null };
+}
+
+/**
+ * Proves the SharePoint configuration without leaving a file behind.
+ *
+ * Asks Graph for the library itself, which exercises the credentials, the site
+ * id, the drive id and the permission grant in one call.
+ */
+export async function checkSharePoint() {
+  const access = await getAccess();
+  if (!access) return { error: "You are not signed in.", library: null };
+  if (!access.canManage("users")) {
+    return { error: "You do not have permission to check this.", library: null };
+  }
+
+  const result = await checkSharePointConnection();
+  if (!result.ok) return { error: result.reason, library: null };
+  return { error: null, library: { name: result.libraryName, url: result.webUrl } };
+}
+
+/**
+ * Retries a mirror that failed.
+ *
+ * The file is fetched back out of storage rather than re-uploaded from the
+ * browser: the portal already holds the authoritative copy, and asking someone
+ * to find the original again a week later is how a retry becomes a never.
+ */
+export async function remirrorDocument(documentId: string) {
+  const access = await getAccess();
+  if (!access) return { error: "You are not signed in." };
+  if (!access.canManage("docs_general")) {
+    return { error: "You do not have permission to mirror documents." };
+  }
+
+  const supabase = await createClient();
+  const { data: document } = await supabase
+    .from("documents")
+    .select("id, title, category, version, storage_path")
+    .eq("id", documentId)
+    .maybeSingle();
+
+  if (!document) return { error: "That document no longer exists." };
+  if (!isMirrorable(document.category)) {
+    return { error: "This category is deliberately not mirrored to SharePoint." };
+  }
+
+  const { data: file, error: downloadError } = await supabase.storage
+    .from(bucketForCategory(document.category))
+    .download(document.storage_path);
+
+  if (downloadError || !file) {
+    return { error: "The stored file could not be read back." };
+  }
+
+  const originalName = document.storage_path.split("/").pop() ?? document.title;
+  const result = await mirrorDocument(
+    document.category,
+    document.title,
+    document.version === null ? null : String(document.version),
+    originalName,
+    file,
+  );
+
+  await supabase
+    .from("documents")
+    .update(
+      result.ok
+        ? {
+            sharepoint_url: result.webUrl,
+            sharepoint_path: result.path,
+            sharepoint_synced_at: new Date().toISOString(),
+            sharepoint_error: null,
+          }
+        : { sharepoint_error: result.reason },
+    )
+    .eq("id", documentId);
+
+  revalidatePath("/admin/integrations");
+  revalidatePath("/documents");
+
+  return result.ok ? { error: null } : { error: result.reason };
 }

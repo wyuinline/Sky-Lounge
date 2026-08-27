@@ -1,8 +1,11 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { after } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { safeErrorMessage, parseEnum } from "@/lib/action-utils";
+import { isMirrorable } from "@/lib/sharepoint";
+import { mirrorDocument } from "@/lib/sharepoint-client";
 import {
   bucketForCategory,
   documentCategories,
@@ -83,7 +86,7 @@ export async function uploadDocument(formData: FormData) {
   const { error: uploadError } = await supabase.storage.from(bucketId).upload(storagePath, file);
   if (uploadError) return { error: safeErrorMessage(uploadError, "upload") };
 
-  const { error: insertError } = await supabase.from("documents").insert({
+  const { data: inserted, error: insertError } = await supabase.from("documents").insert({
     title,
     category,
     uav_model: uavModel || null,
@@ -95,7 +98,7 @@ export async function uploadDocument(formData: FormData) {
     effective_date: effectiveDate || todayIso(),
     review_interval_months: reviewIntervalMonths,
     expires_at: expiresAt || null,
-  });
+  }).select("id, version").single();
 
   if (insertError) {
     // The file is already in the bucket. Without this the object would linger
@@ -103,6 +106,34 @@ export async function uploadDocument(formData: FormData) {
     // which matters most for the restricted incident/regulatory buckets.
     await supabase.storage.from(bucketId).remove([storagePath]);
     return { error: safeErrorMessage(insertError, "upload") };
+  }
+
+  // Mirrored after the response, never before it. A document filed in the
+  // portal but not yet in SharePoint is a delay; a document refused because
+  // SharePoint was unreachable is lost work.
+  if (inserted && isMirrorable(category)) {
+    after(async () => {
+      // The portal stores version as a number; the mirrored filename carries
+      // it as text, so the copy in SharePoint cites the same version an audit
+      // would quote from the portal.
+      const version = inserted.version === null ? null : String(inserted.version);
+      const result = await mirrorDocument(category, title, version, file.name, file);
+      await supabase
+        .from("documents")
+        .update(
+          result.ok
+            ? {
+                sharepoint_url: result.webUrl,
+                sharepoint_path: result.path,
+                sharepoint_synced_at: new Date().toISOString(),
+                sharepoint_error: null,
+              }
+            : // Recorded rather than logged, so the documents page can show
+              // which copies are missing and why.
+              { sharepoint_error: result.reason },
+        )
+        .eq("id", inserted.id);
+    });
   }
 
   revalidatePath("/documents");

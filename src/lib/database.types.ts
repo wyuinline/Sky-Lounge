@@ -683,6 +683,10 @@ export type Database = {
           last_reviewed_by: string | null
           pilot_id: string | null
           review_interval_months: number | null
+          sharepoint_error: string | null
+          sharepoint_path: string | null
+          sharepoint_synced_at: string | null
+          sharepoint_url: string | null
           storage_path: string
           title: string
           uav_model: string | null
@@ -701,6 +705,10 @@ export type Database = {
           last_reviewed_by?: string | null
           pilot_id?: string | null
           review_interval_months?: number | null
+          sharepoint_error?: string | null
+          sharepoint_path?: string | null
+          sharepoint_synced_at?: string | null
+          sharepoint_url?: string | null
           storage_path: string
           title: string
           uav_model?: string | null
@@ -719,6 +727,10 @@ export type Database = {
           last_reviewed_by?: string | null
           pilot_id?: string | null
           review_interval_months?: number | null
+          sharepoint_error?: string | null
+          sharepoint_path?: string | null
+          sharepoint_synced_at?: string | null
+          sharepoint_url?: string | null
           storage_path?: string
           title?: string
           uav_model?: string | null
