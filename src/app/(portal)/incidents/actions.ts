@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { safeErrorMessage, parseEnum } from "@/lib/action-utils";
+import { notify } from "@/lib/webhook-dispatch";
 
 const INCIDENT_TYPES = [
   "near_miss",
@@ -32,7 +33,7 @@ export async function reportIncident(formData: FormData) {
     return { error: "Add the incident date and a description." };
   }
 
-  const { error } = await supabase.from("incidents").insert({
+  const { data: incident, error } = await supabase.from("incidents").insert({
     incident_date: incidentDate,
     incident_type: incidentType,
     uav_id: uavId || null,
@@ -43,9 +44,18 @@ export async function reportIncident(formData: FormData) {
     // Anonymous reports stay genuinely anonymous — no reporter recorded.
     // Named reports are attributable, so a false report can be traced.
     reported_by: isAnonymous ? null : (user?.id ?? null),
-  });
+  }).select("id").single();
 
   if (error) return { error: safeErrorMessage(error, "report") };
+
+  // Neither the reporter nor the pilot is named in the payload. An anonymous
+  // channel that leaks identity through a Teams message is not anonymous.
+  notify("incident.reported", {
+    incident_id: incident?.id ?? null,
+    incident_date: incidentDate,
+    incident_type: incidentType,
+    severity,
+  });
 
   revalidatePath("/incidents");
   revalidatePath("/");

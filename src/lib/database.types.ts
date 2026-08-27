@@ -39,6 +39,63 @@ export type Database = {
   }
   public: {
     Tables: {
+      api_keys: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          expires_at: string | null
+          id: string
+          key_hash: string
+          key_hint: string
+          last_used_at: string | null
+          name: string
+          revoked_at: string | null
+          revoked_by: string | null
+          scopes: Database["public"]["Enums"]["access_area"][]
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          expires_at?: string | null
+          id?: string
+          key_hash: string
+          key_hint: string
+          last_used_at?: string | null
+          name: string
+          revoked_at?: string | null
+          revoked_by?: string | null
+          scopes?: Database["public"]["Enums"]["access_area"][]
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          expires_at?: string | null
+          id?: string
+          key_hash?: string
+          key_hint?: string
+          last_used_at?: string | null
+          name?: string
+          revoked_at?: string | null
+          revoked_by?: string | null
+          scopes?: Database["public"]["Enums"]["access_area"][]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "api_keys_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "api_keys_revoked_by_fkey"
+            columns: ["revoked_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       audit_findings: {
         Row: {
           assigned_to: string | null
@@ -1855,6 +1912,88 @@ export type Database = {
           },
         ]
       }
+      webhook_deliveries: {
+        Row: {
+          attempted_at: string
+          duration_ms: number | null
+          error: string | null
+          event: Database["public"]["Enums"]["webhook_event"]
+          id: string
+          payload: Json
+          status_code: number | null
+          webhook_id: string
+        }
+        Insert: {
+          attempted_at?: string
+          duration_ms?: number | null
+          error?: string | null
+          event: Database["public"]["Enums"]["webhook_event"]
+          id?: string
+          payload: Json
+          status_code?: number | null
+          webhook_id: string
+        }
+        Update: {
+          attempted_at?: string
+          duration_ms?: number | null
+          error?: string | null
+          event?: Database["public"]["Enums"]["webhook_event"]
+          id?: string
+          payload?: Json
+          status_code?: number | null
+          webhook_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "webhook_deliveries_webhook_id_fkey"
+            columns: ["webhook_id"]
+            isOneToOne: false
+            referencedRelation: "webhooks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      webhooks: {
+        Row: {
+          active: boolean
+          created_at: string
+          created_by: string | null
+          events: Database["public"]["Enums"]["webhook_event"][]
+          id: string
+          name: string
+          signing_secret: string
+          url: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          created_by?: string | null
+          events?: Database["public"]["Enums"]["webhook_event"][]
+          id?: string
+          name: string
+          signing_secret: string
+          url: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          created_by?: string | null
+          events?: Database["public"]["Enums"]["webhook_event"][]
+          id?: string
+          name?: string
+          signing_secret?: string
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "webhooks_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       battery_cell_health: {
@@ -2316,6 +2455,10 @@ export type Database = {
         Returns: Database["public"]["Enums"]["user_role"][]
       }
       pilot_has_roc_a: { Args: { p_pilot_id: string }; Returns: boolean }
+      prune_webhook_deliveries: {
+        Args: { p_keep_days?: number }
+        Returns: number
+      }
       severity_score: {
         Args: { v: Database["public"]["Enums"]["risk_severity"] }
         Returns: number
@@ -2461,6 +2604,16 @@ export type Database = {
         | "auditor"
         | "pilot"
         | "read_only"
+      webhook_event:
+        | "flight.logged"
+        | "flight_request.submitted"
+        | "flight_request.approved"
+        | "flight_request.rejected"
+        | "incident.reported"
+        | "maintenance.due"
+        | "maintenance.completed"
+        | "document.expiring"
+        | "certification.expiring"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -2737,6 +2890,17 @@ export const Constants = {
         "auditor",
         "pilot",
         "read_only",
+      ],
+      webhook_event: [
+        "flight.logged",
+        "flight_request.submitted",
+        "flight_request.approved",
+        "flight_request.rejected",
+        "incident.reported",
+        "maintenance.due",
+        "maintenance.completed",
+        "document.expiring",
+        "certification.expiring",
       ],
     },
   },

@@ -23,6 +23,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { logFlight } from "@/app/(portal)/flights/actions";
+import { enqueue } from "@/lib/offline-queue";
 import { fetchObservation } from "@/app/(portal)/flights/weather-actions";
 import type { Observation } from "@/lib/weather";
 
@@ -118,7 +119,41 @@ export function LogFlightDialog({
     for (const id of selectedBatteries) formData.append("battery_ids", id);
     for (const id of observers) formData.append("observer_ids", id);
 
-    const result = await logFlight(formData);
+    // Offline before we even try: hold it rather than making the crew retype
+    // the flight later, when the details have blurred.
+    if (typeof navigator !== "undefined" && !navigator.onLine) {
+      const queued = await enqueue(formData);
+      setLoading(false);
+      if (queued === null) {
+        toast.error("No connection, and this device will not let the portal hold the flight.");
+        return;
+      }
+      window.dispatchEvent(new Event("sky-lounge:queued"));
+      toast.success("Held on this device. It files itself when the signal returns.");
+      setOpen(false);
+      reset();
+      form.reset();
+      return;
+    }
+
+    let result: { error: string | null };
+    try {
+      result = await logFlight(formData);
+    } catch {
+      // The connection dropped mid-submit. The flight is still good.
+      const queued = await enqueue(formData);
+      setLoading(false);
+      if (queued === null) {
+        toast.error("Could not reach the portal, and the flight could not be held. Try again.");
+        return;
+      }
+      window.dispatchEvent(new Event("sky-lounge:queued"));
+      toast.success("Lost the connection — the flight is held and will file itself.");
+      setOpen(false);
+      reset();
+      form.reset();
+      return;
+    }
     setLoading(false);
 
     if (result.error) {

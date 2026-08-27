@@ -18,6 +18,7 @@ import {
   Briefcase,
   ClipboardCheck as ChecklistIcon,
   Radar,
+  Plug,
 } from "lucide-react";
 
 export type NavItem = {
@@ -50,4 +51,5 @@ export const navItems: NavItem[] = [
   { title: "Notifications", href: "/notifications", icon: Bell },
   { title: "User Management", href: "/admin/users", icon: ShieldCheck, manages: "users" },
   { title: "Roles & Access", href: "/admin/permissions", icon: KeyRound, manages: "permissions" },
+  { title: "Integrations", href: "/admin/integrations", icon: Plug, manages: "users" },
 ];

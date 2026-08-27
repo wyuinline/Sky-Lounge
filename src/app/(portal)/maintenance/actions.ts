@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { safeErrorMessage, parseEnum } from "@/lib/action-utils";
+import { notify } from "@/lib/webhook-dispatch";
 
 const MAINTENANCE_TYPES = ["preventive", "repair", "calibration", "battery", "firmware"] as const;
 
@@ -23,16 +24,23 @@ export async function logMaintenance(formData: FormData) {
     return { error: "Choose the UAV this record applies to." };
   }
 
-  const { error } = await supabase.from("maintenance_records").insert({
+  const { data: record, error } = await supabase.from("maintenance_records").insert({
     uav_id: uavId,
     maintenance_type: maintenanceType,
     next_service_date: nextServiceDate || null,
     technician_id: technicianId || null,
     notes: notes || null,
     status: "scheduled",
-  });
+  }).select("id").single();
 
   if (error) return { error: safeErrorMessage(error, "save") };
+
+  notify("maintenance.due", {
+    maintenance_id: record?.id ?? null,
+    uav_id: uavId,
+    maintenance_type: maintenanceType,
+    next_service_date: nextServiceDate || null,
+  });
 
   revalidatePath("/maintenance");
   revalidatePath("/fleet");
@@ -43,12 +51,23 @@ export async function logMaintenance(formData: FormData) {
 export async function completeMaintenance(id: string) {
   const supabase = await createClient();
 
-  const { error } = await supabase
+  const completedDate = new Date().toISOString().slice(0, 10);
+  const { data: record, error } = await supabase
     .from("maintenance_records")
-    .update({ status: "completed", completed_date: new Date().toISOString().slice(0, 10) })
-    .eq("id", id);
+    .update({ status: "completed", completed_date: completedDate })
+    .eq("id", id)
+    .select("uav_id, maintenance_type, next_service_date")
+    .maybeSingle();
 
   if (error) return { error: safeErrorMessage(error, "update") };
+
+  notify("maintenance.completed", {
+    maintenance_id: id,
+    uav_id: record?.uav_id ?? null,
+    maintenance_type: record?.maintenance_type ?? null,
+    completed_date: completedDate,
+    next_service_date: record?.next_service_date ?? null,
+  });
 
   revalidatePath("/maintenance");
   revalidatePath("/fleet");

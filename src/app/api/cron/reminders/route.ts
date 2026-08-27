@@ -2,6 +2,8 @@ import { NextResponse, type NextRequest } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { scanAll, type ReminderCandidate } from "@/lib/reminders";
 import { isEmailConfigured, sendReminderDigest } from "@/lib/email";
+import { notify } from "@/lib/webhook-dispatch";
+import type { WebhookEvent } from "@/lib/webhooks";
 
 /**
  * Weekly compliance reminder job — Wednesdays, 07:00 UTC.
@@ -165,6 +167,14 @@ export async function GET(request: NextRequest) {
 
   const newKeys = new Set((written ?? []).map((row) => row.dedupe_key));
 
+  // Only what is new this run is pushed. A weekly rescan over unchanged data
+  // must not re-announce the same expiry to a Teams channel every Wednesday.
+  pushNewReminders(candidates.filter((c) => newKeys.has(c.dedupe_key)));
+
+  // Delivery logs are only useful while recent, and this is the one job that
+  // already runs on a schedule.
+  const { data: pruned } = await supabase.rpc("prune_webhook_deliveries", { p_keep_days: 30 });
+
   // Email everything not yet successfully sent, not merely what was created in
   // this run. Keying off "new this run" meant a failed send was never retried:
   // the next run finds the row already present, so it would never be mailed.
@@ -192,7 +202,62 @@ export async function GET(request: NextRequest) {
     pendingEmail: toEmail.length,
     emailed,
     emailConfigured: isEmailConfigured(),
+    deliveryLogsPruned: pruned ?? 0,
   });
+}
+
+/**
+ * The reminder kinds that are worth pushing to an external system.
+ *
+ * Deliberately partial. An audit finding falling overdue is an internal matter
+ * for the compliance lead; a certificate about to lapse is something a
+ * scheduling system on the other end genuinely needs to know.
+ */
+const REMINDER_EVENTS: Partial<Record<ReminderCandidate["kind"], WebhookEvent>> = {
+  certification_expiring: "certification.expiring",
+  certification_expired: "certification.expiring",
+  pilot_certificate_expiring: "certification.expiring",
+  pilot_certificate_expired: "certification.expiring",
+  recency_due: "certification.expiring",
+  recency_overdue: "certification.expiring",
+  document_review_due: "document.expiring",
+  document_review_overdue: "document.expiring",
+  document_expiring: "document.expiring",
+  document_expired: "document.expiring",
+  maintenance_due: "maintenance.due",
+  maintenance_overdue: "maintenance.due",
+  maintenance_hours_due: "maintenance.due",
+  maintenance_hours_overdue: "maintenance.due",
+};
+
+/**
+ * Pushes new reminders, one delivery per event type rather than per item.
+ *
+ * A scan that turns up thirty expiring certificates should be one message a
+ * person reads, not thirty a person mutes.
+ */
+function pushNewReminders(created: ReminderCandidate[]): void {
+  const byEvent = new Map<WebhookEvent, ReminderCandidate[]>();
+
+  for (const candidate of created) {
+    const event = REMINDER_EVENTS[candidate.kind];
+    if (!event) continue;
+    byEvent.set(event, [...(byEvent.get(event) ?? []), candidate]);
+  }
+
+  for (const [event, items] of byEvent) {
+    notify(event, {
+      count: items.length,
+      items: items.map((i) => ({
+        kind: i.kind,
+        severity: i.severity,
+        title: i.title,
+        due_date: i.due_date,
+        entity_table: i.entity_table,
+        entity_id: i.entity_id,
+      })),
+    });
+  }
 }
 
 /** Groups reminders by recipient and sends one digest each. */

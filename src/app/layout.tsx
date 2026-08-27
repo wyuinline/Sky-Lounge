@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
@@ -19,6 +19,16 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "UAV Operations Management Portal",
   description: "Fleet, pilot, compliance, and safety operations for enterprise UAV programs.",
+  manifest: "/manifest.webmanifest",
+  appleWebApp: { capable: true, title: "UAV Ops", statusBarStyle: "default" },
+  icons: { icon: "/icon.svg", apple: "/icon.svg" },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#333f48",
+  // Field crews work one-handed on a phone in gloves; pinch-zoom stays on.
+  width: "device-width",
+  initialScale: 1,
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { safeErrorMessage, parseEnum } from "@/lib/action-utils";
 import { getAccess } from "@/lib/permissions";
+import { notify } from "@/lib/webhook-dispatch";
 import { todayIso } from "@/lib/compliance";
 import {
   checkAuthorisations,
@@ -136,7 +137,7 @@ export async function submitFlightRequest(formData: FormData) {
   const authRefusal = await authorisationRefusal(supabase, pilotId, effectiveOperations);
   if (authRefusal) return { error: authRefusal };
 
-  const { error } = await supabase.from("flight_requests").insert({
+  const { data: request, error } = await supabase.from("flight_requests").insert({
     pilot_id: pilotId,
     uav_id: uavId,
     location: location || null,
@@ -147,9 +148,17 @@ export async function submitFlightRequest(formData: FormData) {
     airspace_authorisation: airspaceAuth || null,
     airspace_authorisation_expires: airspaceAuthExpires || null,
     operations: effectiveOperations,
-  });
+  }).select("id").single();
 
   if (error) return { error: safeErrorMessage(error, "request") };
+
+  notify("flight_request.submitted", {
+    request_id: request?.id ?? null,
+    requested_date: requestedDate,
+    location: location || null,
+    risk_level: riskLevel,
+    operations: effectiveOperations,
+  });
 
   revalidatePath("/flights");
   return { error: null };
@@ -199,6 +208,11 @@ export async function updateFlightRequestStatus(
     .eq("id", id);
 
   if (error) return { error: safeErrorMessage(error, "approval") };
+
+  notify(safeStatus === "approved" ? "flight_request.approved" : "flight_request.rejected", {
+    request_id: id,
+    decided_by: user?.id ?? null,
+  });
 
   revalidatePath("/flights");
   return { error: null };
@@ -376,6 +390,16 @@ export async function logFlight(formData: FormData) {
       return { error: safeErrorMessage(crewError, "flight log") };
     }
   }
+
+  notify("flight.logged", {
+    flight_log_id: inserted.id,
+    flight_date: flightDate,
+    duration_minutes: durationMinutes,
+    location: locationName || null,
+    outcome: missionOutcome,
+    is_night: isNight,
+    is_bvlos: isBvlos,
+  });
 
   revalidatePath("/flights");
   revalidatePath("/fleet");

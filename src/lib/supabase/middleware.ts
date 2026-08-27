@@ -1,6 +1,24 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
+/**
+ * Paths that must resolve without a session.
+ *
+ * A service worker is fetched by the browser with no cookies attached, the
+ * manifest is read the same way when a phone installs the app, and the offline
+ * page is what the worker shows when there is no network to authenticate
+ * against — redirecting any of them to /login makes offline capture impossible.
+ *
+ * Exact paths, matched as a set. An earlier exemption here matched by file
+ * extension, which meant any route could bypass auth by ending in one.
+ */
+const UNAUTHENTICATED_PATHS = new Set([
+  "/offline",
+  "/sw.js",
+  "/manifest.webmanifest",
+  "/icon.svg",
+]);
+
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
 
@@ -37,6 +55,10 @@ export async function updateSession(request: NextRequest) {
   // bearer secret, not a session cookie. Redirecting them to /login would turn
   // every unauthenticated API call into a silent 307 to an HTML page.
   if (pathname.startsWith("/api/")) {
+    return supabaseResponse;
+  }
+
+  if (UNAUTHENTICATED_PATHS.has(pathname)) {
     return supabaseResponse;
   }
 

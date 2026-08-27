@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { SideNav } from "@/components/portal/side-nav";
+import { OfflineSync } from "@/components/portal/offline-sync";
 import { getAccess, accessAreaOrder } from "@/lib/permissions";
 
 export default async function PortalLayout({
@@ -33,6 +34,7 @@ export default async function PortalLayout({
         manages={manages}
       />
       <main className="min-w-0 flex-1 bg-background px-4 py-6 sm:px-6">{children}</main>
+      <OfflineSync />
     </div>
   );
 }
