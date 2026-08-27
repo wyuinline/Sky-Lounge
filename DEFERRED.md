@@ -6,7 +6,7 @@ moving, with the reason recorded so the decision can be re-judged later.
 Roadmap phases are in the [parity roadmap](https://claude.ai/code/artifact/958f6078-45d2-49d0-b43d-839ac1d6b591);
 the competitive picture behind them is in the [gap analysis](https://claude.ai/code/artifact/7b0535ca-f1cb-4eb7-be35-0642dde99fdd).
 
-Last updated: 26 August 2026, after Phase 5 and the backlog clear-out.
+Last updated: 27 August 2026, after the multi-tenancy cutover.
 
 ---
 
@@ -101,9 +101,34 @@ None of these can be done from here.
 
 ---
 
-## One decision still open
+## Decided: this is a product
 
-Whether this stays an internal tool or becomes a product sold to other
-operators. Retrofitting `organisation_id` into every table and RLS policy is
-far more expensive than designing for it, and the schema has grown
-considerably since the question was first raised.
+On 27 August 2026 the portal became multi-tenant. Inline Group is tenant one;
+other operators are provisioned by a platform administrator, who creates the
+organisation and invites its first administrator and can do nothing else.
+
+What that means for anything built from here:
+
+- **Never add a platform-admin bypass to domain RLS.** There is none, on
+  purpose. Someone who runs the platform cannot read an operator's incidents by
+  flipping a boolean, and the administrator who provisions an organisation
+  reads zero rows of its permissions matrix a moment later.
+- **Do not set `organisation_id` in application code.** It defaults to the
+  caller's organisation at the database, is not null, and the with-check clause
+  refuses a mismatch. Setting it by hand is how it eventually gets set wrongly.
+- **Three places run on the service role and scope by hand**: the read API, the
+  webhook dispatcher, and the reminders job. Each says so in a comment. Anything
+  new that uses the service role joins that list and takes the same care.
+- **Storage tenancy is a path convention**, built only in `src/lib/storage-paths.ts`
+  and enforced by the storage policies.
+
+### Still open under that decision
+
+- **Subscription billing.** Explicitly out of scope for the tenancy pass: plans
+  and limits are hard to choose before knowing what operators will pay for.
+  Nothing in the schema blocks it.
+- **Self-serve sign-up.** Provisioning is by hand today. Adding a public
+  sign-up needs email verification, rate limiting and a trial concept, but no
+  schema change.
+- **Per-operator subdomains.** Slugs exist and are stable; nothing routes on
+  them yet.
