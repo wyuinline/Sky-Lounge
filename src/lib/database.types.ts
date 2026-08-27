@@ -359,6 +359,13 @@ export type Database = {
             foreignKeyName: "checklist_completions_uav_id_fkey"
             columns: ["uav_id"]
             isOneToOne: false
+            referencedRelation: "inspection_plan_status"
+            referencedColumns: ["uav_id"]
+          },
+          {
+            foreignKeyName: "checklist_completions_uav_id_fkey"
+            columns: ["uav_id"]
+            isOneToOne: false
             referencedRelation: "uav_fleet_status"
             referencedColumns: ["id"]
           },
@@ -574,6 +581,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "component_installations_uav_id_fkey"
+            columns: ["uav_id"]
+            isOneToOne: false
+            referencedRelation: "inspection_plan_status"
+            referencedColumns: ["uav_id"]
           },
           {
             foreignKeyName: "component_installations_uav_id_fkey"
@@ -1068,6 +1082,13 @@ export type Database = {
             foreignKeyName: "flight_logs_uav_id_fkey"
             columns: ["uav_id"]
             isOneToOne: false
+            referencedRelation: "inspection_plan_status"
+            referencedColumns: ["uav_id"]
+          },
+          {
+            foreignKeyName: "flight_logs_uav_id_fkey"
+            columns: ["uav_id"]
+            isOneToOne: false
             referencedRelation: "uav_fleet_status"
             referencedColumns: ["id"]
           },
@@ -1171,6 +1192,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "projects"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "flight_requests_uav_id_fkey"
+            columns: ["uav_id"]
+            isOneToOne: false
+            referencedRelation: "inspection_plan_status"
+            referencedColumns: ["uav_id"]
           },
           {
             foreignKeyName: "flight_requests_uav_id_fkey"
@@ -1385,6 +1413,13 @@ export type Database = {
             foreignKeyName: "incidents_uav_id_fkey"
             columns: ["uav_id"]
             isOneToOne: false
+            referencedRelation: "inspection_plan_status"
+            referencedColumns: ["uav_id"]
+          },
+          {
+            foreignKeyName: "incidents_uav_id_fkey"
+            columns: ["uav_id"]
+            isOneToOne: false
             referencedRelation: "uav_fleet_status"
             referencedColumns: ["id"]
           },
@@ -1404,15 +1439,109 @@ export type Database = {
           },
         ]
       }
+      inspection_plan_items: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          interval_cycles: number | null
+          interval_hours: number | null
+          interval_months: number | null
+          is_critical: boolean
+          name: string
+          plan_id: string
+          sort_order: number
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          interval_cycles?: number | null
+          interval_hours?: number | null
+          interval_months?: number | null
+          is_critical?: boolean
+          name: string
+          plan_id: string
+          sort_order?: number
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          interval_cycles?: number | null
+          interval_hours?: number | null
+          interval_months?: number | null
+          is_critical?: boolean
+          name?: string
+          plan_id?: string
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inspection_plan_items_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "inspection_plan_status"
+            referencedColumns: ["plan_id"]
+          },
+          {
+            foreignKeyName: "inspection_plan_items_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "inspection_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inspection_plans: {
+        Row: {
+          active: boolean
+          applies_to_model: string | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          name: string
+        }
+        Insert: {
+          active?: boolean
+          applies_to_model?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          name: string
+        }
+        Update: {
+          active?: boolean
+          applies_to_model?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inspection_plans_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       maintenance_records: {
         Row: {
           completed_date: string | null
           created_at: string
+          cycles_at_service: number | null
           flight_hours_at_service: number | null
           id: string
           maintenance_type: Database["public"]["Enums"]["maintenance_type"]
           next_service_date: string | null
           notes: string | null
+          plan_item_id: string | null
           status: Database["public"]["Enums"]["maintenance_status"]
           technician_id: string | null
           uav_id: string | null
@@ -1420,11 +1549,13 @@ export type Database = {
         Insert: {
           completed_date?: string | null
           created_at?: string
+          cycles_at_service?: number | null
           flight_hours_at_service?: number | null
           id?: string
           maintenance_type: Database["public"]["Enums"]["maintenance_type"]
           next_service_date?: string | null
           notes?: string | null
+          plan_item_id?: string | null
           status?: Database["public"]["Enums"]["maintenance_status"]
           technician_id?: string | null
           uav_id?: string | null
@@ -1432,22 +1563,45 @@ export type Database = {
         Update: {
           completed_date?: string | null
           created_at?: string
+          cycles_at_service?: number | null
           flight_hours_at_service?: number | null
           id?: string
           maintenance_type?: Database["public"]["Enums"]["maintenance_type"]
           next_service_date?: string | null
           notes?: string | null
+          plan_item_id?: string | null
           status?: Database["public"]["Enums"]["maintenance_status"]
           technician_id?: string | null
           uav_id?: string | null
         }
         Relationships: [
           {
+            foreignKeyName: "maintenance_records_plan_item_id_fkey"
+            columns: ["plan_item_id"]
+            isOneToOne: false
+            referencedRelation: "inspection_plan_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "maintenance_records_plan_item_id_fkey"
+            columns: ["plan_item_id"]
+            isOneToOne: false
+            referencedRelation: "inspection_plan_status"
+            referencedColumns: ["item_id"]
+          },
+          {
             foreignKeyName: "maintenance_records_technician_id_fkey"
             columns: ["technician_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "maintenance_records_uav_id_fkey"
+            columns: ["uav_id"]
+            isOneToOne: false
+            referencedRelation: "inspection_plan_status"
+            referencedColumns: ["uav_id"]
           },
           {
             foreignKeyName: "maintenance_records_uav_id_fkey"
@@ -1853,6 +2007,67 @@ export type Database = {
           },
         ]
       }
+      uav_inspection_plans: {
+        Row: {
+          assigned_on: string
+          plan_id: string
+          uav_id: string
+        }
+        Insert: {
+          assigned_on?: string
+          plan_id: string
+          uav_id: string
+        }
+        Update: {
+          assigned_on?: string
+          plan_id?: string
+          uav_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "uav_inspection_plans_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "inspection_plan_status"
+            referencedColumns: ["plan_id"]
+          },
+          {
+            foreignKeyName: "uav_inspection_plans_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "inspection_plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "uav_inspection_plans_uav_id_fkey"
+            columns: ["uav_id"]
+            isOneToOne: false
+            referencedRelation: "inspection_plan_status"
+            referencedColumns: ["uav_id"]
+          },
+          {
+            foreignKeyName: "uav_inspection_plans_uav_id_fkey"
+            columns: ["uav_id"]
+            isOneToOne: false
+            referencedRelation: "uav_fleet_status"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "uav_inspection_plans_uav_id_fkey"
+            columns: ["uav_id"]
+            isOneToOne: false
+            referencedRelation: "uav_fleet_status"
+            referencedColumns: ["uav_id"]
+          },
+          {
+            foreignKeyName: "uav_inspection_plans_uav_id_fkey"
+            columns: ["uav_id"]
+            isOneToOne: false
+            referencedRelation: "uavs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       uavs: {
         Row: {
           assigned_pilot_id: string | null
@@ -2094,6 +2309,13 @@ export type Database = {
             foreignKeyName: "checklist_completions_uav_id_fkey"
             columns: ["uav_id"]
             isOneToOne: false
+            referencedRelation: "inspection_plan_status"
+            referencedColumns: ["uav_id"]
+          },
+          {
+            foreignKeyName: "checklist_completions_uav_id_fkey"
+            columns: ["uav_id"]
+            isOneToOne: false
             referencedRelation: "uav_fleet_status"
             referencedColumns: ["id"]
           },
@@ -2136,6 +2358,13 @@ export type Database = {
           total_hours: number | null
         }
         Relationships: [
+          {
+            foreignKeyName: "component_installations_uav_id_fkey"
+            columns: ["fitted_to_uav_id"]
+            isOneToOne: false
+            referencedRelation: "inspection_plan_status"
+            referencedColumns: ["uav_id"]
+          },
           {
             foreignKeyName: "component_installations_uav_id_fkey"
             columns: ["fitted_to_uav_id"]
@@ -2253,6 +2482,34 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      inspection_plan_status: {
+        Row: {
+          current_cycles: number | null
+          current_hours: number | null
+          cycles_remaining: number | null
+          days_remaining: number | null
+          drone_id: string | null
+          due_date: string | null
+          hours_remaining: number | null
+          interval_cycles: number | null
+          interval_hours: number | null
+          interval_months: number | null
+          is_critical: boolean | null
+          is_due: boolean | null
+          item_description: string | null
+          item_id: string | null
+          item_name: string | null
+          last_completed_at_cycles: number | null
+          last_completed_at_hours: number | null
+          last_completed_on: string | null
+          model: string | null
+          plan_id: string | null
+          plan_name: string | null
+          sort_order: number | null
+          uav_id: string | null
+        }
+        Relationships: []
       }
       pilot_authorisation_status: {
         Row: {

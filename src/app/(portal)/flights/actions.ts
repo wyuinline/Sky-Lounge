@@ -6,6 +6,7 @@ import { safeErrorMessage, parseEnum } from "@/lib/action-utils";
 import { getAccess } from "@/lib/permissions";
 import { notify } from "@/lib/webhook-dispatch";
 import { todayIso } from "@/lib/compliance";
+import { groundingItems, type PlanItemStatus } from "@/lib/inspection-plans";
 import {
   checkAuthorisations,
   refusalMessage,
@@ -60,6 +61,24 @@ async function airworthinessRefusal(
   }
   if (uav.hours_until_service !== null && uav.hours_until_service <= 0) {
     return `${name} has passed its hours-based service interval. Complete the service before booking a flight.`;
+  }
+
+  // A plan item marked critical holds the aircraft once it is actually
+  // overdue. An ordinary item is flagged on the maintenance page and does not
+  // stop a flight — grounding an aircraft over a late cosmetic check is how
+  // people learn to work around the whole system.
+  const { data: planItems } = await supabase
+    .from("inspection_plan_status")
+    .select(
+      "uav_id, drone_id, plan_name, item_id, item_name, is_critical, sort_order, interval_hours, interval_cycles, interval_months, hours_remaining, cycles_remaining, days_remaining, due_date, last_completed_on, current_hours, current_cycles, is_due",
+    )
+    .eq("uav_id", uavId)
+    .eq("is_critical", true);
+
+  const grounding = groundingItems((planItems ?? []) as unknown as PlanItemStatus[]);
+  if (grounding.length > 0) {
+    const names = grounding.map((item) => item.item_name).join(", ");
+    return `${name} has an overdue critical inspection: ${names}. Complete it before booking a flight.`;
   }
 
   return null;

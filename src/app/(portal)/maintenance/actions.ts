@@ -24,8 +24,12 @@ export async function logMaintenance(formData: FormData) {
     return { error: "Choose the UAV this record applies to." };
   }
 
+  const planItemId = String(formData.get("plan_item_id") ?? "").trim();
+
   const { data: record, error } = await supabase.from("maintenance_records").insert({
     uav_id: uavId,
+    // Null for an unscheduled repair, which satisfies no plan item.
+    plan_item_id: planItemId || null,
     maintenance_type: maintenanceType,
     next_service_date: nextServiceDate || null,
     technician_id: technicianId || null,
@@ -52,9 +56,37 @@ export async function completeMaintenance(id: string) {
   const supabase = await createClient();
 
   const completedDate = new Date().toISOString().slice(0, 10);
+
+  // Which aircraft, so the reading below is taken from the right one.
+  const { data: existing } = await supabase
+    .from("maintenance_records")
+    .select("uav_id")
+    .eq("id", id)
+    .maybeSingle();
+
+  if (!existing?.uav_id) return { error: "That maintenance record no longer exists." };
+
+  // Hours and cycles are read now and stored on the record. This is one of the
+  // few figures the portal stores rather than derives, and deliberately: it is
+  // a reading taken at a moment, and it is what every later interval counts
+  // from. Without it "hours since service" silently means "hours since the
+  // airframe entered service", which never resets and so never falls due.
+  const [{ data: airframe }, { count: cycles }] = await Promise.all([
+    supabase.from("uav_fleet_status").select("flight_hours").eq("uav_id", existing.uav_id).maybeSingle(),
+    supabase
+      .from("flight_logs")
+      .select("id", { count: "exact", head: true })
+      .eq("uav_id", existing.uav_id),
+  ]);
+
   const { data: record, error } = await supabase
     .from("maintenance_records")
-    .update({ status: "completed", completed_date: completedDate })
+    .update({
+      status: "completed",
+      completed_date: completedDate,
+      flight_hours_at_service: airframe?.flight_hours ?? null,
+      cycles_at_service: cycles ?? null,
+    })
     .eq("id", id)
     .select("uav_id, maintenance_type, next_service_date")
     .maybeSingle();
