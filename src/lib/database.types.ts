@@ -752,6 +752,7 @@ export type Database = {
           created_at: string
           duration_minutes: number | null
           effective_duration_minutes: number | null
+          flight_category: string | null
           flight_date: string
           flight_request_id: string | null
           id: string
@@ -769,8 +770,15 @@ export type Database = {
           project_id: string | null
           sfoc_reference: string | null
           takeoff_at: string | null
+          temperature_c: number | null
           uav_id: string | null
+          visibility_sm: number | null
           weather_conditions: string | null
+          weather_observed_at: string | null
+          weather_raw: string | null
+          weather_station: string | null
+          wind_direction_deg: number | null
+          wind_speed_kt: number | null
         }
         Insert: {
           acknowledged_at?: string | null
@@ -779,6 +787,7 @@ export type Database = {
           created_at?: string
           duration_minutes?: number | null
           effective_duration_minutes?: number | null
+          flight_category?: string | null
           flight_date?: string
           flight_request_id?: string | null
           id?: string
@@ -796,8 +805,15 @@ export type Database = {
           project_id?: string | null
           sfoc_reference?: string | null
           takeoff_at?: string | null
+          temperature_c?: number | null
           uav_id?: string | null
+          visibility_sm?: number | null
           weather_conditions?: string | null
+          weather_observed_at?: string | null
+          weather_raw?: string | null
+          weather_station?: string | null
+          wind_direction_deg?: number | null
+          wind_speed_kt?: number | null
         }
         Update: {
           acknowledged_at?: string | null
@@ -806,6 +822,7 @@ export type Database = {
           created_at?: string
           duration_minutes?: number | null
           effective_duration_minutes?: number | null
+          flight_category?: string | null
           flight_date?: string
           flight_request_id?: string | null
           id?: string
@@ -823,8 +840,15 @@ export type Database = {
           project_id?: string | null
           sfoc_reference?: string | null
           takeoff_at?: string | null
+          temperature_c?: number | null
           uav_id?: string | null
+          visibility_sm?: number | null
           weather_conditions?: string | null
+          weather_observed_at?: string | null
+          weather_raw?: string | null
+          weather_station?: string | null
+          wind_direction_deg?: number | null
+          wind_speed_kt?: number | null
         }
         Relationships: [
           {

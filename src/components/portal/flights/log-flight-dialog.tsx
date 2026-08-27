@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import { ClipboardList } from "lucide-react";
+import { ClipboardList, CloudSun } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,6 +23,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { logFlight } from "@/app/(portal)/flights/actions";
+import { fetchObservation } from "@/app/(portal)/flights/weather-actions";
+import type { Observation } from "@/lib/weather";
 
 type Option = { id: string; label: string };
 
@@ -68,7 +70,23 @@ export function LogFlightDialog({
   const [projectId, setProjectId] = useState(NO_PROJECT);
   const [selectedBatteries, setSelectedBatteries] = useState<string[]>([]);
   const [observers, setObservers] = useState<string[]>([]);
+  const [station, setStation] = useState("");
+  const [observation, setObservation] = useState<Observation | null>(null);
+  const [fetchingWeather, setFetchingWeather] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  async function lookUpWeather() {
+    setFetchingWeather(true);
+    const result = await fetchObservation(station);
+    setFetchingWeather(false);
+
+    if (result.error !== null) {
+      toast.error(result.error);
+      return;
+    }
+    setObservation(result.observation);
+    toast.success(`${result.observation.station}: ${result.summary}`);
+  }
 
   function toggle(list: string[], set: (v: string[]) => void, id: string) {
     set(list.includes(id) ? list.filter((v) => v !== id) : [...list, id]);
@@ -82,6 +100,8 @@ export function LogFlightDialog({
     setProjectId(NO_PROJECT);
     setSelectedBatteries([]);
     setObservers([]);
+    setStation("");
+    setObservation(null);
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -346,13 +366,87 @@ export function LogFlightDialog({
             </fieldset>
           ) : null}
 
+          <fieldset className="flex flex-col gap-3 rounded-md border border-border p-3">
+            <legend className="px-1 text-xs font-semibold tracking-[0.06em] text-brand-teal uppercase">
+              Aerodrome observation
+            </legend>
+            <p className="text-xs text-muted-foreground">
+              The nearest reporting aerodrome, which records what was actually observed rather than
+              what anyone remembers. CYEG is Edmonton International.
+            </p>
+            <div className="flex flex-wrap items-end gap-2">
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="weather_station">Station</Label>
+                <Input
+                  id="weather_station"
+                  value={station}
+                  onChange={(e) => setStation(e.target.value.toUpperCase())}
+                  placeholder="CYEG"
+                  maxLength={4}
+                  className="w-28 font-mono"
+                />
+              </div>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                disabled={fetchingWeather || station.trim().length !== 4}
+                onClick={lookUpWeather}
+              >
+                <CloudSun className="size-4" />
+                {fetchingWeather ? "Fetching..." : "Fetch observation"}
+              </Button>
+            </div>
+
+            {observation ? (
+              <div className="flex flex-col gap-1 rounded-md bg-brand-mist/50 px-3 py-2">
+                <p className="text-xs font-medium">
+                  {observation.stationName ?? observation.station}
+                  {observation.observedAt ? (
+                    <span className="font-normal text-muted-foreground">
+                      {" "}
+                      · {new Date(observation.observedAt).toLocaleString()}
+                    </span>
+                  ) : null}
+                </p>
+                {observation.raw ? (
+                  <p className="font-mono text-[0.7rem] break-all text-muted-foreground">
+                    {observation.raw}
+                  </p>
+                ) : null}
+                {/* Carried through as issued — the parsed values are for
+                    reporting, the raw report is the record. */}
+                <input type="hidden" name="weather_station" value={observation.station} />
+                <input type="hidden" name="weather_raw" value={observation.raw ?? ""} />
+                <input
+                  type="hidden"
+                  name="weather_observed_at"
+                  value={observation.observedAt ?? ""}
+                />
+                <input
+                  type="hidden"
+                  name="wind_direction_deg"
+                  value={observation.windDirectionDeg ?? ""}
+                />
+                <input type="hidden" name="wind_speed_kt" value={observation.windSpeedKt ?? ""} />
+                <input type="hidden" name="temperature_c" value={observation.temperatureC ?? ""} />
+                <input type="hidden" name="visibility_sm" value={observation.visibilitySm ?? ""} />
+                <input
+                  type="hidden"
+                  name="flight_category"
+                  value={observation.flightCategory ?? ""}
+                />
+              </div>
+            ) : null}
+          </fieldset>
+
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-2">
-              <Label htmlFor="weather_conditions">Weather Conditions</Label>
+              <Label htmlFor="weather_conditions">Conditions at the site</Label>
               <Input
                 id="weather_conditions"
                 name="weather_conditions"
-                placeholder="Clear, wind 8kt"
+                placeholder="What the crew saw"
               />
             </div>
             <div className="flex flex-col gap-2">

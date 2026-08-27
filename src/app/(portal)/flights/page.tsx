@@ -81,7 +81,11 @@ export default async function FlightsPage() {
               batteries={batteryOptions}
               projects={projectOptions}
             />
-            <SubmitFlightRequestDialog pilots={pilotOptions} uavs={uavOptions} />
+            <SubmitFlightRequestDialog
+              pilots={pilotOptions}
+              uavs={uavOptions}
+              projects={projectOptions}
+            />
           </>
         }
       />

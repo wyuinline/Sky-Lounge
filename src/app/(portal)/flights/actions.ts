@@ -136,6 +136,14 @@ export async function updateFlightRequestStatus(
 
 const AIRSPACE_CLASSES = ["uncontrolled", "controlled", "restricted", "advisory"] as const;
 
+/** A hidden numeric field from the weather lookup, or null if absent. */
+function numberField(formData: FormData, name: string): number | null {
+  const raw = String(formData.get(name) ?? "").trim();
+  if (raw === "") return null;
+  const n = Number(raw);
+  return Number.isFinite(n) ? n : null;
+}
+
 /** Parses "HH:MM" against the flight date into a timestamp, or null. */
 function combineDateTime(date: string, time: string): string | null {
   if (!date || !time) return null;
@@ -170,6 +178,10 @@ export async function logFlight(formData: FormData) {
   const isSheltered = formData.get("is_sheltered") === "on";
 
   const projectId = String(formData.get("project_id") ?? "").trim();
+  const weatherStation = String(formData.get("weather_station") ?? "").trim().toUpperCase();
+  const weatherRaw = String(formData.get("weather_raw") ?? "").trim();
+  const weatherObservedAt = String(formData.get("weather_observed_at") ?? "").trim();
+  const flightCategoryRaw = String(formData.get("flight_category") ?? "").trim();
   const batteryIds = formData.getAll("battery_ids").map(String).filter(Boolean);
   const observerIds = formData.getAll("observer_ids").map(String).filter(Boolean);
 
@@ -248,6 +260,18 @@ export async function logFlight(formData: FormData) {
       is_sheltered: isSheltered,
       sfoc_reference: sfocReference || null,
       project_id: projectId || null,
+      // Filled by the weather lookup. Recorded as issued rather than
+      // re-derived, so the log carries the observation itself.
+      weather_station: weatherStation || null,
+      weather_raw: weatherRaw || null,
+      weather_observed_at: weatherObservedAt || null,
+      wind_direction_deg: numberField(formData, "wind_direction_deg"),
+      wind_speed_kt: numberField(formData, "wind_speed_kt"),
+      temperature_c: numberField(formData, "temperature_c"),
+      visibility_sm: numberField(formData, "visibility_sm"),
+      flight_category: ["VFR", "MVFR", "IFR", "LIFR"].includes(flightCategoryRaw)
+        ? flightCategoryRaw
+        : null,
     })
     .select("id")
     .single();
