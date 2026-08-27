@@ -4,10 +4,30 @@ import { accessAreaOrder, type AccessArea, type AccessLevel, type UserRole } fro
 
 export * from "@/lib/access";
 
+/** The operator the signed-in person works for, and how it presents itself. */
+export type Organisation = {
+  id: string;
+  name: string;
+  legalName: string | null;
+  slug: string;
+  rpocNumber: string | null;
+  logoPath: string | null;
+  accentColour: string | null;
+};
+
 export type Access = {
   userId: string;
   role: UserRole;
   levels: Record<AccessArea, AccessLevel>;
+  /** Every query is already scoped to this by RLS; it is here for storage
+   *  paths, which the database cannot scope for us. */
+  organisation: Organisation;
+  /**
+   * Runs the platform, not this operation. Grants nothing inside any
+   * organisation — only the right to create one and invite its first
+   * administrator.
+   */
+  isPlatformAdmin: boolean;
   /** Sees every record in the area. */
   canReadAll: (area: AccessArea) => boolean;
   /** May add records, though not necessarily amend anyone else's. */
@@ -38,11 +58,24 @@ export const getAccess = cache(async function getAccess(): Promise<Access | null
   if (!user) return null;
 
   const [{ data: profile }, { data: permissions }] = await Promise.all([
-    supabase.from("profiles").select("role").eq("id", user.id).single(),
+    supabase
+      .from("profiles")
+      .select(
+        "role, is_platform_admin, organisations(id, name, legal_name, slug, rpoc_number, logo_path, accent_colour)",
+      )
+      .eq("id", user.id)
+      .single(),
+    // Already scoped to the caller's organisation by RLS, so no filter here.
     supabase.from("role_permissions").select("role, area, level"),
   ]);
 
   const role = (profile?.role as UserRole) ?? "read_only";
+  const org = profile?.organisations;
+
+  // A profile with no organisation cannot happen — the column is not null —
+  // but a failed join can, and treating that as "no access" beats rendering
+  // the portal with somebody else's name on it.
+  if (!org) return null;
 
   const levels = { ...NO_ACCESS };
   for (const row of permissions ?? []) {
@@ -53,6 +86,16 @@ export const getAccess = cache(async function getAccess(): Promise<Access | null
     userId: user.id,
     role,
     levels,
+    organisation: {
+      id: org.id,
+      name: org.name,
+      legalName: org.legal_name,
+      slug: org.slug,
+      rpocNumber: org.rpoc_number,
+      logoPath: org.logo_path,
+      accentColour: org.accent_colour,
+    },
+    isPlatformAdmin: profile?.is_platform_admin ?? false,
     canReadAll: (area) => ["full", "create", "read"].includes(levels[area]),
     canCreate: (area) => ["full", "create"].includes(levels[area]),
     canManage: (area) => levels[area] === "full",

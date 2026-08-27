@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { safeErrorMessage, parseEnum } from "@/lib/action-utils";
 import { getAccess } from "@/lib/permissions";
+import { objectPath } from "@/lib/storage-paths";
 
 const CERTIFICATE_TYPES = [
   "basic_operations",
@@ -175,6 +176,9 @@ export async function deletePilot(pilotId: string) {
  * file — an unverifiable tick is worthless in an audit.
  */
 export async function uploadRocA(pilotId: string, formData: FormData) {
+  const access = await getAccess();
+  if (!access) return { error: "You are not signed in." };
+
   const supabase = await createClient();
   const {
     data: { user },
@@ -199,7 +203,9 @@ export async function uploadRocA(pilotId: string, formData: FormData) {
     return { error: "That pilot no longer exists. Refresh and try again." };
   }
 
-  const storagePath = `${pilotId}/${crypto.randomUUID()}-${file.name}`;
+  // Organisation first, pilot second — the storage policy that lets a pilot
+  // read their own certificate reads the second segment for exactly this.
+  const storagePath = objectPath(access.organisation.id, file.name, pilotId);
 
   const { error: uploadError } = await supabase.storage
     .from(ROC_A_BUCKET)

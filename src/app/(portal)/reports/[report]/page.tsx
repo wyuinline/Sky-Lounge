@@ -5,6 +5,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { PrintButton } from "@/components/portal/reports/print-button";
 import { reportDef } from "@/lib/report-defs";
+import { getAccess } from "@/lib/permissions";
 import { runReport, reportStamp } from "../queries";
 
 export default async function ReportPage({
@@ -36,6 +37,10 @@ export default async function ReportPage({
 
   const { def, rows } = result;
   const stamp = reportStamp();
+  // The operator's own name goes on anything printed: a report handed to a
+  // client should say who flew, not who wrote the software.
+  const access = await getAccess();
+  const operator = access?.organisation.legalName ?? access?.organisation.name ?? "";
 
   return (
     <div className="flex flex-col gap-5">
@@ -61,7 +66,7 @@ export default async function ReportPage({
       <article className="report flex flex-col gap-4">
         <header className="flex flex-col gap-1 border-b-2 border-foreground pb-3">
           <p className="text-xs font-semibold tracking-[0.14em] text-brand-teal uppercase">
-            Inline Group Inc. — UAV Operations
+            {operator} — UAV Operations
           </p>
           <h1 className="text-2xl font-semibold tracking-[-0.015em]">{def.title}</h1>
           <p className="max-w-prose text-sm text-muted-foreground">{def.purpose}</p>
@@ -122,8 +127,8 @@ export default async function ReportPage({
         )}
 
         <footer className="border-t border-border pt-2 text-xs text-muted-foreground">
-          Produced by the Inline Group UAV Operations Portal on {stamp}. Figures are derived from
-          the operational record at the time of printing.
+          Produced by the {access?.organisation.name ?? ""} UAV operations portal on {stamp}.
+          Figures are derived from the operational record at the time of printing.
         </footer>
       </article>
     </div>

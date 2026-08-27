@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { safeErrorMessage, parseEnum } from "@/lib/action-utils";
 import { getAccess } from "@/lib/permissions";
+import { authCallbackUrl } from "@/lib/auth-urls";
 import { roleOrder, type UserRole } from "@/lib/access";
 
 type Supabase = Awaited<ReturnType<typeof createClient>>;
@@ -43,11 +44,17 @@ async function activeAdminCount(supabase: Supabase, managerRoles: UserRole[]): P
 
 async function requireAdmin() {
   const access = await getAccess();
-  if (!access) return { error: "You are not signed in." as const, userId: null };
+  if (!access) return { error: "You are not signed in." as const, userId: null, access: null };
   if (!access.canManage("users")) {
-    return { error: "You do not have permission to manage users." as const, userId: null };
+    return {
+      error: "You do not have permission to manage users." as const,
+      userId: null,
+      access: null,
+    };
   }
-  return { error: null, userId: access.userId };
+  // The whole access object, not only the id: an invitation has to name the
+  // organisation the new account will belong to.
+  return { error: null, userId: access.userId, access };
 }
 
 export async function updateUserRole(profileId: string, role: string) {
@@ -163,21 +170,6 @@ export async function linkPilotToProfile(profileId: string, pilotId: string | nu
 }
 
 /**
- * Where invite and recovery links land. Supabase appends its own query string,
- * and the address must also be listed under Auth → URL Configuration →
- * Redirect URLs in the Supabase dashboard, or it silently falls back to the
- * project's Site URL.
- */
-function authCallbackUrl(next: string) {
-  const base =
-    process.env.NEXT_PUBLIC_SITE_URL ??
-    (process.env.VERCEL_PROJECT_PRODUCTION_URL
-      ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
-      : "http://localhost:3000");
-  return `${base}/auth/confirm?next=${encodeURIComponent(next)}`;
-}
-
-/**
  * Invites someone by email.
  *
  * Creating an auth user is a service-role operation — there is deliberately no
@@ -225,8 +217,15 @@ export async function inviteUser(email: string, role: string, fullName: string) 
     };
   }
 
+  // The organisation travels in the invitation's user metadata. The trigger
+  // on auth.users reads it to place the new profile, and refuses outright if it
+  // is absent — an account that cannot say which operator it belongs to must
+  // fail at signup rather than quietly attach itself to the wrong fleet.
   const { data, error } = await admin.auth.admin.inviteUserByEmail(address, {
-    data: name ? { full_name: name } : undefined,
+    data: {
+      organisation_id: guard.access.organisation.id,
+      ...(name ? { full_name: name } : {}),
+    },
     redirectTo: authCallbackUrl("/auth/update-password"),
   });
 

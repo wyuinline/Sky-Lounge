@@ -61,6 +61,14 @@ export default async function RpocEvidencePage() {
           <h1 className="text-2xl font-semibold tracking-[-0.015em]">
             RPAS Operator Certificate — evidence pack
           </h1>
+          {pack.rpocNumber ? (
+            <p className="text-sm tabular-nums">Certificate {pack.rpocNumber}</p>
+          ) : (
+            <p className="text-sm text-[var(--status-warning)] print:text-black">
+              No operator certificate number on record. Set it under Administration →
+              Organisation before submitting this.
+            </p>
+          )}
           <p className="max-w-prose text-sm text-muted-foreground">
             Assembled from the operational record for a Transport Canada RPOC application or
             review. Each section states what it is evidence of; sections with no records say so

@@ -36,7 +36,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  let supabase;
+  let supabase: ReturnType<typeof createAdminClient>;
   try {
     supabase = createAdminClient();
   } catch (error) {
@@ -45,6 +45,46 @@ export async function GET(request: NextRequest) {
   }
 
   const now = new Date();
+
+  const { data: organisations, error: orgError } = await supabase
+    .from("organisations")
+    .select("id, name")
+    .eq("active", true)
+    .order("name");
+
+  if (orgError) {
+    console.error("[reminders] could not list organisations", orgError);
+    return NextResponse.json({ error: "Could not list organisations." }, { status: 500 });
+  }
+
+  // One operator at a time. This job runs on the service role, so nothing else
+  // is scoping these queries — and a digest that mixed two operators' fleets
+  // would be the worst possible way to find that out.
+  const results = [];
+  for (const organisation of organisations ?? []) {
+    results.push(await scanOrganisation(supabase, organisation, now));
+  }
+
+  // Delivery logs are only useful while recent, and this is the one job that
+  // already runs on a schedule. Not per organisation: the table is pruned by
+  // age, not by owner.
+  const { data: pruned } = await supabase.rpc("prune_webhook_deliveries", { p_keep_days: 30 });
+
+  return NextResponse.json({
+    scanned: true,
+    organisations: results.length,
+    emailConfigured: isEmailConfigured(),
+    deliveryLogsPruned: pruned ?? 0,
+    results,
+  });
+}
+
+async function scanOrganisation(
+  supabase: ReturnType<typeof createAdminClient>,
+  organisation: { id: string; name: string },
+  now: Date,
+) {
+  const organisationId = organisation.id;
 
   const [
     pilotsRes,
@@ -62,27 +102,38 @@ export async function GET(request: NextRequest) {
     supabase
       .from("pilots")
       .select("id, full_name, certificate_expires, last_recency_activity, profile_id")
+      .eq("organisation_id", organisationId)
       .eq("active", true),
     supabase
       .from("training_records")
-      .select("id, certification_name, expiry_date, pilot_id, pilots(full_name, profile_id, active)"),
+      .select("id, certification_name, expiry_date, pilot_id, pilots(full_name, profile_id, active)")
+      .eq("organisation_id", organisationId),
     // The view derives review_due, so the documents page and this scan cannot
     // disagree about when something is due.
     supabase
       .from("document_review_status")
       .select(
         "id, title, category, review_interval_months, last_reviewed_at, effective_date, created_at, expires_at, pilot_name, pilot_profile_id, pilot_active",
-      ),
+      )
+      .eq("organisation_id", organisationId),
     supabase
       .from("maintenance_records")
-      .select("id, status, next_service_date, maintenance_type, uavs(drone_id)"),
+      .select("id, status, next_service_date, maintenance_type, uavs(drone_id)")
+      .eq("organisation_id", organisationId),
     // Hours-since-service is derived by this view; the raw tables don't carry it.
     supabase
       .from("uav_fleet_status")
       .select("uav_id, drone_id, maintenance_interval_hours, hours_since_service, hours_until_service")
+      .eq("organisation_id", organisationId)
       .neq("status", "retired"),
-    supabase.from("audits").select("id, status, audit_date, audit_type"),
-    supabase.from("audit_findings").select("id, status, due_date, description, severity, assigned_to"),
+    supabase
+      .from("audits")
+      .select("id, status, audit_date, audit_type")
+      .eq("organisation_id", organisationId),
+    supabase
+      .from("audit_findings")
+      .select("id, status, due_date, description, severity, assigned_to")
+      .eq("organisation_id", organisationId),
   ]);
 
   const firstError =
@@ -94,8 +145,9 @@ export async function GET(request: NextRequest) {
     auditsRes.error ??
     findingsRes.error;
   if (firstError) {
-    console.error("[reminders] scan query failed", firstError);
-    return NextResponse.json({ error: "Could not read operational data." }, { status: 500 });
+    console.error(`[reminders] scan failed for ${organisation.name}`, firstError);
+    // One operator's outage must not stop the others being reminded.
+    return { organisation: organisation.name, error: "Could not read operational data." };
   }
 
   const candidates = scanAll(
@@ -150,30 +202,32 @@ export async function GET(request: NextRequest) {
   );
 
   if (candidates.length === 0) {
-    return NextResponse.json({ scanned: true, created: 0, emailed: 0, message: "Nothing due." });
+    return { organisation: organisation.name, candidates: 0, created: 0, emailed: 0 };
   }
 
   // Upsert on dedupe_key so a daily run over unchanged data is a no-op rather
   // than piling up duplicates. ignoreDuplicates keeps the original created_at.
   const { data: written, error: writeError } = await supabase
     .from("notifications")
-    .upsert(candidates, { onConflict: "dedupe_key", ignoreDuplicates: true })
+    // organisation_id is set here rather than left to the column default: the
+    // default reads the caller's organisation, and a scheduled job has no
+    // caller to read.
+    .upsert(
+      candidates.map((c) => ({ ...c, organisation_id: organisationId })),
+      { onConflict: "dedupe_key", ignoreDuplicates: true },
+    )
     .select("id, dedupe_key");
 
   if (writeError) {
-    console.error("[reminders] could not record notifications", writeError);
-    return NextResponse.json({ error: "Could not record reminders." }, { status: 500 });
+    console.error(`[reminders] could not record reminders for ${organisation.name}`, writeError);
+    return { organisation: organisation.name, error: "Could not record reminders." };
   }
 
   const newKeys = new Set((written ?? []).map((row) => row.dedupe_key));
 
   // Only what is new this run is pushed. A weekly rescan over unchanged data
   // must not re-announce the same expiry to a Teams channel every Wednesday.
-  pushNewReminders(candidates.filter((c) => newKeys.has(c.dedupe_key)));
-
-  // Delivery logs are only useful while recent, and this is the one job that
-  // already runs on a schedule.
-  const { data: pruned } = await supabase.rpc("prune_webhook_deliveries", { p_keep_days: 30 });
+  pushNewReminders(candidates.filter((c) => newKeys.has(c.dedupe_key)), organisationId);
 
   // Email everything not yet successfully sent, not merely what was created in
   // this run. Keying off "new this run" meant a failed send was never retried:
@@ -181,6 +235,7 @@ export async function GET(request: NextRequest) {
   const { data: unsent, error: unsentError } = await supabase
     .from("notifications")
     .select("dedupe_key")
+    .eq("organisation_id", organisationId)
     .is("emailed_at", null);
 
   if (unsentError) {
@@ -192,18 +247,16 @@ export async function GET(request: NextRequest) {
 
   let emailed = 0;
   if (toEmail.length > 0 && isEmailConfigured()) {
-    emailed = await emailDigests(supabase, toEmail);
+    emailed = await emailDigests(supabase, organisationId, toEmail);
   }
 
-  return NextResponse.json({
-    scanned: true,
+  return {
+    organisation: organisation.name,
     candidates: candidates.length,
     created: newKeys.size,
     pendingEmail: toEmail.length,
     emailed,
-    emailConfigured: isEmailConfigured(),
-    deliveryLogsPruned: pruned ?? 0,
-  });
+  };
 }
 
 /**
@@ -236,7 +289,7 @@ const REMINDER_EVENTS: Partial<Record<ReminderCandidate["kind"], WebhookEvent>> 
  * A scan that turns up thirty expiring certificates should be one message a
  * person reads, not thirty a person mutes.
  */
-function pushNewReminders(created: ReminderCandidate[]): void {
+function pushNewReminders(created: ReminderCandidate[], organisationId: string): void {
   const byEvent = new Map<WebhookEvent, ReminderCandidate[]>();
 
   for (const candidate of created) {
@@ -246,28 +299,34 @@ function pushNewReminders(created: ReminderCandidate[]): void {
   }
 
   for (const [event, items] of byEvent) {
-    notify(event, {
-      count: items.length,
-      items: items.map((i) => ({
-        kind: i.kind,
-        severity: i.severity,
-        title: i.title,
-        due_date: i.due_date,
-        entity_table: i.entity_table,
-        entity_id: i.entity_id,
-      })),
-    });
+    notify(
+      event,
+      {
+        count: items.length,
+        items: items.map((i) => ({
+          kind: i.kind,
+          severity: i.severity,
+          title: i.title,
+          due_date: i.due_date,
+          entity_table: i.entity_table,
+          entity_id: i.entity_id,
+        })),
+      },
+      organisationId,
+    );
   }
 }
 
 /** Groups reminders by recipient and sends one digest each. */
 async function emailDigests(
   supabase: ReturnType<typeof createAdminClient>,
+  organisationId: string,
   reminders: ReminderCandidate[],
 ): Promise<number> {
   const { data: profiles, error } = await supabase
     .from("profiles")
     .select("id, email, role")
+    .eq("organisation_id", organisationId)
     .eq("active", true);
 
   if (error || !profiles) {

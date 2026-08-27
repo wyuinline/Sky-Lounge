@@ -35,16 +35,22 @@ export async function logMaintenance(formData: FormData) {
     technician_id: technicianId || null,
     notes: notes || null,
     status: "scheduled",
-  }).select("id").single();
+  }).select("id, organisation_id").single();
 
   if (error) return { error: safeErrorMessage(error, "save") };
 
-  notify("maintenance.due", {
-    maintenance_id: record?.id ?? null,
-    uav_id: uavId,
-    maintenance_type: maintenanceType,
-    next_service_date: nextServiceDate || null,
-  });
+  if (record) {
+    notify(
+      "maintenance.due",
+      {
+        maintenance_id: record.id,
+        uav_id: uavId,
+        maintenance_type: maintenanceType,
+        next_service_date: nextServiceDate || null,
+      },
+      record.organisation_id,
+    );
+  }
 
   revalidatePath("/maintenance");
   revalidatePath("/fleet");
@@ -88,18 +94,24 @@ export async function completeMaintenance(id: string) {
       cycles_at_service: cycles ?? null,
     })
     .eq("id", id)
-    .select("uav_id, maintenance_type, next_service_date")
+    .select("uav_id, maintenance_type, next_service_date, organisation_id")
     .maybeSingle();
 
   if (error) return { error: safeErrorMessage(error, "update") };
 
-  notify("maintenance.completed", {
-    maintenance_id: id,
-    uav_id: record?.uav_id ?? null,
-    maintenance_type: record?.maintenance_type ?? null,
-    completed_date: completedDate,
-    next_service_date: record?.next_service_date ?? null,
-  });
+  if (record) {
+    notify(
+      "maintenance.completed",
+      {
+        maintenance_id: id,
+        uav_id: record.uav_id,
+        maintenance_type: record.maintenance_type,
+        completed_date: completedDate,
+        next_service_date: record.next_service_date,
+      },
+      record.organisation_id,
+    );
+  }
 
   revalidatePath("/maintenance");
   revalidatePath("/fleet");

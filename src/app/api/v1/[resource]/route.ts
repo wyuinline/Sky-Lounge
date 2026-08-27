@@ -71,8 +71,13 @@ export async function GET(
   // only bridges the two overloads.
   const from = supabase.from as (relation: string) => ReturnType<typeof supabase.from>;
 
+  // Scoped by hand, deliberately and visibly. Everywhere else in the portal
+  // tenancy is RLS's job, but this route runs on the service role, so this one
+  // filter is the whole boundary. .filter() rather than .eq() because the
+  // relation is chosen at runtime and the row type is therefore unknown.
   let query = from(resource.from)
     .select(resource.select, { count: "exact" })
+    .filter("organisation_id", "eq", auth.organisationId)
     .order(resource.orderBy, { ascending: resource.ascending, nullsFirst: false })
     .range(offset, offset + limit - 1);
 

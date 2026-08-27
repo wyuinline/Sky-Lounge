@@ -167,17 +167,23 @@ export async function submitFlightRequest(formData: FormData) {
     airspace_authorisation: airspaceAuth || null,
     airspace_authorisation_expires: airspaceAuthExpires || null,
     operations: effectiveOperations,
-  }).select("id").single();
+  }).select("id, organisation_id").single();
 
   if (error) return { error: safeErrorMessage(error, "request") };
 
-  notify("flight_request.submitted", {
-    request_id: request?.id ?? null,
-    requested_date: requestedDate,
-    location: location || null,
-    risk_level: riskLevel,
-    operations: effectiveOperations,
-  });
+  if (request) {
+    notify(
+      "flight_request.submitted",
+      {
+        request_id: request.id,
+        requested_date: requestedDate,
+        location: location || null,
+        risk_level: riskLevel,
+        operations: effectiveOperations,
+      },
+      request.organisation_id,
+    );
+  }
 
   revalidatePath("/flights");
   return { error: null };
@@ -221,17 +227,22 @@ export async function updateFlightRequestStatus(
     }
   }
 
-  const { error } = await supabase
+  const { data: decided, error } = await supabase
     .from("flight_requests")
     .update({ approval_status: safeStatus, approved_by: user?.id ?? null })
-    .eq("id", id);
+    .eq("id", id)
+    .select("organisation_id")
+    .maybeSingle();
 
   if (error) return { error: safeErrorMessage(error, "approval") };
 
-  notify(safeStatus === "approved" ? "flight_request.approved" : "flight_request.rejected", {
-    request_id: id,
-    decided_by: user?.id ?? null,
-  });
+  if (decided) {
+    notify(
+      safeStatus === "approved" ? "flight_request.approved" : "flight_request.rejected",
+      { request_id: id, decided_by: user?.id ?? null },
+      decided.organisation_id,
+    );
+  }
 
   revalidatePath("/flights");
   return { error: null };
@@ -376,7 +387,7 @@ export async function logFlight(formData: FormData) {
         ? flightCategoryRaw
         : null,
     })
-    .select("id")
+    .select("id, organisation_id")
     .single();
 
   if (error || !inserted) {
@@ -410,15 +421,19 @@ export async function logFlight(formData: FormData) {
     }
   }
 
-  notify("flight.logged", {
-    flight_log_id: inserted.id,
-    flight_date: flightDate,
-    duration_minutes: durationMinutes,
-    location: locationName || null,
-    outcome: missionOutcome,
-    is_night: isNight,
-    is_bvlos: isBvlos,
-  });
+  notify(
+    "flight.logged",
+    {
+      flight_log_id: inserted.id,
+      flight_date: flightDate,
+      duration_minutes: durationMinutes,
+      location: locationName || null,
+      outcome: missionOutcome,
+      is_night: isNight,
+      is_bvlos: isBvlos,
+    },
+    inserted.organisation_id,
+  );
 
   revalidatePath("/flights");
   revalidatePath("/fleet");

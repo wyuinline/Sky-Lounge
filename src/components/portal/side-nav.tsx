@@ -28,15 +28,49 @@ function initials(name: string) {
     .toUpperCase();
 }
 
+/**
+ * Whose portal this is.
+ *
+ * The operator's mark if they have uploaded one, their name if not. A firm
+ * that hands this to their own clients needs the corner of the page to say
+ * their name, not ours.
+ */
+function OrganisationMark({ name, logoUrl }: { name: string; logoUrl: string | null }) {
+  return (
+    <Link
+      href="/"
+      className="flex h-16 shrink-0 items-center gap-2 px-4 text-lg font-semibold tracking-[-0.02em]"
+    >
+      {logoUrl ? (
+        // Not next/image: the source is a per-operator URL on a storage host,
+        // and the optimiser would need every one of them allow-listed.
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={logoUrl} alt={name} className="max-h-9 w-auto max-w-[10rem] object-contain" />
+      ) : (
+        <>
+          <Plane className="size-5 shrink-0" />
+          <span className="truncate">{name || "UAV Ops Portal"}</span>
+        </>
+      )}
+    </Link>
+  );
+}
+
 function NavLinks({
   manages,
+  isPlatformAdmin,
   onNavigate,
 }: {
   manages: AccessArea[];
+  isPlatformAdmin: boolean;
   onNavigate?: () => void;
 }) {
   const pathname = usePathname();
-  const visible = navItems.filter((item) => !item.manages || manages.includes(item.manages));
+  const visible = navItems.filter(
+    (item) =>
+      (item.platformOnly ? isPlatformAdmin : true) &&
+      (!item.manages || manages.includes(item.manages)),
+  );
   return (
     <nav className="flex flex-1 flex-col gap-1 overflow-y-auto px-3 py-4">
       {visible.map((item) => {
@@ -132,12 +166,18 @@ export function SideNav({
   email,
   role,
   manages,
+  organisationName,
+  logoUrl,
+  isPlatformAdmin,
 }: {
   fullName: string;
   email: string;
   role: UserRole;
   /** Areas this person has full authority over — drives which links appear. */
   manages: AccessArea[];
+  organisationName: string;
+  logoUrl: string | null;
+  isPlatformAdmin: boolean;
 }) {
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -145,11 +185,8 @@ export function SideNav({
     <>
       {/* Desktop sidebar */}
       <aside className="hidden w-60 shrink-0 flex-col bg-sidebar text-sidebar-foreground sm:flex">
-        <div className="flex h-16 shrink-0 items-center gap-2 px-4 text-lg font-semibold tracking-[-0.02em]">
-          <Plane className="size-5 shrink-0" />
-          UAV Ops Portal
-        </div>
-        <NavLinks manages={manages} />
+        <OrganisationMark name={organisationName} logoUrl={logoUrl} />
+        <NavLinks manages={manages} isPlatformAdmin={isPlatformAdmin} />
         <div className="border-t border-sidebar-border p-3">
           <UserMenu fullName={fullName} email={email} role={role} />
         </div>
@@ -157,9 +194,9 @@ export function SideNav({
 
       {/* Mobile top bar */}
       <header className="flex h-14 shrink-0 items-center justify-between gap-2 bg-sidebar px-4 text-sidebar-foreground sm:hidden">
-        <Link href="/" className="flex items-center gap-2 text-base font-semibold tracking-[-0.02em]">
-          <Plane className="size-5" />
-          UAV Ops Portal
+        <Link href="/" className="flex min-w-0 items-center gap-2 text-base font-semibold tracking-[-0.02em]">
+          <Plane className="size-5 shrink-0" />
+          <span className="truncate">{organisationName || "UAV Ops Portal"}</span>
         </Link>
         <Button
           size="icon"
@@ -177,9 +214,9 @@ export function SideNav({
           <div className="absolute inset-0 bg-black/40" onClick={() => setMobileOpen(false)} />
           <aside className="absolute inset-y-0 left-0 flex w-64 flex-col bg-sidebar text-sidebar-foreground shadow-xl">
             <div className="flex h-14 shrink-0 items-center justify-between px-4 text-base font-semibold tracking-[-0.02em]">
-              <span className="flex items-center gap-2">
-                <Plane className="size-5" />
-                UAV Ops Portal
+              <span className="flex min-w-0 items-center gap-2">
+                <Plane className="size-5 shrink-0" />
+                <span className="truncate">{organisationName || "UAV Ops Portal"}</span>
               </span>
               <Button
                 size="icon"
@@ -190,7 +227,11 @@ export function SideNav({
                 <X className="size-5" />
               </Button>
             </div>
-            <NavLinks manages={manages} onNavigate={() => setMobileOpen(false)} />
+            <NavLinks
+              manages={manages}
+              isPlatformAdmin={isPlatformAdmin}
+              onNavigate={() => setMobileOpen(false)}
+            />
             <div className="border-t border-sidebar-border p-3">
               <UserMenu fullName={fullName} email={email} role={role} />
             </div>

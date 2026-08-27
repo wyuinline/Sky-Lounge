@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { after } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { safeErrorMessage, parseEnum } from "@/lib/action-utils";
+import { objectPath } from "@/lib/storage-paths";
 import { isMirrorable } from "@/lib/sharepoint";
 import { mirrorDocument } from "@/lib/sharepoint-client";
 import {
@@ -38,6 +39,9 @@ const ALLOWED_MIME_TYPES = new Set([
 const categoryValues = documentCategories.map((c) => c.value);
 
 export async function uploadDocument(formData: FormData) {
+  const access = await getAccess();
+  if (!access) return { error: "You are not signed in." };
+
   const supabase = await createClient();
   const {
     data: { user },
@@ -81,7 +85,9 @@ export async function uploadDocument(formData: FormData) {
   }
 
   const bucketId = bucketForCategory(category);
-  const storagePath = `${crypto.randomUUID()}-${file.name}`;
+  // Under the organisation, because buckets are shared between operators and
+  // a path is guessable in a way a row is not.
+  const storagePath = objectPath(access.organisation.id, file.name);
 
   const { error: uploadError } = await supabase.storage.from(bucketId).upload(storagePath, file);
   if (uploadError) return { error: safeErrorMessage(uploadError, "upload") };

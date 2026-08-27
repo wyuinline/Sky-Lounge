@@ -33,6 +33,8 @@ export type EvidenceSection = {
 export type EvidencePack = {
   generatedOn: string;
   organisation: string;
+  /** The operator certificate this is submitted under, or null until held. */
+  rpocNumber: string | null;
   sections: EvidenceSection[];
   /** Sections with nothing in them: what is missing from the submission. */
   gaps: string[];
@@ -100,7 +102,7 @@ export async function buildEvidencePack(): Promise<
       .order("hazard_code"),
     supabase
       .from("audit_findings")
-      .select("severity, description, due_date, status, training_required, assignee:assigned_to(full_name)")
+      .select("severity, description, due_date, status, training_required, assignee:audit_findings_assigned_to_fkey(full_name)")
       .order("due_date"),
     supabase
       .from("incidents")
@@ -380,7 +382,10 @@ export async function buildEvidencePack(): Promise<
     error: null,
     pack: {
       generatedOn: todayIso(),
-      organisation: "Inline Group Inc.",
+      // The legal name where there is one: what a regulator needs on the cover
+      // is the name on the certificate, not the one used in the corridor.
+      organisation: access.organisation.legalName ?? access.organisation.name,
+      rpocNumber: access.organisation.rpocNumber,
       sections,
       gaps: sections.filter((s) => s.rows.length === 0).map((s) => s.title),
     },

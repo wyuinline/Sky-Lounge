@@ -19,7 +19,7 @@ import {
 } from "@/lib/api-keys";
 
 export type AuthResult =
-  | { ok: true; keyId: string; scopes: string[] }
+  | { ok: true; keyId: string; scopes: string[]; organisationId: string }
   | { ok: false; status: 401 | 403 | 500; reason: string };
 
 /**
@@ -53,7 +53,7 @@ export async function authenticateKey(
   const hash = await hashKey(presented);
   const { data: key } = await supabase
     .from("api_keys")
-    .select("id, scopes, revoked_at, expires_at")
+    .select("id, scopes, revoked_at, expires_at, organisation_id")
     .eq("key_hash", hash)
     .maybeSingle();
 
@@ -71,5 +71,8 @@ export async function authenticateKey(
     .eq("id", key.id)
     .then(undefined, () => undefined);
 
-  return { ok: true, keyId: key.id, scopes: key.scopes };
+  // The key's organisation, and the only thing the routes may scope by. This
+  // path runs on the service role, so RLS is not doing the scoping here — the
+  // filter the caller applies with this value is.
+  return { ok: true, keyId: key.id, scopes: key.scopes, organisationId: key.organisation_id };
 }

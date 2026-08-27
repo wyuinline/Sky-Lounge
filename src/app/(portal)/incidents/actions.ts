@@ -44,18 +44,24 @@ export async function reportIncident(formData: FormData) {
     // Anonymous reports stay genuinely anonymous — no reporter recorded.
     // Named reports are attributable, so a false report can be traced.
     reported_by: isAnonymous ? null : (user?.id ?? null),
-  }).select("id").single();
+  }).select("id, organisation_id").single();
 
   if (error) return { error: safeErrorMessage(error, "report") };
 
   // Neither the reporter nor the pilot is named in the payload. An anonymous
   // channel that leaks identity through a Teams message is not anonymous.
-  notify("incident.reported", {
-    incident_id: incident?.id ?? null,
-    incident_date: incidentDate,
-    incident_type: incidentType,
-    severity,
-  });
+  if (incident) {
+    notify(
+      "incident.reported",
+      {
+        incident_id: incident.id,
+        incident_date: incidentDate,
+        incident_type: incidentType,
+        severity,
+      },
+      incident.organisation_id,
+    );
+  }
 
   revalidatePath("/incidents");
   revalidatePath("/");

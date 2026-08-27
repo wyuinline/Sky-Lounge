@@ -35,6 +35,10 @@ const TIMEOUT_MS = 8000;
 export async function dispatchWebhook(
   event: WebhookEvent,
   data: Record<string, unknown>,
+  // The operator whose event this is. Required, because this runs on the
+  // service role: without it an incident at one operator would be pushed to
+  // every other operator's Teams channel.
+  organisationId: string,
   // Set when testing one hook: a test must not fan out to every other
   // integration subscribed to the same event.
   onlyWebhookId?: string,
@@ -50,6 +54,7 @@ export async function dispatchWebhook(
   let query = supabase
     .from("webhooks")
     .select("id, url, events, signing_secret, active")
+    .eq("organisation_id", organisationId)
     .eq("active", true);
   if (onlyWebhookId) query = query.eq("id", onlyWebhookId);
 
@@ -98,6 +103,9 @@ export async function dispatchWebhook(
         .from("webhook_deliveries")
         .insert({
           webhook_id: target.id,
+          // Set explicitly: the column's default reads the caller's
+          // organisation, and a background task has no caller.
+          organisation_id: organisationId,
           event,
           // Stored as sent, so a delivery log answers "what did they receive".
           payload: JSON.parse(body) as Json,
@@ -127,10 +135,14 @@ export async function dispatchWebhook(
  * swallowed here for the same reason — the delivery log is where a failed push
  * is reported, not the form the person was using.
  */
-export function notify(event: WebhookEvent, data: Record<string, unknown>): void {
+export function notify(
+  event: WebhookEvent,
+  data: Record<string, unknown>,
+  organisationId: string,
+): void {
   after(async () => {
     try {
-      await dispatchWebhook(event, data);
+      await dispatchWebhook(event, data, organisationId);
     } catch (cause) {
       console.error(`[webhooks] ${event} dispatch failed`, cause);
     }

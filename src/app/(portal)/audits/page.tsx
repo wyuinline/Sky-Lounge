@@ -17,12 +17,12 @@ export default async function AuditsPage() {
     getAccess(),
     supabase
       .from("audits")
-      .select("id, audit_type, audit_date, status, compliance_status, auditor:auditor_id(full_name)")
+      .select("id, audit_type, audit_date, status, compliance_status, auditor:audits_auditor_id_fkey(full_name)")
       .order("audit_date", { ascending: false })
 ,
     supabase
       .from("audit_findings")
-      .select("id, severity, description, due_date, status, assignee:assigned_to(full_name)")
+      .select("id, severity, description, due_date, status, assignee:audit_findings_assigned_to_fkey(full_name)")
       .neq("status", "closed")
       .order("due_date")
 ,

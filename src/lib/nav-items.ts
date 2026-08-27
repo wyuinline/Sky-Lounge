@@ -19,6 +19,8 @@ import {
   ClipboardCheck as ChecklistIcon,
   Radar,
   Plug,
+  Building2,
+  Landmark,
 } from "lucide-react";
 
 export type NavItem = {
@@ -31,6 +33,12 @@ export type NavItem = {
    * link is a convenience, never the access control.
    */
   manages?: AccessArea;
+  /**
+   * Shown only to someone who runs the platform rather than an operation.
+   * Same caveat: the page redirects, and the one thing behind it that reaches
+   * across organisations checks again in the database.
+   */
+  platformOnly?: boolean;
 };
 
 export const navItems: NavItem[] = [
@@ -52,4 +60,6 @@ export const navItems: NavItem[] = [
   { title: "User Management", href: "/admin/users", icon: ShieldCheck, manages: "users" },
   { title: "Roles & Access", href: "/admin/permissions", icon: KeyRound, manages: "permissions" },
   { title: "Integrations", href: "/admin/integrations", icon: Plug, manages: "users" },
+  { title: "Organisation", href: "/admin/organisation", icon: Building2, manages: "users" },
+  { title: "Operators", href: "/platform", icon: Landmark, platformOnly: true },
 ];

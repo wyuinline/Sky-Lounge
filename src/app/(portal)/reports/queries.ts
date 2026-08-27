@@ -184,7 +184,7 @@ export async function runReport(id: string): Promise<ReportResult> {
       const { data } = await supabase
         .from("maintenance_records")
         .select(
-          "maintenance_type, status, next_service_date, completed_date, flight_hours_at_service, notes, uavs(drone_id), technician:technician_id(full_name)",
+          "maintenance_type, status, next_service_date, completed_date, flight_hours_at_service, notes, uavs(drone_id), technician:maintenance_records_technician_id_fkey(full_name)",
         )
         .order("completed_date", { ascending: false, nullsFirst: false });
 
@@ -214,7 +214,7 @@ export async function runReport(id: string): Promise<ReportResult> {
           .order("incident_date", { ascending: false }),
         supabase
           .from("audit_findings")
-          .select("severity, description, due_date, status, assignee:assigned_to(full_name)")
+          .select("severity, description, due_date, status, assignee:audit_findings_assigned_to_fkey(full_name)")
           .neq("status", "closed")
           .order("due_date"),
       ]);

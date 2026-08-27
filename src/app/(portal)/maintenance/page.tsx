@@ -23,7 +23,7 @@ export default async function MaintenancePage() {
     supabase
       .from("maintenance_records")
       .select(
-        "id, maintenance_type, next_service_date, status, completed_date, created_at, uavs(drone_id), technician:technician_id(full_name)",
+        "id, maintenance_type, next_service_date, status, completed_date, created_at, uavs(drone_id), technician:maintenance_records_technician_id_fkey(full_name)",
       )
       .order("next_service_date")
 ,

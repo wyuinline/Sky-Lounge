@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { safeErrorMessage } from "@/lib/action-utils";
 import { getAccess } from "@/lib/permissions";
 import { parseTelemetryCsv, downsample } from "@/lib/telemetry";
+import { objectPath } from "@/lib/storage-paths";
 
 const BUCKET = "flight-telemetry";
 const MAX_UPLOAD_BYTES = 20 * 1024 * 1024; // 20 MB
@@ -58,7 +59,7 @@ export async function importTelemetry(flightLogId: string, formData: FormData) {
 
   if (!flight) return { error: "That flight no longer exists. Refresh and try again." };
 
-  const storagePath = `${flightLogId}/${crypto.randomUUID()}-${file.name}`;
+  const storagePath = objectPath(access.organisation.id, file.name, flightLogId);
   const { error: uploadError } = await supabase.storage.from(BUCKET).upload(storagePath, file);
   if (uploadError) return { error: safeErrorMessage(uploadError, "upload") };
 
