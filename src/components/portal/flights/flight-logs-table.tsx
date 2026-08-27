@@ -15,6 +15,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { flightLogFlags } from "@/lib/flags";
+import { TelemetryButton } from "@/components/portal/flights/telemetry-dialog";
+import type { TrackPoint } from "@/components/portal/flights/track-plot";
 import { acknowledgeFlightLog } from "@/app/(portal)/flights/actions";
 
 export type FlightLogRow = {
@@ -34,6 +36,17 @@ export type FlightLogRow = {
   is_over_people: boolean;
   is_sheltered: boolean;
   sfoc_reference: string | null;
+  telemetry_source: string | null;
+  telemetry_imported_at: string | null;
+  telemetry_sample_count: number | null;
+  telemetry_max_speed_ms: number | null;
+  telemetry_max_distance_m: number | null;
+  telemetry_track_length_m: number | null;
+  battery_start_percent: number | null;
+  battery_end_percent: number | null;
+  min_voltage: number | null;
+  min_satellites: number | null;
+  telemetry_track: TrackPoint[] | null;
   pilots: { full_name: string } | null;
   uavs: { drone_id: string } | null;
 };
@@ -108,6 +121,7 @@ export function FlightLogsTable({
             <TableHead>Airspace</TableHead>
             <TableHead>Operation</TableHead>
             <TableHead>Outcome</TableHead>
+            <TableHead className="text-right">Telemetry</TableHead>
             {canAcknowledge && <TableHead className="text-right">Reviewed</TableHead>}
           </TableRow>
         </TableHeader>
@@ -115,7 +129,7 @@ export function FlightLogsTable({
           {rows.length === 0 ? (
             <TableRow>
               <TableCell
-                colSpan={canAcknowledge ? 10 : 9}
+                colSpan={canAcknowledge ? 11 : 10}
                 className="py-8 text-center text-sm text-muted-foreground"
               >
                 No flight logs yet.
@@ -182,6 +196,26 @@ export function FlightLogsTable({
                 </TableCell>
                 <TableCell>
                   <StatusDot tone={outcomeTone[row.mission_outcome]} label={row.mission_outcome} />
+                </TableCell>
+                <TableCell className="text-right">
+                  <TelemetryButton
+                    flightId={row.id}
+                    flightLabel={`${row.flight_date} · ${row.uavs?.drone_id ?? "flight"}`}
+                    canManage={canAcknowledge}
+                    telemetry={{
+                      source: row.telemetry_source,
+                      importedAt: row.telemetry_imported_at,
+                      sampleCount: row.telemetry_sample_count,
+                      maxSpeed: row.telemetry_max_speed_ms,
+                      maxDistance: row.telemetry_max_distance_m,
+                      trackLength: row.telemetry_track_length_m,
+                      batteryStart: row.battery_start_percent,
+                      batteryEnd: row.battery_end_percent,
+                      minVoltage: row.min_voltage,
+                      minSatellites: row.min_satellites,
+                      track: row.telemetry_track,
+                    }}
+                  />
                 </TableCell>
                 {canAcknowledge && (
                   <TableCell className="text-right">

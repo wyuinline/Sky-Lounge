@@ -796,6 +796,8 @@ export type Database = {
           acknowledged_at: string | null
           acknowledged_by: string | null
           airspace: Database["public"]["Enums"]["airspace_class"] | null
+          battery_end_percent: number | null
+          battery_start_percent: number | null
           created_at: string
           duration_minutes: number | null
           effective_duration_minutes: number | null
@@ -812,11 +814,21 @@ export type Database = {
           location_name: string | null
           longitude: number | null
           max_altitude_m: number | null
+          min_satellites: number | null
+          min_voltage: number | null
           mission_outcome: Database["public"]["Enums"]["mission_outcome"]
           pilot_id: string | null
           project_id: string | null
           sfoc_reference: string | null
           takeoff_at: string | null
+          telemetry_imported_at: string | null
+          telemetry_max_distance_m: number | null
+          telemetry_max_speed_ms: number | null
+          telemetry_path: string | null
+          telemetry_sample_count: number | null
+          telemetry_source: string | null
+          telemetry_track: Json | null
+          telemetry_track_length_m: number | null
           temperature_c: number | null
           uav_id: string | null
           visibility_sm: number | null
@@ -831,6 +843,8 @@ export type Database = {
           acknowledged_at?: string | null
           acknowledged_by?: string | null
           airspace?: Database["public"]["Enums"]["airspace_class"] | null
+          battery_end_percent?: number | null
+          battery_start_percent?: number | null
           created_at?: string
           duration_minutes?: number | null
           effective_duration_minutes?: number | null
@@ -847,11 +861,21 @@ export type Database = {
           location_name?: string | null
           longitude?: number | null
           max_altitude_m?: number | null
+          min_satellites?: number | null
+          min_voltage?: number | null
           mission_outcome?: Database["public"]["Enums"]["mission_outcome"]
           pilot_id?: string | null
           project_id?: string | null
           sfoc_reference?: string | null
           takeoff_at?: string | null
+          telemetry_imported_at?: string | null
+          telemetry_max_distance_m?: number | null
+          telemetry_max_speed_ms?: number | null
+          telemetry_path?: string | null
+          telemetry_sample_count?: number | null
+          telemetry_source?: string | null
+          telemetry_track?: Json | null
+          telemetry_track_length_m?: number | null
           temperature_c?: number | null
           uav_id?: string | null
           visibility_sm?: number | null
@@ -866,6 +890,8 @@ export type Database = {
           acknowledged_at?: string | null
           acknowledged_by?: string | null
           airspace?: Database["public"]["Enums"]["airspace_class"] | null
+          battery_end_percent?: number | null
+          battery_start_percent?: number | null
           created_at?: string
           duration_minutes?: number | null
           effective_duration_minutes?: number | null
@@ -882,11 +908,21 @@ export type Database = {
           location_name?: string | null
           longitude?: number | null
           max_altitude_m?: number | null
+          min_satellites?: number | null
+          min_voltage?: number | null
           mission_outcome?: Database["public"]["Enums"]["mission_outcome"]
           pilot_id?: string | null
           project_id?: string | null
           sfoc_reference?: string | null
           takeoff_at?: string | null
+          telemetry_imported_at?: string | null
+          telemetry_max_distance_m?: number | null
+          telemetry_max_speed_ms?: number | null
+          telemetry_path?: string | null
+          telemetry_sample_count?: number | null
+          telemetry_source?: string | null
+          telemetry_track?: Json | null
+          telemetry_track_length_m?: number | null
           temperature_c?: number | null
           uav_id?: string | null
           visibility_sm?: number | null

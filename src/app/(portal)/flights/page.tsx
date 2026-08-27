@@ -9,6 +9,7 @@ import { SubmitFlightRequestDialog } from "@/components/portal/flights/submit-fl
 import { LogFlightDialog } from "@/components/portal/flights/log-flight-dialog";
 import { createClient } from "@/lib/supabase/server";
 import { getAccess } from "@/lib/permissions";
+import { readStoredTrack } from "@/lib/telemetry";
 
 const workflowSteps = [
   "Pilot submits flight request with mission details and risk assessment",
@@ -50,7 +51,7 @@ export default async function FlightsPage() {
     supabase
       .from("flight_logs")
       .select(
-        "id, flight_date, effective_duration_minutes, weather_conditions, mission_outcome, acknowledged_at, takeoff_at, landing_at, location_name, airspace, is_night, is_bvlos, is_over_people, is_sheltered, sfoc_reference, pilots(full_name), uavs(drone_id)",
+        "id, flight_date, effective_duration_minutes, weather_conditions, mission_outcome, acknowledged_at, takeoff_at, landing_at, location_name, airspace, is_night, is_bvlos, is_over_people, is_sheltered, sfoc_reference, telemetry_source, telemetry_imported_at, telemetry_sample_count, telemetry_max_speed_ms, telemetry_max_distance_m, telemetry_track_length_m, battery_start_percent, battery_end_percent, min_voltage, min_satellites, telemetry_track, pilots(full_name), uavs(drone_id)",
       )
       .order("flight_date", { ascending: false })
       .limit(20)
@@ -66,6 +67,14 @@ export default async function FlightsPage() {
   }));
   const canApprove = access?.canManage("requests") ?? false;
   const canReviewLogs = access?.canManage("logs") ?? false;
+
+  // The stored track is jsonb, so it is validated back into points here rather
+  // than cast — a malformed row should be dropped at the boundary, not thrown
+  // inside the plot.
+  const logRows = (logsRes.data ?? []).map((row) => ({
+    ...row,
+    telemetry_track: readStoredTrack(row.telemetry_track),
+  }));
 
   return (
     <div className="flex flex-col gap-6">
@@ -117,7 +126,7 @@ export default async function FlightsPage() {
 
       <div>
         <SectionLabel>Flight Logs</SectionLabel>
-        <FlightLogsTable rows={logsRes.data ?? []} canAcknowledge={canReviewLogs} />
+        <FlightLogsTable rows={logRows} canAcknowledge={canReviewLogs} />
       </div>
 
       <Alert>

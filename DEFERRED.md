@@ -7,7 +7,7 @@ moving, with the reason recorded so the decision can be re-judged later.
 Roadmap phases are in the [parity roadmap](https://claude.ai/code/artifact/958f6078-45d2-49d0-b43d-839ac1d6b591);
 the competitive picture behind them is in the [gap analysis](https://claude.ai/code/artifact/7b0535ca-f1cb-4eb7-be35-0642dde99fdd).
 
-Last updated: 26 August 2026, after Phase 2.
+Last updated: 26 August 2026, after Phase 3.
 
 ---
 
@@ -25,6 +25,18 @@ Deferred because it is the largest remaining piece of Phase 2 and was better
 started fresh than appended to a long stretch of work.
 
 **Effort:** ~1–2 weeks. **Blocks:** nothing.
+
+### Operations manual structure — Phase 3, workstream 1
+The document module already delivers the substance: categories, versions,
+approval status, review cycles, and the evidence pack section that lists every
+procedure at its current revision. What is missing is only *manual structure* —
+grouping documents into a numbered manual with sections and a contents page.
+
+Judged not worth a separate model while the operation runs on a handful of
+SOPs. Revisit if a reviewer asks for a single bound manual rather than a
+document set.
+
+**Effort:** ~3 days. **Blocks:** nothing.
 
 ---
 
