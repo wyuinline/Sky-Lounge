@@ -1,17 +1,12 @@
 import { HeroBand } from "@/components/portal/hero-band";
 import { MetricTile } from "@/components/portal/metric-tile";
-import { MaintenanceTable, type MaintenanceRow } from "@/components/portal/maintenance/maintenance-table";
+import { MaintenanceTable } from "@/components/portal/maintenance/maintenance-table";
 import { AirframeHoursTable } from "@/components/portal/maintenance/hours-table";
 import { SectionLabel } from "@/components/portal/section-label";
 import { LogMaintenanceDialog } from "@/components/portal/maintenance/log-maintenance-dialog";
 import { createClient } from "@/lib/supabase/server";
 import { getAccess } from "@/lib/permissions";
 import { isMaintenanceOverdue } from "@/lib/compliance";
-
-type FullMaintenanceRow = MaintenanceRow & {
-  completed_date: string | null;
-  created_at: string;
-};
 
 export default async function MaintenancePage() {
   const supabase = await createClient();

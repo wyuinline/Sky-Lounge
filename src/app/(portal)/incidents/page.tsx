@@ -4,7 +4,7 @@ import { MetricTile } from "@/components/portal/metric-tile";
 import { SectionLabel } from "@/components/portal/section-label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { IncidentsTable, type IncidentRow } from "@/components/portal/incidents/incidents-table";
+import { IncidentsTable } from "@/components/portal/incidents/incidents-table";
 import { ReportIncidentDialog } from "@/components/portal/incidents/report-incident-dialog";
 import { createClient } from "@/lib/supabase/server";
 import { getAccess } from "@/lib/permissions";

@@ -16,6 +16,8 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { OptionSelect } from "@/components/portal/option-select";
+import { severityOptions } from "@/lib/select-options";
 import { submitFlightRequest } from "@/app/(portal)/flights/actions";
 import {
   operationOrder,
@@ -167,17 +169,12 @@ export function SubmitFlightRequestDialog({
           </div>
           <div className="flex flex-col gap-2">
             <Label>Risk Level</Label>
-            <Select value={riskLevel} onValueChange={(v) => setRiskLevel(v ?? "low")}>
-              <SelectTrigger className="w-full">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="low">Low</SelectItem>
-                <SelectItem value="medium">Medium</SelectItem>
-                <SelectItem value="high">High</SelectItem>
-                <SelectItem value="critical">Critical</SelectItem>
-              </SelectContent>
-            </Select>
+            <OptionSelect
+              value={riskLevel}
+              onValueChange={setRiskLevel}
+              options={severityOptions}
+              className="w-full"
+            />
           </div>
           <fieldset className="flex flex-col gap-3 rounded-md border border-border p-3">
             <legend className="px-1 text-xs font-semibold tracking-[0.06em] text-brand-teal uppercase">

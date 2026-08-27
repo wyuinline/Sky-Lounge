@@ -17,6 +17,8 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { OptionSelect } from "@/components/portal/option-select";
+import { incidentTypeOptions, severityOptions } from "@/lib/select-options";
 import { reportIncident } from "@/app/(portal)/incidents/actions";
 
 type Option = { id: string; label: string };
@@ -79,18 +81,12 @@ export function ReportIncidentDialog({ pilots, uavs }: { pilots: Option[]; uavs:
             </div>
             <div className="flex flex-col gap-2">
               <Label>Incident Type</Label>
-              <Select value={incidentType} onValueChange={(v) => setIncidentType(v ?? "near_miss")}>
-                <SelectTrigger className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="near_miss">Near Miss</SelectItem>
-                  <SelectItem value="crash">Crash</SelectItem>
-                  <SelectItem value="equipment_failure">Equipment Failure</SelectItem>
-                  <SelectItem value="safety_hazard">Safety Hazard</SelectItem>
-                  <SelectItem value="regulatory_breach">Regulatory Breach</SelectItem>
-                </SelectContent>
-              </Select>
+              <OptionSelect
+                value={incidentType}
+                onValueChange={setIncidentType}
+                options={incidentTypeOptions}
+                className="w-full"
+              />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-4">
@@ -111,17 +107,12 @@ export function ReportIncidentDialog({ pilots, uavs }: { pilots: Option[]; uavs:
             </div>
             <div className="flex flex-col gap-2">
               <Label>Severity</Label>
-              <Select value={severity} onValueChange={(v) => setSeverity(v ?? "low")}>
-                <SelectTrigger className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="low">Low</SelectItem>
-                  <SelectItem value="medium">Medium</SelectItem>
-                  <SelectItem value="high">High</SelectItem>
-                  <SelectItem value="critical">Critical</SelectItem>
-                </SelectContent>
-              </Select>
+              <OptionSelect
+                value={severity}
+                onValueChange={setSeverity}
+                options={severityOptions}
+                className="w-full"
+              />
             </div>
           </div>
           <div className="flex items-center gap-2">

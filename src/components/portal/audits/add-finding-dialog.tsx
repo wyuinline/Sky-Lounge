@@ -16,6 +16,8 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { OptionSelect } from "@/components/portal/option-select";
+import { severityOptions } from "@/lib/select-options";
 import { addFinding } from "@/app/(portal)/audits/actions";
 
 type Option = { id: string; label: string };
@@ -159,17 +161,12 @@ export function AddFindingDialog({
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-2">
               <Label>Severity</Label>
-              <Select value={severity} onValueChange={(v) => setSeverity(v ?? "low")}>
-                <SelectTrigger className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="low">Low</SelectItem>
-                  <SelectItem value="medium">Medium</SelectItem>
-                  <SelectItem value="high">High</SelectItem>
-                  <SelectItem value="critical">Critical</SelectItem>
-                </SelectContent>
-              </Select>
+              <OptionSelect
+                value={severity}
+                onValueChange={setSeverity}
+                options={severityOptions}
+                className="w-full"
+              />
             </div>
             <div className="flex flex-col gap-2">
               <Label htmlFor="due_date">Due Date</Label>

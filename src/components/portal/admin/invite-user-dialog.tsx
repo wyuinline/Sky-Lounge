@@ -97,7 +97,7 @@ export function InviteUserDialog() {
             <Label>Role</Label>
             <Select value={role} onValueChange={(v) => v && setRole(v as UserRole)}>
               <SelectTrigger className="w-full">
-                <SelectValue />
+                <SelectValue>{(v) => roleLabel[v as UserRole] ?? "Select a role"}</SelectValue>
               </SelectTrigger>
               <SelectContent>
                 {roleOrder.map((r) => (

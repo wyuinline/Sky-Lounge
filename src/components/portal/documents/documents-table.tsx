@@ -6,7 +6,8 @@ import { toast } from "sonner";
 import { StatusDot } from "@/components/portal/status-dot";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { OptionSelect } from "@/components/portal/option-select";
+import { documentCategoryOptions, withAll } from "@/lib/select-options";
 import {
   Table,
   TableBody,
@@ -15,12 +16,20 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { documentCategories, labelForCategory, type DocumentCategory } from "@/lib/document-categories";
+import { labelForCategory, type DocumentCategory } from "@/lib/document-categories";
 import { reviewCycleShort } from "@/lib/review-cycles";
 import { deriveExpiryStatus, daysUntil, type ExpiryStatus } from "@/lib/compliance";
 import { getDownloadUrl, markDocumentReviewed } from "@/app/(portal)/documents/actions";
 import { AttentionFlag } from "@/components/portal/attention-flag";
 import { documentFlags } from "@/lib/flags";
+
+/** The review states worth filtering by, as the documents page asks about them. */
+const REVIEW_FILTERS = [
+  { value: "all", label: "Any review state" },
+  { value: "needs_review", label: "Needs review soon" },
+  { value: "overdue", label: "Overdue only" },
+  { value: "no_cycle", label: "No review cycle" },
+];
 
 export type DocumentRow = {
   id: string;
@@ -133,30 +142,18 @@ export function DocumentsTable({
           onChange={(e) => setSearch(e.target.value)}
           className="sm:max-w-xs"
         />
-        <Select value={category} onValueChange={(v) => setCategory(v ?? "all")}>
-          <SelectTrigger className="sm:w-52">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All categories</SelectItem>
-            {documentCategories.map((c) => (
-              <SelectItem key={c.value} value={c.value}>
-                {c.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Select value={reviewFilter} onValueChange={(v) => setReviewFilter(v ?? "all")}>
-          <SelectTrigger className="sm:w-52">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Any review state</SelectItem>
-            <SelectItem value="needs_review">Needs review soon</SelectItem>
-            <SelectItem value="overdue">Overdue only</SelectItem>
-            <SelectItem value="no_cycle">No review cycle</SelectItem>
-          </SelectContent>
-        </Select>
+        <OptionSelect
+          value={category}
+          onValueChange={setCategory}
+          options={withAll(documentCategoryOptions, "All categories")}
+          className="sm:w-52"
+        />
+        <OptionSelect
+          value={reviewFilter}
+          onValueChange={setReviewFilter}
+          options={REVIEW_FILTERS}
+          className="sm:w-52"
+        />
       </div>
 
       <div className="overflow-x-auto rounded-md border">

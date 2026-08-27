@@ -111,7 +111,9 @@ export function UsersTable({
                       }
                     >
                       <SelectTrigger className="w-44">
-                        <SelectValue />
+                        <SelectValue>
+                          {(v) => roleLabels[v as UserRole] ?? "Select a role"}
+                        </SelectValue>
                       </SelectTrigger>
                       <SelectContent>
                         {(Object.keys(roleLabels) as UserRole[]).map((r) => (

@@ -15,13 +15,8 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { OptionSelect } from "@/components/portal/option-select";
+import { certificateTypeOptions } from "@/lib/select-options";
 import { addPilot, updatePilot } from "@/app/(portal)/pilots/actions";
 
 export type PilotFormValues = {
@@ -91,21 +86,12 @@ function PilotForm({
           </div>
           <div className="flex flex-col gap-2">
             <Label>Certificate Type</Label>
-            <Select
+            <OptionSelect
               value={certificateType}
-              onValueChange={(v) =>
-                setCertificateType((v as typeof certificateType) ?? "advanced_operations")
-              }
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="basic_operations">Basic Operations</SelectItem>
-                <SelectItem value="advanced_operations">Advanced Operations</SelectItem>
-                <SelectItem value="level_1_complex">Level 1 Complex</SelectItem>
-              </SelectContent>
-            </Select>
+              onValueChange={(v) => setCertificateType(v as typeof certificateType)}
+              options={certificateTypeOptions}
+              className="w-full"
+            />
           </div>
         </div>
         <div className="grid grid-cols-2 gap-4">

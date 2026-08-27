@@ -3,9 +3,7 @@ import { MetricTile } from "@/components/portal/metric-tile";
 import { SectionLabel } from "@/components/portal/section-label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
-  CertificationsTable,
-  type CertificationRow,
-} from "@/components/portal/training/certifications-table";
+  CertificationsTable} from "@/components/portal/training/certifications-table";
 import { UploadCertificationDialog } from "@/components/portal/training/upload-certification-dialog";
 import { createClient } from "@/lib/supabase/server";
 import { getAccess } from "@/lib/permissions";

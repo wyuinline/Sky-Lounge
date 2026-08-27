@@ -16,6 +16,8 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { OptionSelect } from "@/components/portal/option-select";
+import { maintenanceTypeOptions } from "@/lib/select-options";
 import { logMaintenance } from "@/app/(portal)/maintenance/actions";
 
 type Option = { id: string; label: string };
@@ -83,18 +85,12 @@ export function LogMaintenanceDialog({ uavs, technicians }: { uavs: Option[]; te
             </div>
             <div className="flex flex-col gap-2">
               <Label>Maintenance Type</Label>
-              <Select value={maintenanceType} onValueChange={(v) => setMaintenanceType(v ?? "preventive")}>
-                <SelectTrigger className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="preventive">Preventive</SelectItem>
-                  <SelectItem value="repair">Repair</SelectItem>
-                  <SelectItem value="calibration">Calibration</SelectItem>
-                  <SelectItem value="battery">Battery</SelectItem>
-                  <SelectItem value="firmware">Firmware</SelectItem>
-                </SelectContent>
-              </Select>
+              <OptionSelect
+                value={maintenanceType}
+                onValueChange={setMaintenanceType}
+                options={maintenanceTypeOptions}
+                className="w-full"
+              />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-4">

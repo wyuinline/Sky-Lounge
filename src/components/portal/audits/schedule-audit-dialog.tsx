@@ -15,6 +15,8 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { OptionSelect } from "@/components/portal/option-select";
+import { auditTypeOptions } from "@/lib/select-options";
 import { scheduleAudit } from "@/app/(portal)/audits/actions";
 
 type Option = { id: string; label: string };
@@ -64,15 +66,12 @@ export function ScheduleAuditDialog({ auditors }: { auditors: Option[] }) {
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-2">
               <Label>Audit Type</Label>
-              <Select value={auditType} onValueChange={(v) => setAuditType(v ?? "internal")}>
-                <SelectTrigger className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="internal">Internal</SelectItem>
-                  <SelectItem value="regulatory">Regulatory</SelectItem>
-                </SelectContent>
-              </Select>
+              <OptionSelect
+                value={auditType}
+                onValueChange={setAuditType}
+                options={auditTypeOptions}
+                className="w-full"
+              />
             </div>
             <div className="flex flex-col gap-2">
               <Label htmlFor="audit_date">Audit Date</Label>

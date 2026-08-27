@@ -15,13 +15,8 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { OptionSelect } from "@/components/portal/option-select";
+import { uavStatusOptions } from "@/lib/select-options";
 import { addUav, updateUav } from "@/app/(portal)/fleet/actions";
 
 export type UavFormValues = {
@@ -193,17 +188,12 @@ function UavForm({
 
       <div className="flex flex-col gap-2">
         <Label>Status</Label>
-        <Select value={status} onValueChange={(v) => setStatus((v as typeof status) ?? "airworthy")}>
-          <SelectTrigger className="w-full">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="airworthy">Airworthy</SelectItem>
-            <SelectItem value="maintenance">Maintenance</SelectItem>
-            <SelectItem value="grounded">Grounded</SelectItem>
-            <SelectItem value="retired">Retired</SelectItem>
-          </SelectContent>
-        </Select>
+        <OptionSelect
+          value={status}
+          onValueChange={(v) => setStatus(v as typeof status)}
+          options={uavStatusOptions}
+          className="w-full"
+        />
       </div>
 
       <div className="flex flex-col gap-2">

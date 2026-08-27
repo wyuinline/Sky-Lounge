@@ -15,6 +15,8 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { OptionSelect } from "@/components/portal/option-select";
+import { competencyOptions } from "@/lib/select-options";
 import { uploadCertification } from "@/app/(portal)/training/actions";
 
 type Option = { id: string; label: string };
@@ -92,17 +94,12 @@ export function UploadCertificationDialog({ pilots }: { pilots: Option[] }) {
           </div>
           <div className="flex flex-col gap-2">
             <Label>Competency Level</Label>
-            <Select value={competencyLevel} onValueChange={(v) => setCompetencyLevel(v ?? "beginner")}>
-              <SelectTrigger className="w-full">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="beginner">Beginner</SelectItem>
-                <SelectItem value="intermediate">Intermediate</SelectItem>
-                <SelectItem value="advanced">Advanced</SelectItem>
-                <SelectItem value="qualified">Qualified</SelectItem>
-              </SelectContent>
-            </Select>
+            <OptionSelect
+              value={competencyLevel}
+              onValueChange={setCompetencyLevel}
+              options={competencyOptions}
+              className="w-full"
+            />
           </div>
           <DialogFooter>
             <Button type="submit" disabled={loading || !pilotId}>

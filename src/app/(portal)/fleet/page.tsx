@@ -1,7 +1,7 @@
 import { HeroBand } from "@/components/portal/hero-band";
 import { SectionLabel } from "@/components/portal/section-label";
 import { MetricTile } from "@/components/portal/metric-tile";
-import { FleetTable, type FleetRow } from "@/components/portal/fleet/fleet-table";
+import { FleetTable } from "@/components/portal/fleet/fleet-table";
 import { AddUavDialog } from "@/components/portal/fleet/uav-dialog";
 import { BatteriesTable, type BatteryRow } from "@/components/portal/fleet/batteries-table";
 import { AddBatteryDialog } from "@/components/portal/fleet/battery-dialog";

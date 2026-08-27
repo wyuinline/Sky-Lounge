@@ -1,31 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { buildTodoList, countBySeverity, type TodoItem } from "@/lib/todo";
 
-type FlightLogActivityRow = {
-  id: string;
-  flight_date: string;
-  duration_minutes: number | null;
-  created_at: string;
-  pilots: { full_name: string | null } | null;
-  uavs: { drone_id: string } | null;
-};
-
-type MaintenanceActivityRow = {
-  id: string;
-  maintenance_type: string;
-  status: string;
-  created_at: string;
-  uavs: { drone_id: string } | null;
-};
-
-type IncidentActivityRow = {
-  id: string;
-  incident_type: string;
-  severity: string;
-  created_at: string;
-  uavs: { drone_id: string } | null;
-};
-
 /**
  * "schema-missing" means the migration genuinely hasn't run (Postgres 42P01).
  * "error" is anything else — an outage, an RLS denial — where telling the user

@@ -3,7 +3,8 @@
 import { useMemo, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { StatusDot } from "@/components/portal/status-dot";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { OptionSelect } from "@/components/portal/option-select";
+import { uavStatusOptions, withAll } from "@/lib/select-options";
 import {
   Table,
   TableBody,
@@ -83,18 +84,12 @@ export function FleetTable({ rows, canManage }: { rows: FleetRow[]; canManage: b
           onChange={(e) => setSearch(e.target.value)}
           className="sm:max-w-xs"
         />
-        <Select value={status} onValueChange={(value) => setStatus(value ?? "all")}>
-          <SelectTrigger className="sm:w-48">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All statuses</SelectItem>
-            <SelectItem value="airworthy">Airworthy</SelectItem>
-            <SelectItem value="maintenance">Maintenance</SelectItem>
-            <SelectItem value="grounded">Grounded</SelectItem>
-            <SelectItem value="retired">Retired</SelectItem>
-          </SelectContent>
-        </Select>
+        <OptionSelect
+          value={status}
+          onValueChange={setStatus}
+          options={withAll(uavStatusOptions, "All statuses")}
+          className="sm:w-48"
+        />
       </div>
 
       <div className="overflow-x-auto rounded-md border">
