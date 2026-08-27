@@ -49,6 +49,7 @@ export type Database = {
           key_hint: string
           last_used_at: string | null
           name: string
+          organisation_id: string
           revoked_at: string | null
           revoked_by: string | null
           scopes: Database["public"]["Enums"]["access_area"][]
@@ -62,6 +63,7 @@ export type Database = {
           key_hint: string
           last_used_at?: string | null
           name: string
+          organisation_id?: string
           revoked_at?: string | null
           revoked_by?: string | null
           scopes?: Database["public"]["Enums"]["access_area"][]
@@ -75,6 +77,7 @@ export type Database = {
           key_hint?: string
           last_used_at?: string | null
           name?: string
+          organisation_id?: string
           revoked_at?: string | null
           revoked_by?: string | null
           scopes?: Database["public"]["Enums"]["access_area"][]
@@ -82,17 +85,24 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "api_keys_created_by_fkey"
-            columns: ["created_by"]
+            columns: ["created_by", "organisation_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id", "organisation_id"]
+          },
+          {
+            foreignKeyName: "api_keys_organisation_id_fkey"
+            columns: ["organisation_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "api_keys_revoked_by_fkey"
-            columns: ["revoked_by"]
+            columns: ["revoked_by", "organisation_id"]
             isOneToOne: false
             referencedRelation: "profiles"
-            referencedColumns: ["id"]
+            referencedColumns: ["id", "organisation_id"]
           },
         ]
       }
@@ -106,6 +116,7 @@ export type Database = {
           hazard_id: string | null
           id: string
           incident_id: string | null
+          organisation_id: string
           resulting_document_id: string | null
           severity: Database["public"]["Enums"]["severity_level"]
           status: Database["public"]["Enums"]["finding_status"]
@@ -120,6 +131,7 @@ export type Database = {
           hazard_id?: string | null
           id?: string
           incident_id?: string | null
+          organisation_id?: string
           resulting_document_id?: string | null
           severity: Database["public"]["Enums"]["severity_level"]
           status?: Database["public"]["Enums"]["finding_status"]
@@ -134,6 +146,7 @@ export type Database = {
           hazard_id?: string | null
           id?: string
           incident_id?: string | null
+          organisation_id?: string
           resulting_document_id?: string | null
           severity?: Database["public"]["Enums"]["severity_level"]
           status?: Database["public"]["Enums"]["finding_status"]
@@ -142,52 +155,45 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "audit_findings_assigned_to_fkey"
-            columns: ["assigned_to"]
+            columns: ["assigned_to", "organisation_id"]
             isOneToOne: false
             referencedRelation: "profiles"
-            referencedColumns: ["id"]
+            referencedColumns: ["id", "organisation_id"]
           },
           {
             foreignKeyName: "audit_findings_audit_id_fkey"
-            columns: ["audit_id"]
+            columns: ["audit_id", "organisation_id"]
             isOneToOne: false
             referencedRelation: "audits"
-            referencedColumns: ["id"]
+            referencedColumns: ["id", "organisation_id"]
           },
           {
             foreignKeyName: "audit_findings_hazard_id_fkey"
-            columns: ["hazard_id"]
-            isOneToOne: false
-            referencedRelation: "hazard_register"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "audit_findings_hazard_id_fkey"
-            columns: ["hazard_id"]
+            columns: ["hazard_id", "organisation_id"]
             isOneToOne: false
             referencedRelation: "hazards"
-            referencedColumns: ["id"]
+            referencedColumns: ["id", "organisation_id"]
           },
           {
             foreignKeyName: "audit_findings_incident_id_fkey"
-            columns: ["incident_id"]
+            columns: ["incident_id", "organisation_id"]
             isOneToOne: false
             referencedRelation: "incidents"
-            referencedColumns: ["id"]
+            referencedColumns: ["id", "organisation_id"]
           },
           {
-            foreignKeyName: "audit_findings_resulting_document_id_fkey"
-            columns: ["resulting_document_id"]
+            foreignKeyName: "audit_findings_organisation_id_fkey"
+            columns: ["organisation_id"]
             isOneToOne: false
-            referencedRelation: "document_review_status"
+            referencedRelation: "organisations"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "audit_findings_resulting_document_id_fkey"
-            columns: ["resulting_document_id"]
+            columns: ["resulting_document_id", "organisation_id"]
             isOneToOne: false
             referencedRelation: "documents"
-            referencedColumns: ["id"]
+            referencedColumns: ["id", "organisation_id"]
           },
         ]
       }
@@ -201,6 +207,7 @@ export type Database = {
             | null
           created_at: string
           id: string
+          organisation_id: string
           status: Database["public"]["Enums"]["audit_status"]
         }
         Insert: {
@@ -212,6 +219,7 @@ export type Database = {
             | null
           created_at?: string
           id?: string
+          organisation_id?: string
           status?: Database["public"]["Enums"]["audit_status"]
         }
         Update: {
@@ -223,14 +231,22 @@ export type Database = {
             | null
           created_at?: string
           id?: string
+          organisation_id?: string
           status?: Database["public"]["Enums"]["audit_status"]
         }
         Relationships: [
           {
             foreignKeyName: "audits_auditor_id_fkey"
-            columns: ["auditor_id"]
+            columns: ["auditor_id", "organisation_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id", "organisation_id"]
+          },
+          {
+            foreignKeyName: "audits_organisation_id_fkey"
+            columns: ["organisation_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
             referencedColumns: ["id"]
           },
         ]
@@ -248,6 +264,7 @@ export type Database = {
           manufacturer: string | null
           model: string | null
           notes: string | null
+          organisation_id: string
           purchased_date: string | null
           serial_number: string | null
           status: Database["public"]["Enums"]["battery_status"]
@@ -265,6 +282,7 @@ export type Database = {
           manufacturer?: string | null
           model?: string | null
           notes?: string | null
+          organisation_id?: string
           purchased_date?: string | null
           serial_number?: string | null
           status?: Database["public"]["Enums"]["battery_status"]
@@ -282,12 +300,21 @@ export type Database = {
           manufacturer?: string | null
           model?: string | null
           notes?: string | null
+          organisation_id?: string
           purchased_date?: string | null
           serial_number?: string | null
           status?: Database["public"]["Enums"]["battery_status"]
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "batteries_organisation_id_fkey"
+            columns: ["organisation_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       checklist_completions: {
         Row: {
@@ -299,6 +326,7 @@ export type Database = {
           flight_request_id: string | null
           id: string
           notes: string | null
+          organisation_id: string
           template_id: string
           uav_id: string | null
         }
@@ -311,6 +339,7 @@ export type Database = {
           flight_request_id?: string | null
           id?: string
           notes?: string | null
+          organisation_id?: string
           template_id: string
           uav_id?: string | null
         }
@@ -323,65 +352,52 @@ export type Database = {
           flight_request_id?: string | null
           id?: string
           notes?: string | null
+          organisation_id?: string
           template_id?: string
           uav_id?: string | null
         }
         Relationships: [
           {
             foreignKeyName: "checklist_completions_completed_by_fkey"
-            columns: ["completed_by"]
+            columns: ["completed_by", "organisation_id"]
             isOneToOne: false
             referencedRelation: "profiles"
-            referencedColumns: ["id"]
+            referencedColumns: ["id", "organisation_id"]
           },
           {
             foreignKeyName: "checklist_completions_flight_log_id_fkey"
-            columns: ["flight_log_id"]
+            columns: ["flight_log_id", "organisation_id"]
             isOneToOne: false
             referencedRelation: "flight_logs"
-            referencedColumns: ["id"]
+            referencedColumns: ["id", "organisation_id"]
           },
           {
             foreignKeyName: "checklist_completions_flight_request_id_fkey"
-            columns: ["flight_request_id"]
+            columns: ["flight_request_id", "organisation_id"]
             isOneToOne: false
             referencedRelation: "flight_requests"
+            referencedColumns: ["id", "organisation_id"]
+          },
+          {
+            foreignKeyName: "checklist_completions_organisation_id_fkey"
+            columns: ["organisation_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "checklist_completions_template_id_fkey"
-            columns: ["template_id"]
+            columns: ["template_id", "organisation_id"]
             isOneToOne: false
             referencedRelation: "checklist_templates"
-            referencedColumns: ["id"]
+            referencedColumns: ["id", "organisation_id"]
           },
           {
             foreignKeyName: "checklist_completions_uav_id_fkey"
-            columns: ["uav_id"]
-            isOneToOne: false
-            referencedRelation: "inspection_plan_status"
-            referencedColumns: ["uav_id"]
-          },
-          {
-            foreignKeyName: "checklist_completions_uav_id_fkey"
-            columns: ["uav_id"]
-            isOneToOne: false
-            referencedRelation: "uav_fleet_status"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "checklist_completions_uav_id_fkey"
-            columns: ["uav_id"]
-            isOneToOne: false
-            referencedRelation: "uav_fleet_status"
-            referencedColumns: ["uav_id"]
-          },
-          {
-            foreignKeyName: "checklist_completions_uav_id_fkey"
-            columns: ["uav_id"]
+            columns: ["uav_id", "organisation_id"]
             isOneToOne: false
             referencedRelation: "uavs"
-            referencedColumns: ["id"]
+            referencedColumns: ["id", "organisation_id"]
           },
         ]
       }
@@ -390,6 +406,7 @@ export type Database = {
           created_at: string
           critical: boolean
           id: string
+          organisation_id: string
           prompt: string
           sort_order: number
           template_id: string
@@ -398,6 +415,7 @@ export type Database = {
           created_at?: string
           critical?: boolean
           id?: string
+          organisation_id?: string
           prompt: string
           sort_order?: number
           template_id: string
@@ -406,17 +424,25 @@ export type Database = {
           created_at?: string
           critical?: boolean
           id?: string
+          organisation_id?: string
           prompt?: string
           sort_order?: number
           template_id?: string
         }
         Relationships: [
           {
+            foreignKeyName: "checklist_items_organisation_id_fkey"
+            columns: ["organisation_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "checklist_items_template_id_fkey"
-            columns: ["template_id"]
+            columns: ["template_id", "organisation_id"]
             isOneToOne: false
             referencedRelation: "checklist_templates"
-            referencedColumns: ["id"]
+            referencedColumns: ["id", "organisation_id"]
           },
         ]
       }
@@ -427,6 +453,7 @@ export type Database = {
           completion_id: string
           id: string
           item_id: string
+          organisation_id: string
         }
         Insert: {
           checked?: boolean
@@ -434,6 +461,7 @@ export type Database = {
           completion_id: string
           id?: string
           item_id: string
+          organisation_id?: string
         }
         Update: {
           checked?: boolean
@@ -441,27 +469,28 @@ export type Database = {
           completion_id?: string
           id?: string
           item_id?: string
+          organisation_id?: string
         }
         Relationships: [
           {
             foreignKeyName: "checklist_responses_completion_id_fkey"
-            columns: ["completion_id"]
-            isOneToOne: false
-            referencedRelation: "checklist_completion_summary"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "checklist_responses_completion_id_fkey"
-            columns: ["completion_id"]
+            columns: ["completion_id", "organisation_id"]
             isOneToOne: false
             referencedRelation: "checklist_completions"
-            referencedColumns: ["id"]
+            referencedColumns: ["id", "organisation_id"]
           },
           {
             foreignKeyName: "checklist_responses_item_id_fkey"
-            columns: ["item_id"]
+            columns: ["item_id", "organisation_id"]
             isOneToOne: false
             referencedRelation: "checklist_items"
+            referencedColumns: ["id", "organisation_id"]
+          },
+          {
+            foreignKeyName: "checklist_responses_organisation_id_fkey"
+            columns: ["organisation_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
             referencedColumns: ["id"]
           },
         ]
@@ -474,6 +503,7 @@ export type Database = {
           description: string | null
           id: string
           name: string
+          organisation_id: string
           updated_at: string
         }
         Insert: {
@@ -483,6 +513,7 @@ export type Database = {
           description?: string | null
           id?: string
           name: string
+          organisation_id?: string
           updated_at?: string
         }
         Update: {
@@ -492,9 +523,18 @@ export type Database = {
           description?: string | null
           id?: string
           name?: string
+          organisation_id?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "checklist_templates_organisation_id_fkey"
+            columns: ["organisation_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       clients: {
         Row: {
@@ -505,6 +545,7 @@ export type Database = {
           id: string
           name: string
           notes: string | null
+          organisation_id: string
           updated_at: string
         }
         Insert: {
@@ -515,6 +556,7 @@ export type Database = {
           id?: string
           name: string
           notes?: string | null
+          organisation_id?: string
           updated_at?: string
         }
         Update: {
@@ -525,9 +567,18 @@ export type Database = {
           id?: string
           name?: string
           notes?: string | null
+          organisation_id?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "clients_organisation_id_fkey"
+            columns: ["organisation_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       component_installations: {
         Row: {
@@ -537,6 +588,7 @@ export type Database = {
           installed_by: string | null
           installed_on: string
           notes: string | null
+          organisation_id: string
           removed_on: string | null
           uav_id: string
         }
@@ -547,6 +599,7 @@ export type Database = {
           installed_by?: string | null
           installed_on?: string
           notes?: string | null
+          organisation_id?: string
           removed_on?: string | null
           uav_id: string
         }
@@ -557,58 +610,38 @@ export type Database = {
           installed_by?: string | null
           installed_on?: string
           notes?: string | null
+          organisation_id?: string
           removed_on?: string | null
           uav_id?: string
         }
         Relationships: [
           {
             foreignKeyName: "component_installations_component_id_fkey"
-            columns: ["component_id"]
-            isOneToOne: false
-            referencedRelation: "component_status_view"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "component_installations_component_id_fkey"
-            columns: ["component_id"]
+            columns: ["component_id", "organisation_id"]
             isOneToOne: false
             referencedRelation: "components"
-            referencedColumns: ["id"]
+            referencedColumns: ["id", "organisation_id"]
           },
           {
             foreignKeyName: "component_installations_installed_by_fkey"
-            columns: ["installed_by"]
+            columns: ["installed_by", "organisation_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id", "organisation_id"]
+          },
+          {
+            foreignKeyName: "component_installations_organisation_id_fkey"
+            columns: ["organisation_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "component_installations_uav_id_fkey"
-            columns: ["uav_id"]
-            isOneToOne: false
-            referencedRelation: "inspection_plan_status"
-            referencedColumns: ["uav_id"]
-          },
-          {
-            foreignKeyName: "component_installations_uav_id_fkey"
-            columns: ["uav_id"]
-            isOneToOne: false
-            referencedRelation: "uav_fleet_status"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "component_installations_uav_id_fkey"
-            columns: ["uav_id"]
-            isOneToOne: false
-            referencedRelation: "uav_fleet_status"
-            referencedColumns: ["uav_id"]
-          },
-          {
-            foreignKeyName: "component_installations_uav_id_fkey"
-            columns: ["uav_id"]
+            columns: ["uav_id", "organisation_id"]
             isOneToOne: false
             referencedRelation: "uavs"
-            referencedColumns: ["id"]
+            referencedColumns: ["id", "organisation_id"]
           },
         ]
       }
@@ -624,6 +657,7 @@ export type Database = {
           model: string | null
           name: string
           notes: string | null
+          organisation_id: string
           purchased_date: string | null
           serial_number: string | null
           service_interval_hours: number | null
@@ -641,6 +675,7 @@ export type Database = {
           model?: string | null
           name: string
           notes?: string | null
+          organisation_id?: string
           purchased_date?: string | null
           serial_number?: string | null
           service_interval_hours?: number | null
@@ -658,15 +693,24 @@ export type Database = {
           model?: string | null
           name?: string
           notes?: string | null
+          organisation_id?: string
           purchased_date?: string | null
           serial_number?: string | null
           service_interval_hours?: number | null
           status?: Database["public"]["Enums"]["component_status"]
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "components_organisation_id_fkey"
+            columns: ["organisation_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
-      document_review_policy: {
+      document_review_defaults: {
         Row: {
           category: Database["public"]["Enums"]["document_category"]
           rationale: string | null
@@ -684,6 +728,35 @@ export type Database = {
         }
         Relationships: []
       }
+      document_review_policy: {
+        Row: {
+          category: Database["public"]["Enums"]["document_category"]
+          organisation_id: string
+          rationale: string | null
+          review_interval_months: number | null
+        }
+        Insert: {
+          category: Database["public"]["Enums"]["document_category"]
+          organisation_id?: string
+          rationale?: string | null
+          review_interval_months?: number | null
+        }
+        Update: {
+          category?: Database["public"]["Enums"]["document_category"]
+          organisation_id?: string
+          rationale?: string | null
+          review_interval_months?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_review_policy_organisation_id_fkey"
+            columns: ["organisation_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       documents: {
         Row: {
           approval_status: Database["public"]["Enums"]["document_workflow_status"]
@@ -695,6 +768,7 @@ export type Database = {
           id: string
           last_reviewed_at: string | null
           last_reviewed_by: string | null
+          organisation_id: string
           pilot_id: string | null
           review_interval_months: number | null
           sharepoint_error: string | null
@@ -717,6 +791,7 @@ export type Database = {
           id?: string
           last_reviewed_at?: string | null
           last_reviewed_by?: string | null
+          organisation_id?: string
           pilot_id?: string | null
           review_interval_months?: number | null
           sharepoint_error?: string | null
@@ -739,6 +814,7 @@ export type Database = {
           id?: string
           last_reviewed_at?: string | null
           last_reviewed_by?: string | null
+          organisation_id?: string
           pilot_id?: string | null
           review_interval_months?: number | null
           sharepoint_error?: string | null
@@ -754,31 +830,31 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "documents_last_reviewed_by_fkey"
-            columns: ["last_reviewed_by"]
+            columns: ["last_reviewed_by", "organisation_id"]
             isOneToOne: false
             referencedRelation: "profiles"
-            referencedColumns: ["id"]
+            referencedColumns: ["id", "organisation_id"]
           },
           {
-            foreignKeyName: "documents_pilot_id_fkey"
-            columns: ["pilot_id"]
+            foreignKeyName: "documents_organisation_id_fkey"
+            columns: ["organisation_id"]
             isOneToOne: false
-            referencedRelation: "pilot_certificate_status"
+            referencedRelation: "organisations"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "documents_pilot_id_fkey"
-            columns: ["pilot_id"]
+            columns: ["pilot_id", "organisation_id"]
             isOneToOne: false
             referencedRelation: "pilots"
-            referencedColumns: ["id"]
+            referencedColumns: ["id", "organisation_id"]
           },
           {
             foreignKeyName: "documents_uploaded_by_fkey"
-            columns: ["uploaded_by"]
+            columns: ["uploaded_by", "organisation_id"]
             isOneToOne: false
             referencedRelation: "profiles"
-            referencedColumns: ["id"]
+            referencedColumns: ["id", "organisation_id"]
           },
         ]
       }
@@ -789,6 +865,7 @@ export type Database = {
           cycles: number
           flight_log_id: string
           id: string
+          organisation_id: string
         }
         Insert: {
           battery_id: string
@@ -796,6 +873,7 @@ export type Database = {
           cycles?: number
           flight_log_id: string
           id?: string
+          organisation_id?: string
         }
         Update: {
           battery_id?: string
@@ -803,34 +881,28 @@ export type Database = {
           cycles?: number
           flight_log_id?: string
           id?: string
+          organisation_id?: string
         }
         Relationships: [
           {
             foreignKeyName: "flight_battery_usage_battery_id_fkey"
-            columns: ["battery_id"]
+            columns: ["battery_id", "organisation_id"]
             isOneToOne: false
             referencedRelation: "batteries"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "flight_battery_usage_battery_id_fkey"
-            columns: ["battery_id"]
-            isOneToOne: false
-            referencedRelation: "battery_cell_health"
-            referencedColumns: ["battery_id"]
-          },
-          {
-            foreignKeyName: "flight_battery_usage_battery_id_fkey"
-            columns: ["battery_id"]
-            isOneToOne: false
-            referencedRelation: "battery_status_view"
-            referencedColumns: ["id"]
+            referencedColumns: ["id", "organisation_id"]
           },
           {
             foreignKeyName: "flight_battery_usage_flight_log_id_fkey"
-            columns: ["flight_log_id"]
+            columns: ["flight_log_id", "organisation_id"]
             isOneToOne: false
             referencedRelation: "flight_logs"
+            referencedColumns: ["id", "organisation_id"]
+          },
+          {
+            foreignKeyName: "flight_battery_usage_organisation_id_fkey"
+            columns: ["organisation_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
             referencedColumns: ["id"]
           },
         ]
@@ -840,6 +912,7 @@ export type Database = {
           created_at: string
           flight_log_id: string
           id: string
+          organisation_id: string
           pilot_id: string
           role: Database["public"]["Enums"]["crew_role"]
         }
@@ -847,6 +920,7 @@ export type Database = {
           created_at?: string
           flight_log_id: string
           id?: string
+          organisation_id?: string
           pilot_id: string
           role: Database["public"]["Enums"]["crew_role"]
         }
@@ -854,30 +928,31 @@ export type Database = {
           created_at?: string
           flight_log_id?: string
           id?: string
+          organisation_id?: string
           pilot_id?: string
           role?: Database["public"]["Enums"]["crew_role"]
         }
         Relationships: [
           {
             foreignKeyName: "flight_crew_flight_log_id_fkey"
-            columns: ["flight_log_id"]
+            columns: ["flight_log_id", "organisation_id"]
             isOneToOne: false
             referencedRelation: "flight_logs"
-            referencedColumns: ["id"]
+            referencedColumns: ["id", "organisation_id"]
           },
           {
-            foreignKeyName: "flight_crew_pilot_id_fkey"
-            columns: ["pilot_id"]
+            foreignKeyName: "flight_crew_organisation_id_fkey"
+            columns: ["organisation_id"]
             isOneToOne: false
-            referencedRelation: "pilot_certificate_status"
+            referencedRelation: "organisations"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "flight_crew_pilot_id_fkey"
-            columns: ["pilot_id"]
+            columns: ["pilot_id", "organisation_id"]
             isOneToOne: false
             referencedRelation: "pilots"
-            referencedColumns: ["id"]
+            referencedColumns: ["id", "organisation_id"]
           },
         ]
       }
@@ -911,6 +986,7 @@ export type Database = {
           min_satellites: number | null
           min_voltage: number | null
           mission_outcome: Database["public"]["Enums"]["mission_outcome"]
+          organisation_id: string
           pilot_id: string | null
           project_id: string | null
           sfoc_reference: string | null
@@ -962,6 +1038,7 @@ export type Database = {
           min_satellites?: number | null
           min_voltage?: number | null
           mission_outcome?: Database["public"]["Enums"]["mission_outcome"]
+          organisation_id?: string
           pilot_id?: string | null
           project_id?: string | null
           sfoc_reference?: string | null
@@ -1013,6 +1090,7 @@ export type Database = {
           min_satellites?: number | null
           min_voltage?: number | null
           mission_outcome?: Database["public"]["Enums"]["mission_outcome"]
+          organisation_id?: string
           pilot_id?: string | null
           project_id?: string | null
           sfoc_reference?: string | null
@@ -1038,73 +1116,45 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "flight_logs_acknowledged_by_fkey"
-            columns: ["acknowledged_by"]
+            columns: ["acknowledged_by", "organisation_id"]
             isOneToOne: false
             referencedRelation: "profiles"
-            referencedColumns: ["id"]
+            referencedColumns: ["id", "organisation_id"]
           },
           {
             foreignKeyName: "flight_logs_flight_request_id_fkey"
-            columns: ["flight_request_id"]
+            columns: ["flight_request_id", "organisation_id"]
             isOneToOne: false
             referencedRelation: "flight_requests"
-            referencedColumns: ["id"]
+            referencedColumns: ["id", "organisation_id"]
           },
           {
-            foreignKeyName: "flight_logs_pilot_id_fkey"
-            columns: ["pilot_id"]
+            foreignKeyName: "flight_logs_organisation_id_fkey"
+            columns: ["organisation_id"]
             isOneToOne: false
-            referencedRelation: "pilot_certificate_status"
+            referencedRelation: "organisations"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "flight_logs_pilot_id_fkey"
-            columns: ["pilot_id"]
+            columns: ["pilot_id", "organisation_id"]
             isOneToOne: false
             referencedRelation: "pilots"
-            referencedColumns: ["id"]
+            referencedColumns: ["id", "organisation_id"]
           },
           {
             foreignKeyName: "flight_logs_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "project_summary"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "flight_logs_project_id_fkey"
-            columns: ["project_id"]
+            columns: ["project_id", "organisation_id"]
             isOneToOne: false
             referencedRelation: "projects"
-            referencedColumns: ["id"]
+            referencedColumns: ["id", "organisation_id"]
           },
           {
             foreignKeyName: "flight_logs_uav_id_fkey"
-            columns: ["uav_id"]
-            isOneToOne: false
-            referencedRelation: "inspection_plan_status"
-            referencedColumns: ["uav_id"]
-          },
-          {
-            foreignKeyName: "flight_logs_uav_id_fkey"
-            columns: ["uav_id"]
-            isOneToOne: false
-            referencedRelation: "uav_fleet_status"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "flight_logs_uav_id_fkey"
-            columns: ["uav_id"]
-            isOneToOne: false
-            referencedRelation: "uav_fleet_status"
-            referencedColumns: ["uav_id"]
-          },
-          {
-            foreignKeyName: "flight_logs_uav_id_fkey"
-            columns: ["uav_id"]
+            columns: ["uav_id", "organisation_id"]
             isOneToOne: false
             referencedRelation: "uavs"
-            referencedColumns: ["id"]
+            referencedColumns: ["id", "organisation_id"]
           },
         ]
       }
@@ -1118,6 +1168,7 @@ export type Database = {
           id: string
           location: string | null
           operations: Database["public"]["Enums"]["operation_type"][]
+          organisation_id: string
           pilot_id: string | null
           project_id: string | null
           requested_date: string
@@ -1134,6 +1185,7 @@ export type Database = {
           id?: string
           location?: string | null
           operations?: Database["public"]["Enums"]["operation_type"][]
+          organisation_id?: string
           pilot_id?: string | null
           project_id?: string | null
           requested_date?: string
@@ -1150,6 +1202,7 @@ export type Database = {
           id?: string
           location?: string | null
           operations?: Database["public"]["Enums"]["operation_type"][]
+          organisation_id?: string
           pilot_id?: string | null
           project_id?: string | null
           requested_date?: string
@@ -1160,66 +1213,38 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "flight_requests_approved_by_fkey"
-            columns: ["approved_by"]
+            columns: ["approved_by", "organisation_id"]
             isOneToOne: false
             referencedRelation: "profiles"
-            referencedColumns: ["id"]
+            referencedColumns: ["id", "organisation_id"]
           },
           {
-            foreignKeyName: "flight_requests_pilot_id_fkey"
-            columns: ["pilot_id"]
+            foreignKeyName: "flight_requests_organisation_id_fkey"
+            columns: ["organisation_id"]
             isOneToOne: false
-            referencedRelation: "pilot_certificate_status"
+            referencedRelation: "organisations"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "flight_requests_pilot_id_fkey"
-            columns: ["pilot_id"]
+            columns: ["pilot_id", "organisation_id"]
             isOneToOne: false
             referencedRelation: "pilots"
-            referencedColumns: ["id"]
+            referencedColumns: ["id", "organisation_id"]
           },
           {
             foreignKeyName: "flight_requests_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "project_summary"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "flight_requests_project_id_fkey"
-            columns: ["project_id"]
+            columns: ["project_id", "organisation_id"]
             isOneToOne: false
             referencedRelation: "projects"
-            referencedColumns: ["id"]
+            referencedColumns: ["id", "organisation_id"]
           },
           {
             foreignKeyName: "flight_requests_uav_id_fkey"
-            columns: ["uav_id"]
-            isOneToOne: false
-            referencedRelation: "inspection_plan_status"
-            referencedColumns: ["uav_id"]
-          },
-          {
-            foreignKeyName: "flight_requests_uav_id_fkey"
-            columns: ["uav_id"]
-            isOneToOne: false
-            referencedRelation: "uav_fleet_status"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "flight_requests_uav_id_fkey"
-            columns: ["uav_id"]
-            isOneToOne: false
-            referencedRelation: "uav_fleet_status"
-            referencedColumns: ["uav_id"]
-          },
-          {
-            foreignKeyName: "flight_requests_uav_id_fkey"
-            columns: ["uav_id"]
+            columns: ["uav_id", "organisation_id"]
             isOneToOne: false
             referencedRelation: "uavs"
-            referencedColumns: ["id"]
+            referencedColumns: ["id", "organisation_id"]
           },
         ]
       }
@@ -1229,39 +1254,42 @@ export type Database = {
           hazard_id: string
           id: string
           incident_id: string
+          organisation_id: string
         }
         Insert: {
           created_at?: string
           hazard_id: string
           id?: string
           incident_id: string
+          organisation_id?: string
         }
         Update: {
           created_at?: string
           hazard_id?: string
           id?: string
           incident_id?: string
+          organisation_id?: string
         }
         Relationships: [
           {
             foreignKeyName: "hazard_incidents_hazard_id_fkey"
-            columns: ["hazard_id"]
-            isOneToOne: false
-            referencedRelation: "hazard_register"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "hazard_incidents_hazard_id_fkey"
-            columns: ["hazard_id"]
+            columns: ["hazard_id", "organisation_id"]
             isOneToOne: false
             referencedRelation: "hazards"
-            referencedColumns: ["id"]
+            referencedColumns: ["id", "organisation_id"]
           },
           {
             foreignKeyName: "hazard_incidents_incident_id_fkey"
-            columns: ["incident_id"]
+            columns: ["incident_id", "organisation_id"]
             isOneToOne: false
             referencedRelation: "incidents"
+            referencedColumns: ["id", "organisation_id"]
+          },
+          {
+            foreignKeyName: "hazard_incidents_organisation_id_fkey"
+            columns: ["organisation_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
             referencedColumns: ["id"]
           },
         ]
@@ -1279,6 +1307,7 @@ export type Database = {
           last_reviewed_at: string | null
           mitigation: string | null
           notes: string | null
+          organisation_id: string
           owner_id: string | null
           residual_likelihood:
             | Database["public"]["Enums"]["risk_likelihood"]
@@ -1301,6 +1330,7 @@ export type Database = {
           last_reviewed_at?: string | null
           mitigation?: string | null
           notes?: string | null
+          organisation_id?: string
           owner_id?: string | null
           residual_likelihood?:
             | Database["public"]["Enums"]["risk_likelihood"]
@@ -1325,6 +1355,7 @@ export type Database = {
           last_reviewed_at?: string | null
           mitigation?: string | null
           notes?: string | null
+          organisation_id?: string
           owner_id?: string | null
           residual_likelihood?:
             | Database["public"]["Enums"]["risk_likelihood"]
@@ -1339,11 +1370,18 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "hazards_organisation_id_fkey"
+            columns: ["organisation_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "hazards_owner_id_fkey"
-            columns: ["owner_id"]
+            columns: ["owner_id", "organisation_id"]
             isOneToOne: false
             referencedRelation: "profiles"
-            referencedColumns: ["id"]
+            referencedColumns: ["id", "organisation_id"]
           },
         ]
       }
@@ -1355,6 +1393,7 @@ export type Database = {
           incident_date: string
           incident_type: Database["public"]["Enums"]["incident_type"]
           is_anonymous: boolean
+          organisation_id: string
           pilot_id: string | null
           reported_by: string | null
           severity: Database["public"]["Enums"]["severity_level"]
@@ -1368,6 +1407,7 @@ export type Database = {
           incident_date?: string
           incident_type: Database["public"]["Enums"]["incident_type"]
           is_anonymous?: boolean
+          organisation_id?: string
           pilot_id?: string | null
           reported_by?: string | null
           severity: Database["public"]["Enums"]["severity_level"]
@@ -1381,6 +1421,7 @@ export type Database = {
           incident_date?: string
           incident_type?: Database["public"]["Enums"]["incident_type"]
           is_anonymous?: boolean
+          organisation_id?: string
           pilot_id?: string | null
           reported_by?: string | null
           severity?: Database["public"]["Enums"]["severity_level"]
@@ -1389,53 +1430,32 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "incidents_pilot_id_fkey"
-            columns: ["pilot_id"]
+            foreignKeyName: "incidents_organisation_id_fkey"
+            columns: ["organisation_id"]
             isOneToOne: false
-            referencedRelation: "pilot_certificate_status"
+            referencedRelation: "organisations"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "incidents_pilot_id_fkey"
-            columns: ["pilot_id"]
+            columns: ["pilot_id", "organisation_id"]
             isOneToOne: false
             referencedRelation: "pilots"
-            referencedColumns: ["id"]
+            referencedColumns: ["id", "organisation_id"]
           },
           {
             foreignKeyName: "incidents_reported_by_fkey"
-            columns: ["reported_by"]
+            columns: ["reported_by", "organisation_id"]
             isOneToOne: false
             referencedRelation: "profiles"
-            referencedColumns: ["id"]
+            referencedColumns: ["id", "organisation_id"]
           },
           {
             foreignKeyName: "incidents_uav_id_fkey"
-            columns: ["uav_id"]
-            isOneToOne: false
-            referencedRelation: "inspection_plan_status"
-            referencedColumns: ["uav_id"]
-          },
-          {
-            foreignKeyName: "incidents_uav_id_fkey"
-            columns: ["uav_id"]
-            isOneToOne: false
-            referencedRelation: "uav_fleet_status"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "incidents_uav_id_fkey"
-            columns: ["uav_id"]
-            isOneToOne: false
-            referencedRelation: "uav_fleet_status"
-            referencedColumns: ["uav_id"]
-          },
-          {
-            foreignKeyName: "incidents_uav_id_fkey"
-            columns: ["uav_id"]
+            columns: ["uav_id", "organisation_id"]
             isOneToOne: false
             referencedRelation: "uavs"
-            referencedColumns: ["id"]
+            referencedColumns: ["id", "organisation_id"]
           },
         ]
       }
@@ -1449,6 +1469,7 @@ export type Database = {
           interval_months: number | null
           is_critical: boolean
           name: string
+          organisation_id: string
           plan_id: string
           sort_order: number
         }
@@ -1461,6 +1482,7 @@ export type Database = {
           interval_months?: number | null
           is_critical?: boolean
           name: string
+          organisation_id?: string
           plan_id: string
           sort_order?: number
         }
@@ -1473,23 +1495,24 @@ export type Database = {
           interval_months?: number | null
           is_critical?: boolean
           name?: string
+          organisation_id?: string
           plan_id?: string
           sort_order?: number
         }
         Relationships: [
           {
-            foreignKeyName: "inspection_plan_items_plan_id_fkey"
-            columns: ["plan_id"]
+            foreignKeyName: "inspection_plan_items_organisation_id_fkey"
+            columns: ["organisation_id"]
             isOneToOne: false
-            referencedRelation: "inspection_plan_status"
-            referencedColumns: ["plan_id"]
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "inspection_plan_items_plan_id_fkey"
-            columns: ["plan_id"]
+            columns: ["plan_id", "organisation_id"]
             isOneToOne: false
             referencedRelation: "inspection_plans"
-            referencedColumns: ["id"]
+            referencedColumns: ["id", "organisation_id"]
           },
         ]
       }
@@ -1502,6 +1525,7 @@ export type Database = {
           description: string | null
           id: string
           name: string
+          organisation_id: string
         }
         Insert: {
           active?: boolean
@@ -1511,6 +1535,7 @@ export type Database = {
           description?: string | null
           id?: string
           name: string
+          organisation_id?: string
         }
         Update: {
           active?: boolean
@@ -1520,13 +1545,21 @@ export type Database = {
           description?: string | null
           id?: string
           name?: string
+          organisation_id?: string
         }
         Relationships: [
           {
             foreignKeyName: "inspection_plans_created_by_fkey"
-            columns: ["created_by"]
+            columns: ["created_by", "organisation_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id", "organisation_id"]
+          },
+          {
+            foreignKeyName: "inspection_plans_organisation_id_fkey"
+            columns: ["organisation_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
             referencedColumns: ["id"]
           },
         ]
@@ -1541,6 +1574,7 @@ export type Database = {
           maintenance_type: Database["public"]["Enums"]["maintenance_type"]
           next_service_date: string | null
           notes: string | null
+          organisation_id: string
           plan_item_id: string | null
           status: Database["public"]["Enums"]["maintenance_status"]
           technician_id: string | null
@@ -1555,6 +1589,7 @@ export type Database = {
           maintenance_type: Database["public"]["Enums"]["maintenance_type"]
           next_service_date?: string | null
           notes?: string | null
+          organisation_id?: string
           plan_item_id?: string | null
           status?: Database["public"]["Enums"]["maintenance_status"]
           technician_id?: string | null
@@ -1569,6 +1604,7 @@ export type Database = {
           maintenance_type?: Database["public"]["Enums"]["maintenance_type"]
           next_service_date?: string | null
           notes?: string | null
+          organisation_id?: string
           plan_item_id?: string | null
           status?: Database["public"]["Enums"]["maintenance_status"]
           technician_id?: string | null
@@ -1576,53 +1612,32 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "maintenance_records_plan_item_id_fkey"
-            columns: ["plan_item_id"]
+            foreignKeyName: "maintenance_records_organisation_id_fkey"
+            columns: ["organisation_id"]
             isOneToOne: false
-            referencedRelation: "inspection_plan_items"
+            referencedRelation: "organisations"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "maintenance_records_plan_item_id_fkey"
-            columns: ["plan_item_id"]
+            columns: ["plan_item_id", "organisation_id"]
             isOneToOne: false
-            referencedRelation: "inspection_plan_status"
-            referencedColumns: ["item_id"]
+            referencedRelation: "inspection_plan_items"
+            referencedColumns: ["id", "organisation_id"]
           },
           {
             foreignKeyName: "maintenance_records_technician_id_fkey"
-            columns: ["technician_id"]
+            columns: ["technician_id", "organisation_id"]
             isOneToOne: false
             referencedRelation: "profiles"
-            referencedColumns: ["id"]
+            referencedColumns: ["id", "organisation_id"]
           },
           {
             foreignKeyName: "maintenance_records_uav_id_fkey"
-            columns: ["uav_id"]
-            isOneToOne: false
-            referencedRelation: "inspection_plan_status"
-            referencedColumns: ["uav_id"]
-          },
-          {
-            foreignKeyName: "maintenance_records_uav_id_fkey"
-            columns: ["uav_id"]
-            isOneToOne: false
-            referencedRelation: "uav_fleet_status"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "maintenance_records_uav_id_fkey"
-            columns: ["uav_id"]
-            isOneToOne: false
-            referencedRelation: "uav_fleet_status"
-            referencedColumns: ["uav_id"]
-          },
-          {
-            foreignKeyName: "maintenance_records_uav_id_fkey"
-            columns: ["uav_id"]
+            columns: ["uav_id", "organisation_id"]
             isOneToOne: false
             referencedRelation: "uavs"
-            referencedColumns: ["id"]
+            referencedColumns: ["id", "organisation_id"]
           },
         ]
       }
@@ -1634,6 +1649,7 @@ export type Database = {
           heading: string
           id: string
           manual_id: string
+          organisation_id: string
           parent_id: string | null
           sort_order: number
         }
@@ -1644,6 +1660,7 @@ export type Database = {
           heading: string
           id?: string
           manual_id: string
+          organisation_id?: string
           parent_id?: string | null
           sort_order?: number
         }
@@ -1654,44 +1671,38 @@ export type Database = {
           heading?: string
           id?: string
           manual_id?: string
+          organisation_id?: string
           parent_id?: string | null
           sort_order?: number
         }
         Relationships: [
           {
             foreignKeyName: "manual_sections_document_id_fkey"
-            columns: ["document_id"]
-            isOneToOne: false
-            referencedRelation: "document_review_status"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "manual_sections_document_id_fkey"
-            columns: ["document_id"]
+            columns: ["document_id", "organisation_id"]
             isOneToOne: false
             referencedRelation: "documents"
-            referencedColumns: ["id"]
+            referencedColumns: ["id", "organisation_id"]
           },
           {
             foreignKeyName: "manual_sections_manual_id_fkey"
-            columns: ["manual_id"]
-            isOneToOne: false
-            referencedRelation: "manual_summary"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "manual_sections_manual_id_fkey"
-            columns: ["manual_id"]
+            columns: ["manual_id", "organisation_id"]
             isOneToOne: false
             referencedRelation: "manuals"
+            referencedColumns: ["id", "organisation_id"]
+          },
+          {
+            foreignKeyName: "manual_sections_organisation_id_fkey"
+            columns: ["organisation_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "manual_sections_parent_id_fkey"
-            columns: ["parent_id"]
+            columns: ["parent_id", "organisation_id"]
             isOneToOne: false
             referencedRelation: "manual_sections"
-            referencedColumns: ["id"]
+            referencedColumns: ["id", "organisation_id"]
           },
         ]
       }
@@ -1703,6 +1714,7 @@ export type Database = {
           description: string | null
           effective_date: string | null
           id: string
+          organisation_id: string
           revision: string
           title: string
           updated_at: string
@@ -1714,6 +1726,7 @@ export type Database = {
           description?: string | null
           effective_date?: string | null
           id?: string
+          organisation_id?: string
           revision?: string
           title: string
           updated_at?: string
@@ -1725,6 +1738,7 @@ export type Database = {
           description?: string | null
           effective_date?: string | null
           id?: string
+          organisation_id?: string
           revision?: string
           title?: string
           updated_at?: string
@@ -1732,9 +1746,16 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "manuals_created_by_fkey"
-            columns: ["created_by"]
+            columns: ["created_by", "organisation_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id", "organisation_id"]
+          },
+          {
+            foreignKeyName: "manuals_organisation_id_fkey"
+            columns: ["organisation_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
             referencedColumns: ["id"]
           },
         ]
@@ -1742,33 +1763,43 @@ export type Database = {
       notification_reads: {
         Row: {
           notification_id: string
+          organisation_id: string
           profile_id: string
           read_at: string
         }
         Insert: {
           notification_id: string
+          organisation_id?: string
           profile_id: string
           read_at?: string
         }
         Update: {
           notification_id?: string
+          organisation_id?: string
           profile_id?: string
           read_at?: string
         }
         Relationships: [
           {
             foreignKeyName: "notification_reads_notification_id_fkey"
-            columns: ["notification_id"]
+            columns: ["notification_id", "organisation_id"]
             isOneToOne: false
             referencedRelation: "notifications"
+            referencedColumns: ["id", "organisation_id"]
+          },
+          {
+            foreignKeyName: "notification_reads_organisation_id_fkey"
+            columns: ["organisation_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "notification_reads_profile_id_fkey"
-            columns: ["profile_id"]
+            columns: ["profile_id", "organisation_id"]
             isOneToOne: false
             referencedRelation: "profiles"
-            referencedColumns: ["id"]
+            referencedColumns: ["id", "organisation_id"]
           },
         ]
       }
@@ -1783,6 +1814,7 @@ export type Database = {
           entity_table: string | null
           id: string
           kind: Database["public"]["Enums"]["notification_kind"]
+          organisation_id: string
           severity: Database["public"]["Enums"]["severity_level"]
           target_profile_id: string | null
           target_roles: Database["public"]["Enums"]["user_role"][]
@@ -1798,6 +1830,7 @@ export type Database = {
           entity_table?: string | null
           id?: string
           kind: Database["public"]["Enums"]["notification_kind"]
+          organisation_id?: string
           severity: Database["public"]["Enums"]["severity_level"]
           target_profile_id?: string | null
           target_roles?: Database["public"]["Enums"]["user_role"][]
@@ -1813,6 +1846,7 @@ export type Database = {
           entity_table?: string | null
           id?: string
           kind?: Database["public"]["Enums"]["notification_kind"]
+          organisation_id?: string
           severity?: Database["public"]["Enums"]["severity_level"]
           target_profile_id?: string | null
           target_roles?: Database["public"]["Enums"]["user_role"][]
@@ -1820,13 +1854,62 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "notifications_target_profile_id_fkey"
-            columns: ["target_profile_id"]
+            foreignKeyName: "notifications_organisation_id_fkey"
+            columns: ["organisation_id"]
             isOneToOne: false
-            referencedRelation: "profiles"
+            referencedRelation: "organisations"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "notifications_target_profile_id_fkey"
+            columns: ["target_profile_id", "organisation_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id", "organisation_id"]
+          },
         ]
+      }
+      organisations: {
+        Row: {
+          accent_colour: string | null
+          active: boolean
+          contact_email: string | null
+          contact_phone: string | null
+          created_at: string
+          id: string
+          legal_name: string | null
+          logo_path: string | null
+          name: string
+          rpoc_number: string | null
+          slug: string
+        }
+        Insert: {
+          accent_colour?: string | null
+          active?: boolean
+          contact_email?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          id?: string
+          legal_name?: string | null
+          logo_path?: string | null
+          name: string
+          rpoc_number?: string | null
+          slug: string
+        }
+        Update: {
+          accent_colour?: string | null
+          active?: boolean
+          contact_email?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          id?: string
+          legal_name?: string | null
+          logo_path?: string | null
+          name?: string
+          rpoc_number?: string | null
+          slug?: string
+        }
+        Relationships: []
       }
       pilot_authorisations: {
         Row: {
@@ -1838,6 +1921,7 @@ export type Database = {
           id: string
           notes: string | null
           operation: Database["public"]["Enums"]["operation_type"]
+          organisation_id: string
           pilot_id: string
           updated_at: string
         }
@@ -1850,6 +1934,7 @@ export type Database = {
           id?: string
           notes?: string | null
           operation: Database["public"]["Enums"]["operation_type"]
+          organisation_id?: string
           pilot_id: string
           updated_at?: string
         }
@@ -1862,30 +1947,31 @@ export type Database = {
           id?: string
           notes?: string | null
           operation?: Database["public"]["Enums"]["operation_type"]
+          organisation_id?: string
           pilot_id?: string
           updated_at?: string
         }
         Relationships: [
           {
             foreignKeyName: "pilot_authorisations_authorised_by_fkey"
-            columns: ["authorised_by"]
+            columns: ["authorised_by", "organisation_id"]
             isOneToOne: false
             referencedRelation: "profiles"
-            referencedColumns: ["id"]
+            referencedColumns: ["id", "organisation_id"]
           },
           {
-            foreignKeyName: "pilot_authorisations_pilot_id_fkey"
-            columns: ["pilot_id"]
+            foreignKeyName: "pilot_authorisations_organisation_id_fkey"
+            columns: ["organisation_id"]
             isOneToOne: false
-            referencedRelation: "pilot_certificate_status"
+            referencedRelation: "organisations"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "pilot_authorisations_pilot_id_fkey"
-            columns: ["pilot_id"]
+            columns: ["pilot_id", "organisation_id"]
             isOneToOne: false
             referencedRelation: "pilots"
-            referencedColumns: ["id"]
+            referencedColumns: ["id", "organisation_id"]
           },
         ]
       }
@@ -1904,6 +1990,7 @@ export type Database = {
           id: string
           last_recency_activity: string | null
           notes: string | null
+          organisation_id: string
           profile_id: string | null
         }
         Insert: {
@@ -1920,6 +2007,7 @@ export type Database = {
           id?: string
           last_recency_activity?: string | null
           notes?: string | null
+          organisation_id?: string
           profile_id?: string | null
         }
         Update: {
@@ -1936,15 +2024,23 @@ export type Database = {
           id?: string
           last_recency_activity?: string | null
           notes?: string | null
+          organisation_id?: string
           profile_id?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "pilots_profile_id_fkey"
-            columns: ["profile_id"]
-            isOneToOne: true
-            referencedRelation: "profiles"
+            foreignKeyName: "pilots_organisation_id_fkey"
+            columns: ["organisation_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pilots_profile_id_fkey"
+            columns: ["profile_id", "organisation_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id", "organisation_id"]
           },
         ]
       }
@@ -1955,6 +2051,8 @@ export type Database = {
           email: string | null
           full_name: string | null
           id: string
+          is_platform_admin: boolean
+          organisation_id: string
           role: Database["public"]["Enums"]["user_role"]
         }
         Insert: {
@@ -1963,6 +2061,8 @@ export type Database = {
           email?: string | null
           full_name?: string | null
           id: string
+          is_platform_admin?: boolean
+          organisation_id: string
           role?: Database["public"]["Enums"]["user_role"]
         }
         Update: {
@@ -1971,9 +2071,19 @@ export type Database = {
           email?: string | null
           full_name?: string | null
           id?: string
+          is_platform_admin?: boolean
+          organisation_id?: string
           role?: Database["public"]["Enums"]["user_role"]
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_organisation_id_fkey"
+            columns: ["organisation_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       projects: {
         Row: {
@@ -1986,6 +2096,7 @@ export type Database = {
           longitude: number | null
           name: string
           notes: string | null
+          organisation_id: string
           project_code: string
           site_name: string | null
           start_date: string | null
@@ -2002,6 +2113,7 @@ export type Database = {
           longitude?: number | null
           name: string
           notes?: string | null
+          organisation_id?: string
           project_code: string
           site_name?: string | null
           start_date?: string | null
@@ -2018,6 +2130,7 @@ export type Database = {
           longitude?: number | null
           name?: string
           notes?: string | null
+          organisation_id?: string
           project_code?: string
           site_name?: string | null
           start_date?: string | null
@@ -2027,17 +2140,43 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "projects_client_id_fkey"
-            columns: ["client_id"]
+            columns: ["client_id", "organisation_id"]
             isOneToOne: false
             referencedRelation: "clients"
+            referencedColumns: ["id", "organisation_id"]
+          },
+          {
+            foreignKeyName: "projects_organisation_id_fkey"
+            columns: ["organisation_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
             referencedColumns: ["id"]
           },
         ]
+      }
+      role_permission_defaults: {
+        Row: {
+          area: Database["public"]["Enums"]["access_area"]
+          level: Database["public"]["Enums"]["access_level"]
+          role: Database["public"]["Enums"]["user_role"]
+        }
+        Insert: {
+          area: Database["public"]["Enums"]["access_area"]
+          level: Database["public"]["Enums"]["access_level"]
+          role: Database["public"]["Enums"]["user_role"]
+        }
+        Update: {
+          area?: Database["public"]["Enums"]["access_area"]
+          level?: Database["public"]["Enums"]["access_level"]
+          role?: Database["public"]["Enums"]["user_role"]
+        }
+        Relationships: []
       }
       role_permissions: {
         Row: {
           area: Database["public"]["Enums"]["access_area"]
           level: Database["public"]["Enums"]["access_level"]
+          organisation_id: string
           role: Database["public"]["Enums"]["user_role"]
           updated_at: string
           updated_by: string | null
@@ -2045,6 +2184,7 @@ export type Database = {
         Insert: {
           area: Database["public"]["Enums"]["access_area"]
           level?: Database["public"]["Enums"]["access_level"]
+          organisation_id?: string
           role: Database["public"]["Enums"]["user_role"]
           updated_at?: string
           updated_by?: string | null
@@ -2052,17 +2192,25 @@ export type Database = {
         Update: {
           area?: Database["public"]["Enums"]["access_area"]
           level?: Database["public"]["Enums"]["access_level"]
+          organisation_id?: string
           role?: Database["public"]["Enums"]["user_role"]
           updated_at?: string
           updated_by?: string | null
         }
         Relationships: [
           {
+            foreignKeyName: "role_permissions_organisation_id_fkey"
+            columns: ["organisation_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "role_permissions_updated_by_fkey"
-            columns: ["updated_by"]
+            columns: ["updated_by", "organisation_id"]
             isOneToOne: false
             referencedRelation: "profiles"
-            referencedColumns: ["id"]
+            referencedColumns: ["id", "organisation_id"]
           },
         ]
       }
@@ -2076,6 +2224,7 @@ export type Database = {
           expiry_date: string | null
           id: string
           issue_date: string | null
+          organisation_id: string
           pilot_id: string | null
           status: Database["public"]["Enums"]["currency_status"]
         }
@@ -2088,6 +2237,7 @@ export type Database = {
           expiry_date?: string | null
           id?: string
           issue_date?: string | null
+          organisation_id?: string
           pilot_id?: string | null
           status?: Database["public"]["Enums"]["currency_status"]
         }
@@ -2100,84 +2250,67 @@ export type Database = {
           expiry_date?: string | null
           id?: string
           issue_date?: string | null
+          organisation_id?: string
           pilot_id?: string | null
           status?: Database["public"]["Enums"]["currency_status"]
         }
         Relationships: [
           {
-            foreignKeyName: "training_records_pilot_id_fkey"
-            columns: ["pilot_id"]
+            foreignKeyName: "training_records_organisation_id_fkey"
+            columns: ["organisation_id"]
             isOneToOne: false
-            referencedRelation: "pilot_certificate_status"
+            referencedRelation: "organisations"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "training_records_pilot_id_fkey"
-            columns: ["pilot_id"]
+            columns: ["pilot_id", "organisation_id"]
             isOneToOne: false
             referencedRelation: "pilots"
-            referencedColumns: ["id"]
+            referencedColumns: ["id", "organisation_id"]
           },
         ]
       }
       uav_inspection_plans: {
         Row: {
           assigned_on: string
+          organisation_id: string
           plan_id: string
           uav_id: string
         }
         Insert: {
           assigned_on?: string
+          organisation_id?: string
           plan_id: string
           uav_id: string
         }
         Update: {
           assigned_on?: string
+          organisation_id?: string
           plan_id?: string
           uav_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "uav_inspection_plans_plan_id_fkey"
-            columns: ["plan_id"]
+            foreignKeyName: "uav_inspection_plans_organisation_id_fkey"
+            columns: ["organisation_id"]
             isOneToOne: false
-            referencedRelation: "inspection_plan_status"
-            referencedColumns: ["plan_id"]
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "uav_inspection_plans_plan_id_fkey"
-            columns: ["plan_id"]
+            columns: ["plan_id", "organisation_id"]
             isOneToOne: false
             referencedRelation: "inspection_plans"
-            referencedColumns: ["id"]
+            referencedColumns: ["id", "organisation_id"]
           },
           {
             foreignKeyName: "uav_inspection_plans_uav_id_fkey"
-            columns: ["uav_id"]
-            isOneToOne: false
-            referencedRelation: "inspection_plan_status"
-            referencedColumns: ["uav_id"]
-          },
-          {
-            foreignKeyName: "uav_inspection_plans_uav_id_fkey"
-            columns: ["uav_id"]
-            isOneToOne: false
-            referencedRelation: "uav_fleet_status"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "uav_inspection_plans_uav_id_fkey"
-            columns: ["uav_id"]
-            isOneToOne: false
-            referencedRelation: "uav_fleet_status"
-            referencedColumns: ["uav_id"]
-          },
-          {
-            foreignKeyName: "uav_inspection_plans_uav_id_fkey"
-            columns: ["uav_id"]
+            columns: ["uav_id", "organisation_id"]
             isOneToOne: false
             referencedRelation: "uavs"
-            referencedColumns: ["id"]
+            referencedColumns: ["id", "organisation_id"]
           },
         ]
       }
@@ -2195,6 +2328,7 @@ export type Database = {
           model: string
           next_inspection_date: string | null
           notes: string | null
+          organisation_id: string
           purchased_date: string | null
           registration_number: string | null
           serial_number: string | null
@@ -2215,6 +2349,7 @@ export type Database = {
           model: string
           next_inspection_date?: string | null
           notes?: string | null
+          organisation_id?: string
           purchased_date?: string | null
           registration_number?: string | null
           serial_number?: string | null
@@ -2235,6 +2370,7 @@ export type Database = {
           model?: string
           next_inspection_date?: string | null
           notes?: string | null
+          organisation_id?: string
           purchased_date?: string | null
           registration_number?: string | null
           serial_number?: string | null
@@ -2245,9 +2381,16 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "uavs_assigned_pilot_id_fkey"
-            columns: ["assigned_pilot_id"]
+            columns: ["assigned_pilot_id", "organisation_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id", "organisation_id"]
+          },
+          {
+            foreignKeyName: "uavs_organisation_id_fkey"
+            columns: ["organisation_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
             referencedColumns: ["id"]
           },
         ]
@@ -2259,6 +2402,7 @@ export type Database = {
           error: string | null
           event: Database["public"]["Enums"]["webhook_event"]
           id: string
+          organisation_id: string
           payload: Json
           status_code: number | null
           webhook_id: string
@@ -2269,6 +2413,7 @@ export type Database = {
           error?: string | null
           event: Database["public"]["Enums"]["webhook_event"]
           id?: string
+          organisation_id?: string
           payload: Json
           status_code?: number | null
           webhook_id: string
@@ -2279,17 +2424,25 @@ export type Database = {
           error?: string | null
           event?: Database["public"]["Enums"]["webhook_event"]
           id?: string
+          organisation_id?: string
           payload?: Json
           status_code?: number | null
           webhook_id?: string
         }
         Relationships: [
           {
+            foreignKeyName: "webhook_deliveries_organisation_id_fkey"
+            columns: ["organisation_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "webhook_deliveries_webhook_id_fkey"
-            columns: ["webhook_id"]
+            columns: ["webhook_id", "organisation_id"]
             isOneToOne: false
             referencedRelation: "webhooks"
-            referencedColumns: ["id"]
+            referencedColumns: ["id", "organisation_id"]
           },
         ]
       }
@@ -2301,6 +2454,7 @@ export type Database = {
           events: Database["public"]["Enums"]["webhook_event"][]
           id: string
           name: string
+          organisation_id: string
           signing_secret: string
           url: string
         }
@@ -2311,6 +2465,7 @@ export type Database = {
           events?: Database["public"]["Enums"]["webhook_event"][]
           id?: string
           name: string
+          organisation_id?: string
           signing_secret: string
           url: string
         }
@@ -2321,15 +2476,23 @@ export type Database = {
           events?: Database["public"]["Enums"]["webhook_event"][]
           id?: string
           name?: string
+          organisation_id?: string
           signing_secret?: string
           url?: string
         }
         Relationships: [
           {
             foreignKeyName: "webhooks_created_by_fkey"
-            columns: ["created_by"]
+            columns: ["created_by", "organisation_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id", "organisation_id"]
+          },
+          {
+            foreignKeyName: "webhooks_organisation_id_fkey"
+            columns: ["organisation_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
             referencedColumns: ["id"]
           },
         ]
@@ -2389,64 +2552,7 @@ export type Database = {
           template_name: string | null
           uav_id: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "checklist_completions_completed_by_fkey"
-            columns: ["completed_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "checklist_completions_flight_log_id_fkey"
-            columns: ["flight_log_id"]
-            isOneToOne: false
-            referencedRelation: "flight_logs"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "checklist_completions_flight_request_id_fkey"
-            columns: ["flight_request_id"]
-            isOneToOne: false
-            referencedRelation: "flight_requests"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "checklist_completions_template_id_fkey"
-            columns: ["template_id"]
-            isOneToOne: false
-            referencedRelation: "checklist_templates"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "checklist_completions_uav_id_fkey"
-            columns: ["uav_id"]
-            isOneToOne: false
-            referencedRelation: "inspection_plan_status"
-            referencedColumns: ["uav_id"]
-          },
-          {
-            foreignKeyName: "checklist_completions_uav_id_fkey"
-            columns: ["uav_id"]
-            isOneToOne: false
-            referencedRelation: "uav_fleet_status"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "checklist_completions_uav_id_fkey"
-            columns: ["uav_id"]
-            isOneToOne: false
-            referencedRelation: "uav_fleet_status"
-            referencedColumns: ["uav_id"]
-          },
-          {
-            foreignKeyName: "checklist_completions_uav_id_fkey"
-            columns: ["uav_id"]
-            isOneToOne: false
-            referencedRelation: "uavs"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       component_status_view: {
         Row: {
@@ -2470,36 +2576,7 @@ export type Database = {
           status: Database["public"]["Enums"]["component_status"] | null
           total_hours: number | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "component_installations_uav_id_fkey"
-            columns: ["fitted_to_uav_id"]
-            isOneToOne: false
-            referencedRelation: "inspection_plan_status"
-            referencedColumns: ["uav_id"]
-          },
-          {
-            foreignKeyName: "component_installations_uav_id_fkey"
-            columns: ["fitted_to_uav_id"]
-            isOneToOne: false
-            referencedRelation: "uav_fleet_status"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "component_installations_uav_id_fkey"
-            columns: ["fitted_to_uav_id"]
-            isOneToOne: false
-            referencedRelation: "uav_fleet_status"
-            referencedColumns: ["uav_id"]
-          },
-          {
-            foreignKeyName: "component_installations_uav_id_fkey"
-            columns: ["fitted_to_uav_id"]
-            isOneToOne: false
-            referencedRelation: "uavs"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       document_review_status: {
         Row: {
@@ -2525,36 +2602,7 @@ export type Database = {
           uploaded_by: string | null
           version: number | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "documents_pilot_id_fkey"
-            columns: ["pilot_id"]
-            isOneToOne: false
-            referencedRelation: "pilot_certificate_status"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "documents_pilot_id_fkey"
-            columns: ["pilot_id"]
-            isOneToOne: false
-            referencedRelation: "pilots"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "documents_uploaded_by_fkey"
-            columns: ["uploaded_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "pilots_profile_id_fkey"
-            columns: ["pilot_profile_id"]
-            isOneToOne: true
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       hazard_register: {
         Row: {
@@ -2586,15 +2634,7 @@ export type Database = {
           status: Database["public"]["Enums"]["hazard_status"] | null
           title: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "hazards_owner_id_fkey"
-            columns: ["owner_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       inspection_plan_status: {
         Row: {
@@ -2682,29 +2722,7 @@ export type Database = {
           pilot_id: string | null
           pilot_name: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "pilot_authorisations_authorised_by_fkey"
-            columns: ["authorised_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "pilot_authorisations_pilot_id_fkey"
-            columns: ["pilot_id"]
-            isOneToOne: false
-            referencedRelation: "pilot_certificate_status"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "pilot_authorisations_pilot_id_fkey"
-            columns: ["pilot_id"]
-            isOneToOne: false
-            referencedRelation: "pilots"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       pilot_certificate_status: {
         Row: {
@@ -2758,15 +2776,7 @@ export type Database = {
           profile_id?: string | null
           recency_due?: never
         }
-        Relationships: [
-          {
-            foreignKeyName: "pilots_profile_id_fkey"
-            columns: ["profile_id"]
-            isOneToOne: true
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       project_summary: {
         Row: {
@@ -2792,15 +2802,7 @@ export type Database = {
           start_date: string | null
           status: Database["public"]["Enums"]["project_status"] | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "projects_client_id_fkey"
-            columns: ["client_id"]
-            isOneToOne: false
-            referencedRelation: "clients"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       uav_fleet_status: {
         Row: {
@@ -2827,15 +2829,7 @@ export type Database = {
           uav_id: string | null
           weight_kg: number | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "uavs_assigned_pilot_id_fkey"
-            columns: ["assigned_pilot_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
     }
     Functions: {
@@ -2859,10 +2853,12 @@ export type Database = {
         Args: { p_area: Database["public"]["Enums"]["access_area"] }
         Returns: boolean
       }
+      current_org_id: { Args: never; Returns: string }
       current_user_role: {
         Args: never
         Returns: Database["public"]["Enums"]["user_role"]
       }
+      is_platform_admin: { Args: never; Returns: boolean }
       is_restricted_document_category: {
         Args: { cat: Database["public"]["Enums"]["document_category"] }
         Returns: boolean
@@ -2879,7 +2875,17 @@ export type Database = {
         Args: { t: string[] }
         Returns: Database["public"]["Enums"]["user_role"][]
       }
+      owns_row: { Args: { p_org: string }; Returns: boolean }
       pilot_has_roc_a: { Args: { p_pilot_id: string }; Returns: boolean }
+      provision_organisation: {
+        Args: {
+          p_contact_email?: string
+          p_legal_name?: string
+          p_name: string
+          p_slug: string
+        }
+        Returns: string
+      }
       prune_webhook_deliveries: {
         Args: { p_keep_days?: number }
         Returns: number
