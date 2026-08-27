@@ -17,6 +17,7 @@ import {
   FileSpreadsheet,
   Briefcase,
   ClipboardCheck as ChecklistIcon,
+  Radar,
 } from "lucide-react";
 
 export type NavItem = {
@@ -41,6 +42,7 @@ export const navItems: NavItem[] = [
   { title: "Maintenance", href: "/maintenance", icon: Wrench },
   { title: "Checklists", href: "/checklists", icon: ChecklistIcon },
   { title: "Incidents & Safety", href: "/incidents", icon: ShieldAlert },
+  { title: "Hazard Register", href: "/hazards", icon: Radar },
   { title: "Training Portal", href: "/training", icon: GraduationCap },
   { title: "Documents", href: "/documents", icon: FileText },
   { title: "Analytics", href: "/analytics", icon: BarChart3 },

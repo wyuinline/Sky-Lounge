@@ -46,9 +46,13 @@ export type Database = {
           created_at: string
           description: string
           due_date: string | null
+          hazard_id: string | null
           id: string
+          incident_id: string | null
+          resulting_document_id: string | null
           severity: Database["public"]["Enums"]["severity_level"]
           status: Database["public"]["Enums"]["finding_status"]
+          training_required: boolean
         }
         Insert: {
           assigned_to?: string | null
@@ -56,9 +60,13 @@ export type Database = {
           created_at?: string
           description: string
           due_date?: string | null
+          hazard_id?: string | null
           id?: string
+          incident_id?: string | null
+          resulting_document_id?: string | null
           severity: Database["public"]["Enums"]["severity_level"]
           status?: Database["public"]["Enums"]["finding_status"]
+          training_required?: boolean
         }
         Update: {
           assigned_to?: string | null
@@ -66,9 +74,13 @@ export type Database = {
           created_at?: string
           description?: string
           due_date?: string | null
+          hazard_id?: string | null
           id?: string
+          incident_id?: string | null
+          resulting_document_id?: string | null
           severity?: Database["public"]["Enums"]["severity_level"]
           status?: Database["public"]["Enums"]["finding_status"]
+          training_required?: boolean
         }
         Relationships: [
           {
@@ -83,6 +95,41 @@ export type Database = {
             columns: ["audit_id"]
             isOneToOne: false
             referencedRelation: "audits"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "audit_findings_hazard_id_fkey"
+            columns: ["hazard_id"]
+            isOneToOne: false
+            referencedRelation: "hazard_register"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "audit_findings_hazard_id_fkey"
+            columns: ["hazard_id"]
+            isOneToOne: false
+            referencedRelation: "hazards"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "audit_findings_incident_id_fkey"
+            columns: ["incident_id"]
+            isOneToOne: false
+            referencedRelation: "incidents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "audit_findings_resulting_document_id_fkey"
+            columns: ["resulting_document_id"]
+            isOneToOne: false
+            referencedRelation: "document_review_status"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "audit_findings_resulting_document_id_fkey"
+            columns: ["resulting_document_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
             referencedColumns: ["id"]
           },
         ]
@@ -925,6 +972,7 @@ export type Database = {
           created_at: string
           id: string
           location: string | null
+          operations: Database["public"]["Enums"]["operation_type"][]
           pilot_id: string | null
           project_id: string | null
           requested_date: string
@@ -940,6 +988,7 @@ export type Database = {
           created_at?: string
           id?: string
           location?: string | null
+          operations?: Database["public"]["Enums"]["operation_type"][]
           pilot_id?: string | null
           project_id?: string | null
           requested_date?: string
@@ -955,6 +1004,7 @@ export type Database = {
           created_at?: string
           id?: string
           location?: string | null
+          operations?: Database["public"]["Enums"]["operation_type"][]
           pilot_id?: string | null
           project_id?: string | null
           requested_date?: string
@@ -1017,6 +1067,130 @@ export type Database = {
             columns: ["uav_id"]
             isOneToOne: false
             referencedRelation: "uavs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hazard_incidents: {
+        Row: {
+          created_at: string
+          hazard_id: string
+          id: string
+          incident_id: string
+        }
+        Insert: {
+          created_at?: string
+          hazard_id: string
+          id?: string
+          incident_id: string
+        }
+        Update: {
+          created_at?: string
+          hazard_id?: string
+          id?: string
+          incident_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hazard_incidents_hazard_id_fkey"
+            columns: ["hazard_id"]
+            isOneToOne: false
+            referencedRelation: "hazard_register"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hazard_incidents_hazard_id_fkey"
+            columns: ["hazard_id"]
+            isOneToOne: false
+            referencedRelation: "hazards"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hazard_incidents_incident_id_fkey"
+            columns: ["incident_id"]
+            isOneToOne: false
+            referencedRelation: "incidents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hazards: {
+        Row: {
+          category: Database["public"]["Enums"]["hazard_category"]
+          created_at: string
+          description: string | null
+          hazard_code: string
+          id: string
+          identified_on: string
+          initial_likelihood: Database["public"]["Enums"]["risk_likelihood"]
+          initial_severity: Database["public"]["Enums"]["risk_severity"]
+          last_reviewed_at: string | null
+          mitigation: string | null
+          notes: string | null
+          owner_id: string | null
+          residual_likelihood:
+            | Database["public"]["Enums"]["risk_likelihood"]
+            | null
+          residual_severity: Database["public"]["Enums"]["risk_severity"] | null
+          review_interval_months: number
+          status: Database["public"]["Enums"]["hazard_status"]
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          category?: Database["public"]["Enums"]["hazard_category"]
+          created_at?: string
+          description?: string | null
+          hazard_code: string
+          id?: string
+          identified_on?: string
+          initial_likelihood: Database["public"]["Enums"]["risk_likelihood"]
+          initial_severity: Database["public"]["Enums"]["risk_severity"]
+          last_reviewed_at?: string | null
+          mitigation?: string | null
+          notes?: string | null
+          owner_id?: string | null
+          residual_likelihood?:
+            | Database["public"]["Enums"]["risk_likelihood"]
+            | null
+          residual_severity?:
+            | Database["public"]["Enums"]["risk_severity"]
+            | null
+          review_interval_months?: number
+          status?: Database["public"]["Enums"]["hazard_status"]
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          category?: Database["public"]["Enums"]["hazard_category"]
+          created_at?: string
+          description?: string | null
+          hazard_code?: string
+          id?: string
+          identified_on?: string
+          initial_likelihood?: Database["public"]["Enums"]["risk_likelihood"]
+          initial_severity?: Database["public"]["Enums"]["risk_severity"]
+          last_reviewed_at?: string | null
+          mitigation?: string | null
+          notes?: string | null
+          owner_id?: string | null
+          residual_likelihood?:
+            | Database["public"]["Enums"]["risk_likelihood"]
+            | null
+          residual_severity?:
+            | Database["public"]["Enums"]["risk_severity"]
+            | null
+          review_interval_months?: number
+          status?: Database["public"]["Enums"]["hazard_status"]
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hazards_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -1259,6 +1433,67 @@ export type Database = {
             columns: ["target_profile_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pilot_authorisations: {
+        Row: {
+          authorised_by: string | null
+          authorised_on: string
+          created_at: string
+          evidence: string | null
+          expires_on: string | null
+          id: string
+          notes: string | null
+          operation: Database["public"]["Enums"]["operation_type"]
+          pilot_id: string
+          updated_at: string
+        }
+        Insert: {
+          authorised_by?: string | null
+          authorised_on?: string
+          created_at?: string
+          evidence?: string | null
+          expires_on?: string | null
+          id?: string
+          notes?: string | null
+          operation: Database["public"]["Enums"]["operation_type"]
+          pilot_id: string
+          updated_at?: string
+        }
+        Update: {
+          authorised_by?: string | null
+          authorised_on?: string
+          created_at?: string
+          evidence?: string | null
+          expires_on?: string | null
+          id?: string
+          notes?: string | null
+          operation?: Database["public"]["Enums"]["operation_type"]
+          pilot_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pilot_authorisations_authorised_by_fkey"
+            columns: ["authorised_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pilot_authorisations_pilot_id_fkey"
+            columns: ["pilot_id"]
+            isOneToOne: false
+            referencedRelation: "pilot_certificate_status"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pilot_authorisations_pilot_id_fkey"
+            columns: ["pilot_id"]
+            isOneToOne: false
+            referencedRelation: "pilots"
             referencedColumns: ["id"]
           },
         ]
@@ -1760,6 +1995,85 @@ export type Database = {
           },
         ]
       }
+      hazard_register: {
+        Row: {
+          category: Database["public"]["Enums"]["hazard_category"] | null
+          created_at: string | null
+          description: string | null
+          hazard_code: string | null
+          id: string | null
+          identified_on: string | null
+          incident_count: number | null
+          initial_likelihood:
+            | Database["public"]["Enums"]["risk_likelihood"]
+            | null
+          initial_score: number | null
+          initial_severity: Database["public"]["Enums"]["risk_severity"] | null
+          last_reviewed_at: string | null
+          mitigation: string | null
+          notes: string | null
+          open_finding_count: number | null
+          owner_id: string | null
+          owner_name: string | null
+          residual_likelihood:
+            | Database["public"]["Enums"]["risk_likelihood"]
+            | null
+          residual_score: number | null
+          residual_severity: Database["public"]["Enums"]["risk_severity"] | null
+          review_due: string | null
+          review_interval_months: number | null
+          status: Database["public"]["Enums"]["hazard_status"] | null
+          title: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hazards_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pilot_authorisation_status: {
+        Row: {
+          authorised_by: string | null
+          authorised_by_name: string | null
+          authorised_on: string | null
+          currently_valid: boolean | null
+          evidence: string | null
+          expires_on: string | null
+          id: string | null
+          notes: string | null
+          operation: Database["public"]["Enums"]["operation_type"] | null
+          pilot_active: boolean | null
+          pilot_id: string | null
+          pilot_name: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pilot_authorisations_authorised_by_fkey"
+            columns: ["authorised_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pilot_authorisations_pilot_id_fkey"
+            columns: ["pilot_id"]
+            isOneToOne: false
+            referencedRelation: "pilot_certificate_status"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pilot_authorisations_pilot_id_fkey"
+            columns: ["pilot_id"]
+            isOneToOne: false
+            referencedRelation: "pilots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pilot_certificate_status: {
         Row: {
           active: boolean | null
@@ -1921,6 +2235,10 @@ export type Database = {
         Args: { cat: Database["public"]["Enums"]["document_category"] }
         Returns: boolean
       }
+      likelihood_score: {
+        Args: { v: Database["public"]["Enums"]["risk_likelihood"] }
+        Returns: number
+      }
       map_legacy_role: {
         Args: { t: string }
         Returns: Database["public"]["Enums"]["user_role"]
@@ -1930,6 +2248,10 @@ export type Database = {
         Returns: Database["public"]["Enums"]["user_role"][]
       }
       pilot_has_roc_a: { Args: { p_pilot_id: string }; Returns: boolean }
+      severity_score: {
+        Args: { v: Database["public"]["Enums"]["risk_severity"] }
+        Returns: number
+      }
     }
     Enums: {
       access_area:
@@ -1987,6 +2309,14 @@ export type Database = {
         | "approved"
         | "published"
       finding_status: "open" | "in_progress" | "closed" | "overdue"
+      hazard_category:
+        | "operational"
+        | "technical"
+        | "environmental"
+        | "human_factors"
+        | "regulatory"
+        | "security"
+      hazard_status: "open" | "mitigated" | "accepted" | "closed"
       incident_status: "open" | "investigating" | "closed" | "escalated"
       incident_type:
         | "near_miss"
@@ -2022,6 +2352,15 @@ export type Database = {
         | "document_review_overdue"
         | "document_expiring"
         | "document_expired"
+      operation_type:
+        | "vlos"
+        | "evlos"
+        | "bvlos"
+        | "sheltered"
+        | "controlled_airspace"
+        | "over_people"
+        | "night"
+        | "medium_rpas"
       project_status:
         | "planned"
         | "active"
@@ -2029,6 +2368,18 @@ export type Database = {
         | "complete"
         | "cancelled"
       risk_level: "low" | "medium" | "high" | "critical"
+      risk_likelihood:
+        | "rare"
+        | "unlikely"
+        | "possible"
+        | "likely"
+        | "almost_certain"
+      risk_severity:
+        | "negligible"
+        | "minor"
+        | "moderate"
+        | "major"
+        | "catastrophic"
       rpas_certificate_type:
         | "basic_operations"
         | "advanced_operations"
@@ -2231,6 +2582,15 @@ export const Constants = {
         "published",
       ],
       finding_status: ["open", "in_progress", "closed", "overdue"],
+      hazard_category: [
+        "operational",
+        "technical",
+        "environmental",
+        "human_factors",
+        "regulatory",
+        "security",
+      ],
+      hazard_status: ["open", "mitigated", "accepted", "closed"],
       incident_status: ["open", "investigating", "closed", "escalated"],
       incident_type: [
         "near_miss",
@@ -2269,8 +2629,32 @@ export const Constants = {
         "document_expiring",
         "document_expired",
       ],
+      operation_type: [
+        "vlos",
+        "evlos",
+        "bvlos",
+        "sheltered",
+        "controlled_airspace",
+        "over_people",
+        "night",
+        "medium_rpas",
+      ],
       project_status: ["planned", "active", "on_hold", "complete", "cancelled"],
       risk_level: ["low", "medium", "high", "critical"],
+      risk_likelihood: [
+        "rare",
+        "unlikely",
+        "possible",
+        "likely",
+        "almost_certain",
+      ],
+      risk_severity: [
+        "negligible",
+        "minor",
+        "moderate",
+        "major",
+        "catastrophic",
+      ],
       rpas_certificate_type: [
         "basic_operations",
         "advanced_operations",
