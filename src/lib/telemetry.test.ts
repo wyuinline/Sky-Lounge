@@ -7,6 +7,7 @@ import {
   downsample,
   summarise,
   readStoredTrack,
+  findCellColumns,
   type TelemetrySample,
 } from "@/lib/telemetry";
 
@@ -258,5 +259,81 @@ describe("readStoredTrack", () => {
       { t: 1, lat: 53.6, lon: -113.5 },
     ]);
     expect(out?.[0].alt).toBeNull();
+  });
+});
+
+describe("cell voltages", () => {
+  const CELLS_CSV = [
+    "time(millisecond),latitude,longitude,height(m),battery.cellVoltage1,battery.cellVoltage2,battery.cellVoltage3,battery.cellVoltage4",
+    "0,53.5461,-113.4938,0,4.18,4.18,4.17,4.18",
+    "1000,53.5462,-113.4938,20,4.05,4.04,3.86,4.05",
+    "2000,53.5463,-113.4938,40,3.92,3.91,3.70,3.92",
+  ].join("\n");
+
+  it("finds cell columns whatever they are called", () => {
+    expect(findCellColumns(["cellvoltage1", "cellvoltage2"])).toEqual([0, 1]);
+    expect(findCellColumns(["volt1", "volt2", "volt3"])).toEqual([0, 1, 2]);
+    expect(findCellColumns(["cell1", "cell2"])).toEqual([0, 1]);
+    expect(findCellColumns(["latitude", "cellvoltage2", "cellvoltage1"])).toEqual([2, 1]);
+  });
+
+  it("orders columns by cell number, not by position in the file", () => {
+    // Ten before two is a string-sort trap that would mislabel every cell.
+    const headers = ["cellvoltage10", "cellvoltage2", "cellvoltage1"];
+    expect(findCellColumns(headers)).toEqual([2, 1, 0]);
+  });
+
+  it("finds nothing in a file without per-cell columns", () => {
+    expect(findCellColumns(["latitude", "voltage", "battery"])).toEqual([]);
+  });
+
+  it("reads the widest spread and when it happened", () => {
+    const result = parseTelemetryCsv(CELLS_CSV);
+    expect(result.error).toBeNull();
+    expect(result.summary?.cellCount).toBe(4);
+    // Cell 3 is the weak one: 4.05 - 3.86 = 0.19 at t=1, 3.92 - 3.70 = 0.22 at t=2.
+    expect(result.summary?.maxCellSpread).toBeCloseTo(0.22, 3);
+    expect(result.summary?.maxCellSpreadAt).toBe(2);
+    expect(result.summary?.minCellVoltage).toBeCloseTo(3.7, 3);
+  });
+
+  it("does not treat cell columns as unrecognised", () => {
+    const result = parseTelemetryCsv(CELLS_CSV);
+    expect(result.unmatchedHeaders).toEqual([]);
+  });
+
+  it("reports no cell data for a file that has none", () => {
+    const result = parseTelemetryCsv(DJI_CSV);
+    expect(result.summary?.cellCount).toBeNull();
+    expect(result.summary?.maxCellSpread).toBeNull();
+  });
+
+  it("skips readings taken before the pack woke up", () => {
+    // Packs report zeroes at power-on; a spurious 4-volt spread on every
+    // flight would drown the real signal.
+    const csv = [
+      "time,latitude,longitude,height(m),cell1,cell2",
+      "0,53.5,-113.5,0,0,0",
+      "1,53.5,-113.5,10,4.10,4.05",
+    ].join("\n");
+    const result = parseTelemetryCsv(csv);
+    expect(result.summary?.maxCellSpread).toBeCloseTo(0.05, 3);
+    expect(result.summary?.minCellVoltage).toBeCloseTo(4.05, 3);
+  });
+
+  it("ignores a single-cell column, which cannot have a spread", () => {
+    const result = parseTelemetryCsv("time,latitude,longitude,height(m),cell1\n0,53.5,-113.5,0,4.1");
+    expect(result.summary?.maxCellSpread).toBeNull();
+  });
+
+  it("copes with a pack that reports no usable readings at all", () => {
+    const csv = [
+      "time,latitude,longitude,height(m),cell1,cell2",
+      "0,53.5,-113.5,0,0,0",
+      "1,53.5,-113.5,10,0,0",
+    ].join("\n");
+    const result = parseTelemetryCsv(csv);
+    expect(result.summary?.maxCellSpread).toBeNull();
+    expect(result.summary?.cellCount).toBe(2);
   });
 });

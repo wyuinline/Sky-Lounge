@@ -34,6 +34,21 @@ export type TelemetrySample = {
   satellites: number | null;
 };
 
+/**
+ * Per-cell voltages at one moment.
+ *
+ * The single most useful thing a flight log carries about battery health: a
+ * pack fails one cell at a time, and the spread between the strongest and
+ * weakest cell widens long before the pack stops holding charge. Airdata built
+ * a product on this, and it is cheap to compute once the samples are parsed.
+ */
+export type CellReading = {
+  t: number;
+  cells: number[];
+  /** Strongest minus weakest, in volts. */
+  spread: number;
+};
+
 export type TelemetrySummary = {
   sampleCount: number;
   durationSeconds: number | null;
@@ -48,7 +63,80 @@ export type TelemetrySummary = {
   minVoltage: number | null;
   minSatellites: number | null;
   hasPositions: boolean;
+  /** How many cells the pack reported, if it reported them individually. */
+  cellCount: number | null;
+  /** The widest spread seen across the flight, in volts. */
+  maxCellSpread: number | null;
+  /** The lowest any single cell fell to. */
+  minCellVoltage: number | null;
+  /** When the widest spread occurred, in seconds from the start. */
+  maxCellSpreadAt: number | null;
 };
+
+/**
+ * Cell voltage columns, which every source spells differently.
+ *
+ * Matched by prefix and a trailing index, since the count varies by pack: a
+ * Mavic has four cells, a Matrice TB65 has twelve.
+ */
+const CELL_PATTERNS = [
+  /^batterycellvoltage(\d+)$/,
+  /^cellvoltage(\d+)$/,
+  /^cell(\d+)voltage$/,
+  /^cell(\d+)$/,
+  /^volt(\d+)$/,
+  /^batteryvoltagecell(\d+)$/,
+];
+
+/** Column indices of per-cell voltages, in cell order. */
+export function findCellColumns(headers: string[]): number[] {
+  const found: { index: number; cell: number }[] = [];
+  headers.forEach((h, index) => {
+    for (const pattern of CELL_PATTERNS) {
+      const match = pattern.exec(h);
+      if (match) {
+        found.push({ index, cell: Number(match[1]) });
+        break;
+      }
+    }
+  });
+  return found.sort((a, b) => a.cell - b.cell).map((f) => f.index);
+}
+
+/**
+ * The widest cell spread across a flight.
+ *
+ * Readings where a cell shows zero are skipped rather than treated as a dead
+ * cell: packs report zeroes before the pack wakes up, and a spurious 4-volt
+ * spread on every flight would make the real signal worthless.
+ */
+export function summariseCells(readings: CellReading[]): {
+  cellCount: number | null;
+  maxCellSpread: number | null;
+  minCellVoltage: number | null;
+  maxCellSpreadAt: number | null;
+} {
+  const usable = readings.filter((r) => r.cells.length > 1 && r.cells.every((v) => v > 0.5));
+  if (usable.length === 0) {
+    return {
+      cellCount: readings[0]?.cells.length ?? null,
+      maxCellSpread: null,
+      minCellVoltage: null,
+      maxCellSpreadAt: null,
+    };
+  }
+
+  let worst = usable[0];
+  for (const reading of usable) if (reading.spread > worst.spread) worst = reading;
+
+  return {
+    cellCount: usable[0].cells.length,
+    maxCellSpread: Math.round(worst.spread * 1000) / 1000,
+    minCellVoltage:
+      Math.round(Math.min(...usable.flatMap((r) => r.cells)) * 1000) / 1000,
+    maxCellSpreadAt: Math.round(worst.t),
+  };
+}
 
 export type ParseResult =
   | { error: string; samples: null; summary: null; unmatchedHeaders: string[] }
@@ -231,7 +319,10 @@ export function downsample<T>(samples: T[], limit: number): T[] {
   return out;
 }
 
-export function summarise(samples: TelemetrySample[]): TelemetrySummary {
+export function summarise(
+  samples: TelemetrySample[],
+  cells: CellReading[] = [],
+): TelemetrySummary {
   const positioned = samples.filter(
     (s): s is TelemetrySample & { lat: number; lon: number } => s.lat !== null && s.lon !== null,
   );
@@ -264,6 +355,8 @@ export function summarise(samples: TelemetrySample[]): TelemetrySummary {
 
   const times = samples.map((s) => s.t).filter((t) => Number.isFinite(t));
 
+  const cellSummary = summariseCells(cells);
+
   return {
     sampleCount: samples.length,
     durationSeconds: times.length > 1 ? Math.max(...times) - Math.min(...times) : null,
@@ -276,6 +369,7 @@ export function summarise(samples: TelemetrySample[]): TelemetrySummary {
     minVoltage: voltages.length > 0 ? Math.min(...voltages) : null,
     minSatellites: sats.length > 0 ? Math.min(...sats) : null,
     hasPositions: positioned.length > 1,
+    ...cellSummary,
   };
 }
 
@@ -342,10 +436,16 @@ export function parseTelemetryCsv(text: string): ParseResult {
     };
   }
 
-  const matched = new Set(Object.values(columns).filter((i) => i !== -1));
+  const cellColumns = findCellColumns(headers);
+
+  const matched = new Set([
+    ...Object.values(columns).filter((i) => i !== -1),
+    ...cellColumns,
+  ]);
   const unmatchedHeaders = headers.filter((_, i) => !matched.has(i));
 
   const rows: TelemetrySample[] = [];
+  const cellReadings: CellReading[] = [];
   let firstTime: number | null = null;
   let divisor = 1;
   let divisorSettled = false;
@@ -376,6 +476,19 @@ export function parseTelemetryCsv(text: string): ParseResult {
       voltage: columns.voltage === -1 ? null : toNumber(cells[columns.voltage]),
       satellites: columns.satellites === -1 ? null : toNumber(cells[columns.satellites]),
     });
+
+    if (cellColumns.length > 1) {
+      const values = cellColumns
+        .map((c) => toNumber(cells[c]))
+        .filter((v): v is number => v !== null);
+      if (values.length === cellColumns.length) {
+        cellReadings.push({
+          t: rows[rows.length - 1].t,
+          cells: values,
+          spread: Math.max(...values) - Math.min(...values),
+        });
+      }
+    }
   }
 
   // A row of zeroes for lat/lon is the null island, not a position — DJI logs
@@ -387,7 +500,12 @@ export function parseTelemetryCsv(text: string): ParseResult {
     }
   }
 
-  return { error: null, samples: rows, summary: summarise(rows), unmatchedHeaders };
+  return {
+    error: null,
+    samples: rows,
+    summary: summarise(rows, cellReadings),
+    unmatchedHeaders,
+  };
 }
 
 /**

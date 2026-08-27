@@ -46,6 +46,9 @@ export type FlightLogRow = {
   battery_end_percent: number | null;
   min_voltage: number | null;
   min_satellites: number | null;
+  cell_count: number | null;
+  max_cell_spread: number | null;
+  min_cell_voltage: number | null;
   telemetry_track: TrackPoint[] | null;
   pilots: { full_name: string } | null;
   uavs: { drone_id: string } | null;
@@ -213,6 +216,9 @@ export function FlightLogsTable({
                       batteryEnd: row.battery_end_percent,
                       minVoltage: row.min_voltage,
                       minSatellites: row.min_satellites,
+                      cellCount: row.cell_count,
+                      maxCellSpread: row.max_cell_spread,
+                      minCellVoltage: row.min_cell_voltage,
                       track: row.telemetry_track,
                     }}
                   />

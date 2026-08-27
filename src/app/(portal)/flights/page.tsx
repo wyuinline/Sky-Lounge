@@ -51,7 +51,7 @@ export default async function FlightsPage() {
     supabase
       .from("flight_logs")
       .select(
-        "id, flight_date, effective_duration_minutes, weather_conditions, mission_outcome, acknowledged_at, takeoff_at, landing_at, location_name, airspace, is_night, is_bvlos, is_over_people, is_sheltered, sfoc_reference, telemetry_source, telemetry_imported_at, telemetry_sample_count, telemetry_max_speed_ms, telemetry_max_distance_m, telemetry_track_length_m, battery_start_percent, battery_end_percent, min_voltage, min_satellites, telemetry_track, pilots(full_name), uavs(drone_id)",
+        "id, flight_date, effective_duration_minutes, weather_conditions, mission_outcome, acknowledged_at, takeoff_at, landing_at, location_name, airspace, is_night, is_bvlos, is_over_people, is_sheltered, sfoc_reference, telemetry_source, telemetry_imported_at, telemetry_sample_count, telemetry_max_speed_ms, telemetry_max_distance_m, telemetry_track_length_m, battery_start_percent, battery_end_percent, min_voltage, min_satellites, cell_count, max_cell_spread, min_cell_voltage, telemetry_track, pilots(full_name), uavs(drone_id)",
       )
       .order("flight_date", { ascending: false })
       .limit(20)

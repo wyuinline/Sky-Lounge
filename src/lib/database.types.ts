@@ -733,6 +733,13 @@ export type Database = {
             foreignKeyName: "flight_battery_usage_battery_id_fkey"
             columns: ["battery_id"]
             isOneToOne: false
+            referencedRelation: "battery_cell_health"
+            referencedColumns: ["battery_id"]
+          },
+          {
+            foreignKeyName: "flight_battery_usage_battery_id_fkey"
+            columns: ["battery_id"]
+            isOneToOne: false
             referencedRelation: "battery_status_view"
             referencedColumns: ["id"]
           },
@@ -798,6 +805,7 @@ export type Database = {
           airspace: Database["public"]["Enums"]["airspace_class"] | null
           battery_end_percent: number | null
           battery_start_percent: number | null
+          cell_count: number | null
           created_at: string
           duration_minutes: number | null
           effective_duration_minutes: number | null
@@ -814,6 +822,9 @@ export type Database = {
           location_name: string | null
           longitude: number | null
           max_altitude_m: number | null
+          max_cell_spread: number | null
+          max_cell_spread_at: number | null
+          min_cell_voltage: number | null
           min_satellites: number | null
           min_voltage: number | null
           mission_outcome: Database["public"]["Enums"]["mission_outcome"]
@@ -845,6 +856,7 @@ export type Database = {
           airspace?: Database["public"]["Enums"]["airspace_class"] | null
           battery_end_percent?: number | null
           battery_start_percent?: number | null
+          cell_count?: number | null
           created_at?: string
           duration_minutes?: number | null
           effective_duration_minutes?: number | null
@@ -861,6 +873,9 @@ export type Database = {
           location_name?: string | null
           longitude?: number | null
           max_altitude_m?: number | null
+          max_cell_spread?: number | null
+          max_cell_spread_at?: number | null
+          min_cell_voltage?: number | null
           min_satellites?: number | null
           min_voltage?: number | null
           mission_outcome?: Database["public"]["Enums"]["mission_outcome"]
@@ -892,6 +907,7 @@ export type Database = {
           airspace?: Database["public"]["Enums"]["airspace_class"] | null
           battery_end_percent?: number | null
           battery_start_percent?: number | null
+          cell_count?: number | null
           created_at?: string
           duration_minutes?: number | null
           effective_duration_minutes?: number | null
@@ -908,6 +924,9 @@ export type Database = {
           location_name?: string | null
           longitude?: number | null
           max_altitude_m?: number | null
+          max_cell_spread?: number | null
+          max_cell_spread_at?: number | null
+          min_cell_voltage?: number | null
           min_satellites?: number | null
           min_voltage?: number | null
           mission_outcome?: Database["public"]["Enums"]["mission_outcome"]
@@ -1838,6 +1857,19 @@ export type Database = {
       }
     }
     Views: {
+      battery_cell_health: {
+        Row: {
+          battery_id: string | null
+          battery_tag: string | null
+          flights_with_cell_data: number | null
+          last_cell_reading: string | null
+          latest_spread: number | null
+          lowest_cell: number | null
+          status: Database["public"]["Enums"]["battery_status"] | null
+          worst_spread: number | null
+        }
+        Relationships: []
+      }
       battery_status_view: {
         Row: {
           age_months: number | null

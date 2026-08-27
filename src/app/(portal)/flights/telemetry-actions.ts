@@ -94,6 +94,10 @@ export async function importTelemetry(flightLogId: string, formData: FormData) {
       battery_end_percent: summary.batteryEnd === null ? null : Math.round(summary.batteryEnd),
       min_voltage: round(summary.minVoltage, 2),
       min_satellites: summary.minSatellites === null ? null : Math.round(summary.minSatellites),
+      cell_count: summary.cellCount,
+      max_cell_spread: summary.maxCellSpread,
+      min_cell_voltage: summary.minCellVoltage,
+      max_cell_spread_at: summary.maxCellSpreadAt,
       telemetry_track: track.length > 1 ? track : null,
       // Only filled where nobody has recorded it: a measured altitude is
       // better than a typed one, but overwriting a figure a pilot entered
@@ -155,6 +159,10 @@ export async function clearTelemetry(flightLogId: string) {
       min_voltage: null,
       min_satellites: null,
       telemetry_track: null,
+      cell_count: null,
+      max_cell_spread: null,
+      min_cell_voltage: null,
+      max_cell_spread_at: null,
     })
     .eq("id", flightLogId);
 

@@ -29,8 +29,33 @@ export type FlightTelemetry = {
   batteryEnd: number | null;
   minVoltage: number | null;
   minSatellites: number | null;
+  cellCount: number | null;
+  maxCellSpread: number | null;
+  minCellVoltage: number | null;
   track: TrackPoint[] | null;
 };
+
+/**
+ * What a cell spread means, in the words a maintenance decision needs.
+ *
+ * Thresholds are the ones the industry works to: under load, a tenth of a volt
+ * is worth watching and three tenths is a pack that comes out of service.
+ */
+function cellVerdict(spread: number): { tone: string; text: string } {
+  if (spread >= 0.3) {
+    return {
+      tone: "text-[var(--status-critical)]",
+      text: "Take this pack out of service — one cell is failing.",
+    };
+  }
+  if (spread >= 0.1) {
+    return {
+      tone: "text-[var(--status-warning)]",
+      text: "Watch this pack. The spread is wider than a healthy one.",
+    };
+  }
+  return { tone: "text-[var(--status-good)]", text: "Cells are balanced." };
+}
 
 function Figure({ label, value }: { label: string; value: string }) {
   return (
@@ -134,6 +159,34 @@ export function TelemetryDialog({
                 />
                 <Figure label="Source" value={telemetry.source ?? "—"} />
               </dl>
+
+              {telemetry.maxCellSpread !== null ? (
+                <div className="flex flex-col gap-2 rounded-md border border-border p-3">
+                  <p className="text-[0.65rem] font-semibold tracking-[0.06em] text-brand-teal uppercase">
+                    Battery cells
+                  </p>
+                  <div className="flex flex-wrap items-baseline gap-x-6 gap-y-1">
+                    <span className="text-sm">
+                      <span className="font-semibold tabular-nums">
+                        {telemetry.maxCellSpread.toFixed(3)} V
+                      </span>{" "}
+                      <span className="text-muted-foreground">widest spread</span>
+                    </span>
+                    <span className="text-sm">
+                      <span className="font-semibold tabular-nums">
+                        {telemetry.minCellVoltage?.toFixed(3) ?? "—"} V
+                      </span>{" "}
+                      <span className="text-muted-foreground">lowest cell</span>
+                    </span>
+                    <span className="text-sm text-muted-foreground tabular-nums">
+                      {telemetry.cellCount} cells
+                    </span>
+                  </div>
+                  <p className={`text-xs ${cellVerdict(telemetry.maxCellSpread).tone}`}>
+                    {cellVerdict(telemetry.maxCellSpread).text}
+                  </p>
+                </div>
+              ) : null}
 
               {canManage ? (
                 <div className="flex flex-wrap items-center justify-between gap-2">
