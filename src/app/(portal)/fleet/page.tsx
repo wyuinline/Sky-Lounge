@@ -10,6 +10,8 @@ import {
   AddComponentDialog,
   type ComponentRow,
 } from "@/components/portal/fleet/components-table";
+import { ImportDialog } from "@/components/portal/import-dialog";
+import { uavImport, batteryImport, componentImport } from "@/lib/import-schemas";
 import { createClient } from "@/lib/supabase/server";
 import { getAccess } from "@/lib/permissions";
 import { AttentionSummary } from "@/components/portal/attention-flag";
@@ -138,7 +140,18 @@ export default async function FleetPage() {
         eyebrow="Asset Registry"
         title="UAV Fleet Management"
         subtitle="Complete registry of all enterprise UAV assets — status, maintenance, and assignment tracking."
-        actions={canManageFleet ? <AddUavDialog /> : undefined}
+        actions={
+          canManageFleet ? (
+            <>
+              <AddUavDialog />
+              <ImportDialog
+                schema={uavImport}
+                canManage={canManageFleet}
+                buttonLabel="Import aircraft"
+              />
+            </>
+          ) : undefined
+        }
       />
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
@@ -160,7 +173,10 @@ export default async function FleetPage() {
       <div>
         <div className="flex items-center justify-between gap-3 pb-1">
           <SectionLabel>Batteries</SectionLabel>
-          {canManageFleet ? <AddBatteryDialog /> : null}
+          <span className="flex gap-2">
+            <ImportDialog schema={batteryImport} canManage={canManageFleet} />
+            {canManageFleet ? <AddBatteryDialog /> : null}
+          </span>
         </div>
         <BatteriesTable rows={packs} canManage={canManageFleet} />
       </div>
@@ -168,7 +184,10 @@ export default async function FleetPage() {
       <div>
         <div className="flex items-center justify-between gap-3 pb-1">
           <SectionLabel>Parts &amp; Equipment</SectionLabel>
-          {canManageFleet ? <AddComponentDialog /> : null}
+          <span className="flex gap-2">
+            <ImportDialog schema={componentImport} canManage={canManageFleet} />
+            {canManageFleet ? <AddComponentDialog /> : null}
+          </span>
         </div>
         <ComponentsTable rows={components} uavs={fitTargets} canManage={canManageFleet} />
       </div>

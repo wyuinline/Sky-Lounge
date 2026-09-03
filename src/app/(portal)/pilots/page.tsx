@@ -12,6 +12,8 @@ import {
   type CrewMember,
 } from "@/components/portal/pilots/authorisation-matrix";
 import type { OperationType } from "@/lib/operations";
+import { ImportDialog } from "@/components/portal/import-dialog";
+import { pilotImport } from "@/lib/import-schemas";
 import { createClient } from "@/lib/supabase/server";
 import { getAccess } from "@/lib/permissions";
 import { derivePilotCertificateStatus, recencyDue, deriveExpiryStatus } from "@/lib/compliance";
@@ -81,7 +83,18 @@ export default async function PilotsPage() {
         eyebrow="Crew Registry"
         title="Pilots & Crew Management"
         subtitle="RPAS pilot certificates, recency activity, and radio operator credentials."
-        actions={canManagePilots ? <AddPilotDialog /> : undefined}
+        actions={
+          canManagePilots ? (
+            <>
+              <AddPilotDialog />
+              <ImportDialog
+                schema={pilotImport}
+                canManage={canManagePilots}
+                buttonLabel="Import crew"
+              />
+            </>
+          ) : undefined
+        }
       />
 
       <Card className="rounded-md">
