@@ -7,6 +7,7 @@ import { getAccess } from "@/lib/permissions";
 import { notify } from "@/lib/webhook-dispatch";
 import { todayIso } from "@/lib/compliance";
 import { groundingItems, type PlanItemStatus } from "@/lib/inspection-plans";
+import { declarationVerdict, describeFlight, type RpasOperation } from "@/lib/declarations";
 import {
   checkAuthorisations,
   refusalMessage,
@@ -85,6 +86,61 @@ async function airworthinessRefusal(
 }
 
 /**
+ * Refuses a flight the aircraft holds no declaration for.
+ *
+ * CAR 901.69: the manufacturer declares an aircraft against a Standard 922
+ * requirement for a given kind of operation. Flying that operation without the
+ * declaration is an offence carrying up to $5,000 for a corporation — and it
+ * is entirely independent of the aircraft being serviceable and the pilot
+ * being qualified, which is why neither of the other two gates catches it.
+ *
+ * An aircraft whose category was never recorded cannot be judged, and is not
+ * refused: that is a gap in the record rather than a fault with the aircraft,
+ * and it is surfaced on the fleet page instead.
+ */
+async function declarationRefusal(
+  supabase: Supabase,
+  uavId: string,
+  operations: OperationType[],
+  proximity: "away" | "near" | "over",
+): Promise<string | null> {
+  const [{ data: uav }, { data: held }] = await Promise.all([
+    supabase.from("uavs").select("drone_id, rpas_category").eq("id", uavId).maybeSingle(),
+    supabase.from("aircraft_declarations").select("operation").eq("uav_id", uavId),
+  ]);
+
+  if (!uav) return null;
+
+  const flight = {
+    category: uav.rpas_category,
+    proximity,
+    controlledAirspace: operations.includes("controlled_airspace"),
+    sheltered: operations.includes("sheltered"),
+  };
+
+  const verdict = declarationVerdict(
+    flight,
+    (held ?? []).map((d) => d.operation as RpasOperation),
+  );
+
+  if (verdict.status !== "missing") return null;
+
+  const { data: requirements } = await supabase
+    .from("declaration_requirements")
+    .select("operation, label, rpas_standard, car_reference")
+    .in("operation", verdict.missing);
+
+  const named = (requirements ?? [])
+    .map((r) => `${r.label} (${r.rpas_standard}, CAR ${r.car_reference})`)
+    .join("; ");
+
+  return (
+    `${uav.drone_id} has no manufacturer safety-assurance declaration for ` +
+    `${describeFlight(flight).toLowerCase()}. Missing: ${named || verdict.missing.join(", ")}.`
+  );
+}
+
+/**
  * Refuses a pilot who is not cleared for what the flight is doing.
  *
  * A current certificate says a pilot may fly; an authorisation says what they
@@ -156,7 +212,17 @@ export async function submitFlightRequest(formData: FormData) {
   const authRefusal = await authorisationRefusal(supabase, pilotId, effectiveOperations);
   if (authRefusal) return { error: authRefusal };
 
+  const proximity = readProximity(formData);
+  const declarationIssue = await declarationRefusal(
+    supabase,
+    uavId,
+    effectiveOperations,
+    proximity,
+  );
+  if (declarationIssue) return { error: declarationIssue };
+
   const { data: request, error } = await supabase.from("flight_requests").insert({
+    proximity_to_people: proximity,
     pilot_id: pilotId,
     uav_id: uavId,
     location: location || null,
@@ -206,7 +272,7 @@ export async function updateFlightRequestStatus(
   if (safeStatus === "approved") {
     const { data: request } = await supabase
       .from("flight_requests")
-      .select("uav_id, pilot_id, operations")
+      .select("uav_id, pilot_id, operations, proximity_to_people")
       .eq("id", id)
       .maybeSingle();
 
@@ -225,6 +291,14 @@ export async function updateFlightRequestStatus(
       );
       if (authRefusal) return { error: authRefusal };
     }
+
+    const declarationIssue = await declarationRefusal(
+      supabase,
+      request.uav_id,
+      (request.operations ?? []) as OperationType[],
+      (request.proximity_to_people ?? "away") as "away" | "near" | "over",
+    );
+    if (declarationIssue) return { error: declarationIssue };
   }
 
   const { data: decided, error } = await supabase
@@ -249,6 +323,12 @@ export async function updateFlightRequestStatus(
 }
 
 const AIRSPACE_CLASSES = ["uncontrolled", "controlled", "restricted", "advisory"] as const;
+const PROXIMITIES = ["away", "near", "over"] as const;
+
+/** How close the flight goes to people, which decides the declaration needed. */
+function readProximity(formData: FormData): (typeof PROXIMITIES)[number] {
+  return parseEnum(formData.get("proximity_to_people"), PROXIMITIES, "away");
+}
 
 /** A hidden numeric field from the weather lookup, or null if absent. */
 function numberField(formData: FormData, name: string): number | null {

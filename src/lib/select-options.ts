@@ -81,3 +81,15 @@ export function withAll<T extends string>(
 ): SelectOption<T | "all">[] {
   return [{ value: "all" as T | "all", label }, ...options];
 }
+
+/**
+ * How close a flight goes to people.
+ *
+ * The three cases CAR 901.69 distinguishes, worded with the distances so
+ * nobody has to look them up while filling in a form.
+ */
+export const proximityOptions: SelectOption[] = [
+  { value: "away", label: "Away from people" },
+  { value: "near", label: "Near people — under 30 m, over 5 m" },
+  { value: "over", label: "Over people — under 5 m" },
+];

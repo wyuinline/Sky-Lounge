@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.17"
+    PostgrestVersion: "14.5"
   }
   graphql_public: {
     Tables: {
@@ -39,6 +39,78 @@ export type Database = {
   }
   public: {
     Tables: {
+      aircraft_declarations: {
+        Row: {
+          created_at: string
+          declared_by_manufacturer: string | null
+          declared_on: string | null
+          evidence_path: string | null
+          id: string
+          notes: string | null
+          operation: Database["public"]["Enums"]["rpas_operation"]
+          organisation_id: string
+          uav_id: string
+        }
+        Insert: {
+          created_at?: string
+          declared_by_manufacturer?: string | null
+          declared_on?: string | null
+          evidence_path?: string | null
+          id?: string
+          notes?: string | null
+          operation: Database["public"]["Enums"]["rpas_operation"]
+          organisation_id?: string
+          uav_id: string
+        }
+        Update: {
+          created_at?: string
+          declared_by_manufacturer?: string | null
+          declared_on?: string | null
+          evidence_path?: string | null
+          id?: string
+          notes?: string | null
+          operation?: Database["public"]["Enums"]["rpas_operation"]
+          organisation_id?: string
+          uav_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "aircraft_declarations_organisation_id_fkey"
+            columns: ["organisation_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "aircraft_declarations_uav_fkey"
+            columns: ["uav_id", "organisation_id"]
+            isOneToOne: false
+            referencedRelation: "inspection_plan_status"
+            referencedColumns: ["uav_id", "organisation_id"]
+          },
+          {
+            foreignKeyName: "aircraft_declarations_uav_fkey"
+            columns: ["uav_id", "organisation_id"]
+            isOneToOne: false
+            referencedRelation: "uav_fleet_status"
+            referencedColumns: ["id", "organisation_id"]
+          },
+          {
+            foreignKeyName: "aircraft_declarations_uav_fkey"
+            columns: ["uav_id", "organisation_id"]
+            isOneToOne: false
+            referencedRelation: "uav_fleet_status"
+            referencedColumns: ["uav_id", "organisation_id"]
+          },
+          {
+            foreignKeyName: "aircraft_declarations_uav_fkey"
+            columns: ["uav_id", "organisation_id"]
+            isOneToOne: false
+            referencedRelation: "uavs"
+            referencedColumns: ["id", "organisation_id"]
+          },
+        ]
+      }
       api_keys: {
         Row: {
           created_at: string
@@ -780,6 +852,33 @@ export type Database = {
           },
         ]
       }
+      declaration_requirements: {
+        Row: {
+          car_reference: string
+          declaration_type: Database["public"]["Enums"]["declaration_type"]
+          label: string
+          operation: Database["public"]["Enums"]["rpas_operation"]
+          rpas_standard: string
+          sort_order: number
+        }
+        Insert: {
+          car_reference: string
+          declaration_type: Database["public"]["Enums"]["declaration_type"]
+          label: string
+          operation: Database["public"]["Enums"]["rpas_operation"]
+          rpas_standard: string
+          sort_order?: number
+        }
+        Update: {
+          car_reference?: string
+          declaration_type?: Database["public"]["Enums"]["declaration_type"]
+          label?: string
+          operation?: Database["public"]["Enums"]["rpas_operation"]
+          rpas_standard?: string
+          sort_order?: number
+        }
+        Relationships: []
+      }
       document_review_defaults: {
         Row: {
           category: Database["public"]["Enums"]["document_category"]
@@ -1087,6 +1186,7 @@ export type Database = {
           organisation_id: string
           pilot_id: string | null
           project_id: string | null
+          proximity_to_people: Database["public"]["Enums"]["people_proximity"]
           sfoc_reference: string | null
           takeoff_at: string | null
           telemetry_imported_at: string | null
@@ -1139,6 +1239,7 @@ export type Database = {
           organisation_id?: string
           pilot_id?: string | null
           project_id?: string | null
+          proximity_to_people?: Database["public"]["Enums"]["people_proximity"]
           sfoc_reference?: string | null
           takeoff_at?: string | null
           telemetry_imported_at?: string | null
@@ -1191,6 +1292,7 @@ export type Database = {
           organisation_id?: string
           pilot_id?: string | null
           project_id?: string | null
+          proximity_to_people?: Database["public"]["Enums"]["people_proximity"]
           sfoc_reference?: string | null
           takeoff_at?: string | null
           telemetry_imported_at?: string | null
@@ -1304,6 +1406,7 @@ export type Database = {
           organisation_id: string
           pilot_id: string | null
           project_id: string | null
+          proximity_to_people: Database["public"]["Enums"]["people_proximity"]
           requested_date: string
           risk_assessment: string | null
           risk_level: Database["public"]["Enums"]["risk_level"]
@@ -1321,6 +1424,7 @@ export type Database = {
           organisation_id?: string
           pilot_id?: string | null
           project_id?: string | null
+          proximity_to_people?: Database["public"]["Enums"]["people_proximity"]
           requested_date?: string
           risk_assessment?: string | null
           risk_level?: Database["public"]["Enums"]["risk_level"]
@@ -1338,6 +1442,7 @@ export type Database = {
           organisation_id?: string
           pilot_id?: string | null
           project_id?: string | null
+          proximity_to_people?: Database["public"]["Enums"]["people_proximity"]
           requested_date?: string
           risk_assessment?: string | null
           risk_level?: Database["public"]["Enums"]["risk_level"]
@@ -1413,6 +1518,210 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "uavs"
             referencedColumns: ["id", "organisation_id"]
+          },
+        ]
+      }
+      flight_reviews: {
+        Row: {
+          car_reference: string
+          completed_on: string
+          created_at: string
+          document_path: string | null
+          flight_reviewer_rating_ref: string | null
+          id: string
+          organisation_id: string
+          pilot_id: string
+          result: string
+          review_type: Database["public"]["Enums"]["certificate_level"]
+          reviewer_certificate_number: string | null
+          reviewer_name: string | null
+        }
+        Insert: {
+          car_reference?: string
+          completed_on: string
+          created_at?: string
+          document_path?: string | null
+          flight_reviewer_rating_ref?: string | null
+          id?: string
+          organisation_id?: string
+          pilot_id: string
+          result?: string
+          review_type: Database["public"]["Enums"]["certificate_level"]
+          reviewer_certificate_number?: string | null
+          reviewer_name?: string | null
+        }
+        Update: {
+          car_reference?: string
+          completed_on?: string
+          created_at?: string
+          document_path?: string | null
+          flight_reviewer_rating_ref?: string | null
+          id?: string
+          organisation_id?: string
+          pilot_id?: string
+          result?: string
+          review_type?: Database["public"]["Enums"]["certificate_level"]
+          reviewer_certificate_number?: string | null
+          reviewer_name?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "flight_reviews_organisation_id_fkey"
+            columns: ["organisation_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "flight_reviews_pilot_fkey"
+            columns: ["pilot_id", "organisation_id"]
+            isOneToOne: false
+            referencedRelation: "pilot_certificate_status"
+            referencedColumns: ["id", "organisation_id"]
+          },
+          {
+            foreignKeyName: "flight_reviews_pilot_fkey"
+            columns: ["pilot_id", "organisation_id"]
+            isOneToOne: false
+            referencedRelation: "pilots"
+            referencedColumns: ["id", "organisation_id"]
+          },
+        ]
+      }
+      foreign_qualifications: {
+        Row: {
+          aircraft_types_flown: string | null
+          authority: string | null
+          created_at: string
+          credential_name: string
+          credential_number: string | null
+          document_path: string | null
+          expires_on: string | null
+          id: string
+          issued_on: string | null
+          issuing_state: string
+          logged_hours: number | null
+          organisation_id: string
+          pilot_id: string
+          translation_path: string | null
+          verification_notes: string | null
+        }
+        Insert: {
+          aircraft_types_flown?: string | null
+          authority?: string | null
+          created_at?: string
+          credential_name: string
+          credential_number?: string | null
+          document_path?: string | null
+          expires_on?: string | null
+          id?: string
+          issued_on?: string | null
+          issuing_state: string
+          logged_hours?: number | null
+          organisation_id?: string
+          pilot_id: string
+          translation_path?: string | null
+          verification_notes?: string | null
+        }
+        Update: {
+          aircraft_types_flown?: string | null
+          authority?: string | null
+          created_at?: string
+          credential_name?: string
+          credential_number?: string | null
+          document_path?: string | null
+          expires_on?: string | null
+          id?: string
+          issued_on?: string | null
+          issuing_state?: string
+          logged_hours?: number | null
+          organisation_id?: string
+          pilot_id?: string
+          translation_path?: string | null
+          verification_notes?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "foreign_qualifications_organisation_id_fkey"
+            columns: ["organisation_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "foreign_qualifications_pilot_fkey"
+            columns: ["pilot_id", "organisation_id"]
+            isOneToOne: false
+            referencedRelation: "pilot_certificate_status"
+            referencedColumns: ["id", "organisation_id"]
+          },
+          {
+            foreignKeyName: "foreign_qualifications_pilot_fkey"
+            columns: ["pilot_id", "organisation_id"]
+            isOneToOne: false
+            referencedRelation: "pilots"
+            referencedColumns: ["id", "organisation_id"]
+          },
+        ]
+      }
+      ground_school_records: {
+        Row: {
+          car_reference: string
+          certificate_path: string | null
+          completed_on: string
+          created_at: string
+          hours: number | null
+          id: string
+          organisation_id: string
+          pilot_id: string
+          provider_name: string
+          syllabus_ref: string | null
+        }
+        Insert: {
+          car_reference?: string
+          certificate_path?: string | null
+          completed_on: string
+          created_at?: string
+          hours?: number | null
+          id?: string
+          organisation_id?: string
+          pilot_id: string
+          provider_name: string
+          syllabus_ref?: string | null
+        }
+        Update: {
+          car_reference?: string
+          certificate_path?: string | null
+          completed_on?: string
+          created_at?: string
+          hours?: number | null
+          id?: string
+          organisation_id?: string
+          pilot_id?: string
+          provider_name?: string
+          syllabus_ref?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ground_school_pilot_fkey"
+            columns: ["pilot_id", "organisation_id"]
+            isOneToOne: false
+            referencedRelation: "pilot_certificate_status"
+            referencedColumns: ["id", "organisation_id"]
+          },
+          {
+            foreignKeyName: "ground_school_pilot_fkey"
+            columns: ["pilot_id", "organisation_id"]
+            isOneToOne: false
+            referencedRelation: "pilots"
+            referencedColumns: ["id", "organisation_id"]
+          },
+          {
+            foreignKeyName: "ground_school_records_organisation_id_fkey"
+            columns: ["organisation_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -2149,6 +2458,41 @@ export type Database = {
         }
         Relationships: []
       }
+      personal_data_access_log: {
+        Row: {
+          accessed_at: string
+          accessed_by: string | null
+          id: string
+          organisation_id: string
+          pilot_id: string
+          purpose: string | null
+        }
+        Insert: {
+          accessed_at?: string
+          accessed_by?: string | null
+          id?: string
+          organisation_id?: string
+          pilot_id: string
+          purpose?: string | null
+        }
+        Update: {
+          accessed_at?: string
+          accessed_by?: string | null
+          id?: string
+          organisation_id?: string
+          pilot_id?: string
+          purpose?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "personal_data_access_log_organisation_id_fkey"
+            columns: ["organisation_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pilot_authorisations: {
         Row: {
           authorised_by: string | null
@@ -2220,6 +2564,186 @@ export type Database = {
           },
         ]
       }
+      pilot_certificates: {
+        Row: {
+          car_reference: string
+          certificate_level: Database["public"]["Enums"]["certificate_level"]
+          certificate_number: string
+          created_at: string
+          document_path: string | null
+          id: string
+          issued_on: string
+          organisation_id: string
+          pilot_id: string
+          superseded_by: string | null
+          verified_by: string | null
+          verified_on: string | null
+        }
+        Insert: {
+          car_reference?: string
+          certificate_level: Database["public"]["Enums"]["certificate_level"]
+          certificate_number: string
+          created_at?: string
+          document_path?: string | null
+          id?: string
+          issued_on: string
+          organisation_id?: string
+          pilot_id: string
+          superseded_by?: string | null
+          verified_by?: string | null
+          verified_on?: string | null
+        }
+        Update: {
+          car_reference?: string
+          certificate_level?: Database["public"]["Enums"]["certificate_level"]
+          certificate_number?: string
+          created_at?: string
+          document_path?: string | null
+          id?: string
+          issued_on?: string
+          organisation_id?: string
+          pilot_id?: string
+          superseded_by?: string | null
+          verified_by?: string | null
+          verified_on?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pilot_certificates_organisation_id_fkey"
+            columns: ["organisation_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pilot_certificates_pilot_fkey"
+            columns: ["pilot_id", "organisation_id"]
+            isOneToOne: false
+            referencedRelation: "pilot_certificate_status"
+            referencedColumns: ["id", "organisation_id"]
+          },
+          {
+            foreignKeyName: "pilot_certificates_pilot_fkey"
+            columns: ["pilot_id", "organisation_id"]
+            isOneToOne: false
+            referencedRelation: "pilots"
+            referencedColumns: ["id", "organisation_id"]
+          },
+        ]
+      }
+      pilot_exams: {
+        Row: {
+          car_reference: string
+          created_at: string
+          document_path: string | null
+          exam_type: Database["public"]["Enums"]["certificate_level"]
+          id: string
+          organisation_id: string
+          passed_on: string
+          pilot_id: string
+          score: number | null
+        }
+        Insert: {
+          car_reference?: string
+          created_at?: string
+          document_path?: string | null
+          exam_type: Database["public"]["Enums"]["certificate_level"]
+          id?: string
+          organisation_id?: string
+          passed_on: string
+          pilot_id: string
+          score?: number | null
+        }
+        Update: {
+          car_reference?: string
+          created_at?: string
+          document_path?: string | null
+          exam_type?: Database["public"]["Enums"]["certificate_level"]
+          id?: string
+          organisation_id?: string
+          passed_on?: string
+          pilot_id?: string
+          score?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pilot_exams_organisation_id_fkey"
+            columns: ["organisation_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pilot_exams_pilot_fkey"
+            columns: ["pilot_id", "organisation_id"]
+            isOneToOne: false
+            referencedRelation: "pilot_certificate_status"
+            referencedColumns: ["id", "organisation_id"]
+          },
+          {
+            foreignKeyName: "pilot_exams_pilot_fkey"
+            columns: ["pilot_id", "organisation_id"]
+            isOneToOne: false
+            referencedRelation: "pilots"
+            referencedColumns: ["id", "organisation_id"]
+          },
+        ]
+      }
+      pilot_personal_data: {
+        Row: {
+          date_of_birth: string | null
+          organisation_id: string
+          pilot_id: string
+          updated_at: string
+          updated_by: string | null
+          work_authorization_expires_on: string | null
+          work_authorization_notes: string | null
+          work_authorization_status: string | null
+        }
+        Insert: {
+          date_of_birth?: string | null
+          organisation_id?: string
+          pilot_id: string
+          updated_at?: string
+          updated_by?: string | null
+          work_authorization_expires_on?: string | null
+          work_authorization_notes?: string | null
+          work_authorization_status?: string | null
+        }
+        Update: {
+          date_of_birth?: string | null
+          organisation_id?: string
+          pilot_id?: string
+          updated_at?: string
+          updated_by?: string | null
+          work_authorization_expires_on?: string | null
+          work_authorization_notes?: string | null
+          work_authorization_status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pilot_personal_data_organisation_id_fkey"
+            columns: ["organisation_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pilot_personal_data_pilot_fkey"
+            columns: ["pilot_id", "organisation_id"]
+            isOneToOne: false
+            referencedRelation: "pilot_certificate_status"
+            referencedColumns: ["id", "organisation_id"]
+          },
+          {
+            foreignKeyName: "pilot_personal_data_pilot_fkey"
+            columns: ["pilot_id", "organisation_id"]
+            isOneToOne: false
+            referencedRelation: "pilots"
+            referencedColumns: ["id", "organisation_id"]
+          },
+        ]
+      }
       pilots: {
         Row: {
           active: boolean
@@ -2230,13 +2754,26 @@ export type Database = {
             | Database["public"]["Enums"]["rpas_certificate_type"]
             | null
           created_at: string
+          employment_status:
+            | Database["public"]["Enums"]["employment_status"]
+            | null
           flight_hours: number
           full_name: string
           id: string
           last_recency_activity: string | null
+          legal_first_name: string | null
+          legal_last_name: string | null
+          legal_middle_names: string | null
           notes: string | null
+          onboarding_status:
+            | Database["public"]["Enums"]["onboarding_status"]
+            | null
           organisation_id: string
+          position_title: string | null
+          preferred_name: string | null
           profile_id: string | null
+          reports_to_id: string | null
+          rpas_roles: Database["public"]["Enums"]["rpas_role"][]
         }
         Insert: {
           active?: boolean
@@ -2247,13 +2784,26 @@ export type Database = {
             | Database["public"]["Enums"]["rpas_certificate_type"]
             | null
           created_at?: string
+          employment_status?:
+            | Database["public"]["Enums"]["employment_status"]
+            | null
           flight_hours?: number
           full_name: string
           id?: string
           last_recency_activity?: string | null
+          legal_first_name?: string | null
+          legal_last_name?: string | null
+          legal_middle_names?: string | null
           notes?: string | null
+          onboarding_status?:
+            | Database["public"]["Enums"]["onboarding_status"]
+            | null
           organisation_id?: string
+          position_title?: string | null
+          preferred_name?: string | null
           profile_id?: string | null
+          reports_to_id?: string | null
+          rpas_roles?: Database["public"]["Enums"]["rpas_role"][]
         }
         Update: {
           active?: boolean
@@ -2264,13 +2814,26 @@ export type Database = {
             | Database["public"]["Enums"]["rpas_certificate_type"]
             | null
           created_at?: string
+          employment_status?:
+            | Database["public"]["Enums"]["employment_status"]
+            | null
           flight_hours?: number
           full_name?: string
           id?: string
           last_recency_activity?: string | null
+          legal_first_name?: string | null
+          legal_last_name?: string | null
+          legal_middle_names?: string | null
           notes?: string | null
+          onboarding_status?:
+            | Database["public"]["Enums"]["onboarding_status"]
+            | null
           organisation_id?: string
+          position_title?: string | null
+          preferred_name?: string | null
           profile_id?: string | null
+          reports_to_id?: string | null
+          rpas_roles?: Database["public"]["Enums"]["rpas_role"][]
         }
         Relationships: [
           {
@@ -2285,6 +2848,20 @@ export type Database = {
             columns: ["profile_id", "organisation_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id", "organisation_id"]
+          },
+          {
+            foreignKeyName: "pilots_reports_to_id_fkey"
+            columns: ["reports_to_id", "organisation_id"]
+            isOneToOne: false
+            referencedRelation: "pilot_certificate_status"
+            referencedColumns: ["id", "organisation_id"]
+          },
+          {
+            foreignKeyName: "pilots_reports_to_id_fkey"
+            columns: ["reports_to_id", "organisation_id"]
+            isOneToOne: false
+            referencedRelation: "pilots"
             referencedColumns: ["id", "organisation_id"]
           },
         ]
@@ -2399,6 +2976,120 @@ export type Database = {
           },
         ]
       }
+      recency_records: {
+        Row: {
+          activity_type: Database["public"]["Enums"]["recency_activity"]
+          car_reference: string
+          completed_on: string
+          created_at: string
+          evidence_path: string | null
+          expires_on: string | null
+          id: string
+          notes: string | null
+          organisation_id: string
+          pilot_id: string
+        }
+        Insert: {
+          activity_type: Database["public"]["Enums"]["recency_activity"]
+          car_reference?: string
+          completed_on: string
+          created_at?: string
+          evidence_path?: string | null
+          expires_on?: string | null
+          id?: string
+          notes?: string | null
+          organisation_id?: string
+          pilot_id: string
+        }
+        Update: {
+          activity_type?: Database["public"]["Enums"]["recency_activity"]
+          car_reference?: string
+          completed_on?: string
+          created_at?: string
+          evidence_path?: string | null
+          expires_on?: string | null
+          id?: string
+          notes?: string | null
+          organisation_id?: string
+          pilot_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recency_records_organisation_id_fkey"
+            columns: ["organisation_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "recency_records_pilot_fkey"
+            columns: ["pilot_id", "organisation_id"]
+            isOneToOne: false
+            referencedRelation: "pilot_certificate_status"
+            referencedColumns: ["id", "organisation_id"]
+          },
+          {
+            foreignKeyName: "recency_records_pilot_fkey"
+            columns: ["pilot_id", "organisation_id"]
+            isOneToOne: false
+            referencedRelation: "pilots"
+            referencedColumns: ["id", "organisation_id"]
+          },
+        ]
+      }
+      regulatory_watch: {
+        Row: {
+          consultation_closes_on: string | null
+          created_at: string
+          expected_in_force_on: string | null
+          id: string
+          impact_notes: string | null
+          organisation_id: string
+          owner_id: string | null
+          reference: string
+          review_due_on: string | null
+          stage: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          consultation_closes_on?: string | null
+          created_at?: string
+          expected_in_force_on?: string | null
+          id?: string
+          impact_notes?: string | null
+          organisation_id?: string
+          owner_id?: string | null
+          reference: string
+          review_due_on?: string | null
+          stage?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          consultation_closes_on?: string | null
+          created_at?: string
+          expected_in_force_on?: string | null
+          id?: string
+          impact_notes?: string | null
+          organisation_id?: string
+          owner_id?: string | null
+          reference?: string
+          review_due_on?: string | null
+          stage?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "regulatory_watch_organisation_id_fkey"
+            columns: ["organisation_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       role_permission_defaults: {
         Row: {
           area: Database["public"]["Enums"]["access_area"]
@@ -2456,6 +3147,210 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id", "organisation_id"]
+          },
+        ]
+      }
+      training_completions: {
+        Row: {
+          assessment_result: string
+          created_at: string
+          delivered_by: string | null
+          delivered_on: string
+          evaluator_id: string | null
+          evidence_path: string | null
+          hours: number | null
+          id: string
+          module_id: string
+          notes: string | null
+          organisation_id: string
+          pilot_id: string
+          score: number | null
+          training_category: Database["public"]["Enums"]["training_category"]
+        }
+        Insert: {
+          assessment_result?: string
+          created_at?: string
+          delivered_by?: string | null
+          delivered_on: string
+          evaluator_id?: string | null
+          evidence_path?: string | null
+          hours?: number | null
+          id?: string
+          module_id: string
+          notes?: string | null
+          organisation_id?: string
+          pilot_id: string
+          score?: number | null
+          training_category?: Database["public"]["Enums"]["training_category"]
+        }
+        Update: {
+          assessment_result?: string
+          created_at?: string
+          delivered_by?: string | null
+          delivered_on?: string
+          evaluator_id?: string | null
+          evidence_path?: string | null
+          hours?: number | null
+          id?: string
+          module_id?: string
+          notes?: string | null
+          organisation_id?: string
+          pilot_id?: string
+          score?: number | null
+          training_category?: Database["public"]["Enums"]["training_category"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "training_completions_module_fkey"
+            columns: ["module_id", "organisation_id"]
+            isOneToOne: false
+            referencedRelation: "training_modules"
+            referencedColumns: ["id", "organisation_id"]
+          },
+          {
+            foreignKeyName: "training_completions_organisation_id_fkey"
+            columns: ["organisation_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "training_completions_pilot_fkey"
+            columns: ["pilot_id", "organisation_id"]
+            isOneToOne: false
+            referencedRelation: "pilot_certificate_status"
+            referencedColumns: ["id", "organisation_id"]
+          },
+          {
+            foreignKeyName: "training_completions_pilot_fkey"
+            columns: ["pilot_id", "organisation_id"]
+            isOneToOne: false
+            referencedRelation: "pilots"
+            referencedColumns: ["id", "organisation_id"]
+          },
+        ]
+      }
+      training_effectiveness_reviews: {
+        Row: {
+          actions: string | null
+          car_reference: string
+          completed_on: string | null
+          created_at: string
+          findings: string | null
+          id: string
+          organisation_id: string
+          owner_id: string | null
+          period_end: string
+          period_start: string
+        }
+        Insert: {
+          actions?: string | null
+          car_reference?: string
+          completed_on?: string | null
+          created_at?: string
+          findings?: string | null
+          id?: string
+          organisation_id?: string
+          owner_id?: string | null
+          period_end: string
+          period_start: string
+        }
+        Update: {
+          actions?: string | null
+          car_reference?: string
+          completed_on?: string | null
+          created_at?: string
+          findings?: string | null
+          id?: string
+          organisation_id?: string
+          owner_id?: string | null
+          period_end?: string
+          period_start?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "training_effectiveness_reviews_organisation_id_fkey"
+            columns: ["organisation_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      training_module_defaults: {
+        Row: {
+          car_reference: string | null
+          code: string
+          interval_months: number | null
+          name: string
+          sort_order: number
+        }
+        Insert: {
+          car_reference?: string | null
+          code: string
+          interval_months?: number | null
+          name: string
+          sort_order?: number
+        }
+        Update: {
+          car_reference?: string | null
+          code?: string
+          interval_months?: number | null
+          name?: string
+          sort_order?: number
+        }
+        Relationships: []
+      }
+      training_modules: {
+        Row: {
+          active: boolean
+          applies_to_roles: Database["public"]["Enums"]["rpas_role"][]
+          car_reference: string | null
+          code: string
+          created_at: string
+          description: string | null
+          id: string
+          interval_months: number | null
+          name: string
+          organisation_id: string
+          required_for_all: boolean
+          sort_order: number
+        }
+        Insert: {
+          active?: boolean
+          applies_to_roles?: Database["public"]["Enums"]["rpas_role"][]
+          car_reference?: string | null
+          code: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          interval_months?: number | null
+          name: string
+          organisation_id?: string
+          required_for_all?: boolean
+          sort_order?: number
+        }
+        Update: {
+          active?: boolean
+          applies_to_roles?: Database["public"]["Enums"]["rpas_role"][]
+          car_reference?: string | null
+          code?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          interval_months?: number | null
+          name?: string
+          organisation_id?: string
+          required_for_all?: boolean
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "training_modules_organisation_id_fkey"
+            columns: ["organisation_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -2519,6 +3414,124 @@ export type Database = {
             columns: ["pilot_id", "organisation_id"]
             isOneToOne: false
             referencedRelation: "pilots"
+            referencedColumns: ["id", "organisation_id"]
+          },
+        ]
+      }
+      type_competencies: {
+        Row: {
+          aircraft_model: string | null
+          assessed_by: string | null
+          assessed_on: string
+          competency_type: Database["public"]["Enums"]["competency_type"]
+          component_id: string | null
+          created_at: string
+          evidence_path: string | null
+          expires_on: string | null
+          id: string
+          limitations: string | null
+          method: Database["public"]["Enums"]["assessment_method"]
+          organisation_id: string
+          pilot_id: string
+          result: string
+          uav_id: string | null
+        }
+        Insert: {
+          aircraft_model?: string | null
+          assessed_by?: string | null
+          assessed_on: string
+          competency_type: Database["public"]["Enums"]["competency_type"]
+          component_id?: string | null
+          created_at?: string
+          evidence_path?: string | null
+          expires_on?: string | null
+          id?: string
+          limitations?: string | null
+          method?: Database["public"]["Enums"]["assessment_method"]
+          organisation_id?: string
+          pilot_id: string
+          result?: string
+          uav_id?: string | null
+        }
+        Update: {
+          aircraft_model?: string | null
+          assessed_by?: string | null
+          assessed_on?: string
+          competency_type?: Database["public"]["Enums"]["competency_type"]
+          component_id?: string | null
+          created_at?: string
+          evidence_path?: string | null
+          expires_on?: string | null
+          id?: string
+          limitations?: string | null
+          method?: Database["public"]["Enums"]["assessment_method"]
+          organisation_id?: string
+          pilot_id?: string
+          result?: string
+          uav_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "type_competencies_component_fkey"
+            columns: ["component_id", "organisation_id"]
+            isOneToOne: false
+            referencedRelation: "component_status_view"
+            referencedColumns: ["id", "organisation_id"]
+          },
+          {
+            foreignKeyName: "type_competencies_component_fkey"
+            columns: ["component_id", "organisation_id"]
+            isOneToOne: false
+            referencedRelation: "components"
+            referencedColumns: ["id", "organisation_id"]
+          },
+          {
+            foreignKeyName: "type_competencies_organisation_id_fkey"
+            columns: ["organisation_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "type_competencies_pilot_fkey"
+            columns: ["pilot_id", "organisation_id"]
+            isOneToOne: false
+            referencedRelation: "pilot_certificate_status"
+            referencedColumns: ["id", "organisation_id"]
+          },
+          {
+            foreignKeyName: "type_competencies_pilot_fkey"
+            columns: ["pilot_id", "organisation_id"]
+            isOneToOne: false
+            referencedRelation: "pilots"
+            referencedColumns: ["id", "organisation_id"]
+          },
+          {
+            foreignKeyName: "type_competencies_uav_fkey"
+            columns: ["uav_id", "organisation_id"]
+            isOneToOne: false
+            referencedRelation: "inspection_plan_status"
+            referencedColumns: ["uav_id", "organisation_id"]
+          },
+          {
+            foreignKeyName: "type_competencies_uav_fkey"
+            columns: ["uav_id", "organisation_id"]
+            isOneToOne: false
+            referencedRelation: "uav_fleet_status"
+            referencedColumns: ["id", "organisation_id"]
+          },
+          {
+            foreignKeyName: "type_competencies_uav_fkey"
+            columns: ["uav_id", "organisation_id"]
+            isOneToOne: false
+            referencedRelation: "uav_fleet_status"
+            referencedColumns: ["uav_id", "organisation_id"]
+          },
+          {
+            foreignKeyName: "type_competencies_uav_fkey"
+            columns: ["uav_id", "organisation_id"]
+            isOneToOne: false
+            referencedRelation: "uavs"
             referencedColumns: ["id", "organisation_id"]
           },
         ]
@@ -2602,8 +3615,16 @@ export type Database = {
           next_inspection_date: string | null
           notes: string | null
           organisation_id: string
+          propulsion: string | null
           purchased_date: string | null
+          registered_owner: string | null
+          registration_marking_verified_on: string | null
           registration_number: string | null
+          remote_id_capable: boolean | null
+          remote_id_method: string | null
+          remote_id_serial: string | null
+          rpas_category: Database["public"]["Enums"]["rpas_category"] | null
+          rpas_class: Database["public"]["Enums"]["rpas_class"] | null
           serial_number: string | null
           status: Database["public"]["Enums"]["uav_status"]
           updated_at: string
@@ -2623,8 +3644,16 @@ export type Database = {
           next_inspection_date?: string | null
           notes?: string | null
           organisation_id?: string
+          propulsion?: string | null
           purchased_date?: string | null
+          registered_owner?: string | null
+          registration_marking_verified_on?: string | null
           registration_number?: string | null
+          remote_id_capable?: boolean | null
+          remote_id_method?: string | null
+          remote_id_serial?: string | null
+          rpas_category?: Database["public"]["Enums"]["rpas_category"] | null
+          rpas_class?: Database["public"]["Enums"]["rpas_class"] | null
           serial_number?: string | null
           status?: Database["public"]["Enums"]["uav_status"]
           updated_at?: string
@@ -2644,8 +3673,16 @@ export type Database = {
           next_inspection_date?: string | null
           notes?: string | null
           organisation_id?: string
+          propulsion?: string | null
           purchased_date?: string | null
+          registered_owner?: string | null
+          registration_marking_verified_on?: string | null
           registration_number?: string | null
+          remote_id_capable?: boolean | null
+          remote_id_method?: string | null
+          remote_id_serial?: string | null
+          rpas_category?: Database["public"]["Enums"]["rpas_category"] | null
+          rpas_class?: Database["public"]["Enums"]["rpas_class"] | null
           serial_number?: string | null
           status?: Database["public"]["Enums"]["uav_status"]
           updated_at?: string
@@ -3395,13 +4432,22 @@ export type Database = {
         | "notifications"
         | "users"
         | "permissions"
+        | "personal_data"
       access_level: "full" | "create" | "read" | "own" | "none"
       airspace_class: "uncontrolled" | "controlled" | "restricted" | "advisory"
       approval_status: "pending" | "approved" | "rejected"
+      assessment_method: "written" | "observed_flight" | "oral_practical"
       audit_status: "planned" | "in_progress" | "completed" | "overdue"
       audit_type: "internal" | "regulatory"
       battery_status: "serviceable" | "monitor" | "retired"
+      certificate_level: "basic" | "advanced" | "level_1_complex"
       competency_level: "beginner" | "intermediate" | "advanced" | "qualified"
+      competency_type:
+        | "airframe"
+        | "payload"
+        | "ground_control_station"
+        | "rtk_base_station"
+        | "software"
       compliance_status: "compliant" | "at_risk" | "non_compliant"
       component_category:
         | "motor"
@@ -3419,6 +4465,7 @@ export type Database = {
       component_status: "in_service" | "spare" | "maintenance" | "retired"
       crew_role: "visual_observer" | "payload_operator" | "trainee"
       currency_status: "current" | "due_soon" | "expired"
+      declaration_type: "declaration" | "pre_validated_declaration"
       document_category:
         | "sop"
         | "policy"
@@ -3434,6 +4481,7 @@ export type Database = {
         | "pending_approval"
         | "approved"
         | "published"
+      employment_status: "employee" | "contractor" | "agent" | "representative"
       finding_status: "open" | "in_progress" | "closed" | "overdue"
       hazard_category:
         | "operational"
@@ -3478,6 +4526,15 @@ export type Database = {
         | "document_review_overdue"
         | "document_expiring"
         | "document_expired"
+      onboarding_status:
+        | "phase_1_verify_person"
+        | "phase_2_certification"
+        | "phase_3_company_qualification"
+        | "phase_4_documentation"
+        | "phase_5_aircraft"
+        | "phase_6_operational_release"
+        | "released"
+        | "suspended"
       operation_type:
         | "vlos"
         | "evlos"
@@ -3487,12 +4544,19 @@ export type Database = {
         | "over_people"
         | "night"
         | "medium_rpas"
+      people_proximity: "away" | "near" | "over"
       project_status:
         | "planned"
         | "active"
         | "on_hold"
         | "complete"
         | "cancelled"
+      recency_activity:
+        | "exam_retake"
+        | "flight_review"
+        | "tc_endorsed_seminar"
+        | "recurrent_training_program"
+        | "self_paced_study"
       risk_level: "low" | "medium" | "high" | "critical"
       risk_likelihood:
         | "rare"
@@ -3506,11 +4570,35 @@ export type Database = {
         | "moderate"
         | "major"
         | "catastrophic"
+      rpas_category: "small" | "medium"
       rpas_certificate_type:
         | "basic_operations"
         | "advanced_operations"
         | "level_1_complex"
+      rpas_class: "multirotor" | "fixed_wing" | "vtol" | "helicopter" | "hybrid"
+      rpas_operation:
+        | "small_vlos_controlled"
+        | "small_near_people"
+        | "small_over_people"
+        | "small_sheltered_controlled"
+        | "medium_vlos_away"
+        | "medium_near_people"
+        | "medium_over_people"
+        | "medium_vlos_controlled"
+      rpas_role:
+        | "pilot_in_command"
+        | "visual_observer"
+        | "chief_pilot"
+        | "training_pilot"
+        | "person_responsible_for_maintenance"
+        | "accountable_executive"
       severity_level: "low" | "medium" | "high" | "critical"
+      training_category:
+        | "indoctrination"
+        | "initial"
+        | "recurrent"
+        | "annual"
+        | "on_the_job"
       uav_status: "airworthy" | "maintenance" | "grounded" | "retired"
       user_role:
         | "system_admin"
@@ -3544,12 +4632,12 @@ export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
         DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -3573,11 +4661,11 @@ export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -3598,11 +4686,11 @@ export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -3623,11 +4711,11 @@ export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema["Enums"]
     | { schema: keyof DatabaseWithoutInternals },
-  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+  EnumName extends (DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -3640,11 +4728,11 @@ export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof DatabaseWithoutInternals },
-  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+  CompositeTypeName extends (PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : never = never,
+    : never) = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -3674,14 +4762,24 @@ export const Constants = {
         "notifications",
         "users",
         "permissions",
+        "personal_data",
       ],
       access_level: ["full", "create", "read", "own", "none"],
       airspace_class: ["uncontrolled", "controlled", "restricted", "advisory"],
       approval_status: ["pending", "approved", "rejected"],
+      assessment_method: ["written", "observed_flight", "oral_practical"],
       audit_status: ["planned", "in_progress", "completed", "overdue"],
       audit_type: ["internal", "regulatory"],
       battery_status: ["serviceable", "monitor", "retired"],
+      certificate_level: ["basic", "advanced", "level_1_complex"],
       competency_level: ["beginner", "intermediate", "advanced", "qualified"],
+      competency_type: [
+        "airframe",
+        "payload",
+        "ground_control_station",
+        "rtk_base_station",
+        "software",
+      ],
       compliance_status: ["compliant", "at_risk", "non_compliant"],
       component_category: [
         "motor",
@@ -3700,6 +4798,7 @@ export const Constants = {
       component_status: ["in_service", "spare", "maintenance", "retired"],
       crew_role: ["visual_observer", "payload_operator", "trainee"],
       currency_status: ["current", "due_soon", "expired"],
+      declaration_type: ["declaration", "pre_validated_declaration"],
       document_category: [
         "sop",
         "policy",
@@ -3717,6 +4816,7 @@ export const Constants = {
         "approved",
         "published",
       ],
+      employment_status: ["employee", "contractor", "agent", "representative"],
       finding_status: ["open", "in_progress", "closed", "overdue"],
       hazard_category: [
         "operational",
@@ -3765,6 +4865,16 @@ export const Constants = {
         "document_expiring",
         "document_expired",
       ],
+      onboarding_status: [
+        "phase_1_verify_person",
+        "phase_2_certification",
+        "phase_3_company_qualification",
+        "phase_4_documentation",
+        "phase_5_aircraft",
+        "phase_6_operational_release",
+        "released",
+        "suspended",
+      ],
       operation_type: [
         "vlos",
         "evlos",
@@ -3775,7 +4885,15 @@ export const Constants = {
         "night",
         "medium_rpas",
       ],
+      people_proximity: ["away", "near", "over"],
       project_status: ["planned", "active", "on_hold", "complete", "cancelled"],
+      recency_activity: [
+        "exam_retake",
+        "flight_review",
+        "tc_endorsed_seminar",
+        "recurrent_training_program",
+        "self_paced_study",
+      ],
       risk_level: ["low", "medium", "high", "critical"],
       risk_likelihood: [
         "rare",
@@ -3791,12 +4909,39 @@ export const Constants = {
         "major",
         "catastrophic",
       ],
+      rpas_category: ["small", "medium"],
       rpas_certificate_type: [
         "basic_operations",
         "advanced_operations",
         "level_1_complex",
       ],
+      rpas_class: ["multirotor", "fixed_wing", "vtol", "helicopter", "hybrid"],
+      rpas_operation: [
+        "small_vlos_controlled",
+        "small_near_people",
+        "small_over_people",
+        "small_sheltered_controlled",
+        "medium_vlos_away",
+        "medium_near_people",
+        "medium_over_people",
+        "medium_vlos_controlled",
+      ],
+      rpas_role: [
+        "pilot_in_command",
+        "visual_observer",
+        "chief_pilot",
+        "training_pilot",
+        "person_responsible_for_maintenance",
+        "accountable_executive",
+      ],
       severity_level: ["low", "medium", "high", "critical"],
+      training_category: [
+        "indoctrination",
+        "initial",
+        "recurrent",
+        "annual",
+        "on_the_job",
+      ],
       uav_status: ["airworthy", "maintenance", "grounded", "retired"],
       user_role: [
         "system_admin",

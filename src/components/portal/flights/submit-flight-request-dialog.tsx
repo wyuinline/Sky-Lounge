@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { OptionSelect } from "@/components/portal/option-select";
-import { severityOptions } from "@/lib/select-options";
+import { severityOptions, proximityOptions } from "@/lib/select-options";
 import { submitFlightRequest } from "@/app/(portal)/flights/actions";
 import {
   operationOrder,
@@ -47,6 +47,7 @@ export function SubmitFlightRequestDialog({
   // VLOS is the baseline every flight needs, so it starts selected rather
   // than being something a requester has to remember to tick.
   const [operations, setOperations] = useState<OperationType[]>(["vlos"]);
+  const [proximity, setProximity] = useState("away");
   const [loading, setLoading] = useState(false);
 
   function toggleOperation(op: OperationType) {
@@ -68,6 +69,7 @@ export function SubmitFlightRequestDialog({
     formData.set("pilot_id", pilotId);
     formData.set("uav_id", uavId);
     formData.set("risk_level", riskLevel);
+    formData.set("proximity_to_people", proximity);
     formData.set("project_id", projectId === NO_PROJECT ? "" : projectId);
     for (const op of operations) formData.append("operations", op);
     const result = await submitFlightRequest(formData);
@@ -202,6 +204,21 @@ export function SubmitFlightRequestDialog({
                   </span>
                 </label>
               ))}
+            </div>
+
+            <div className="flex flex-col gap-2 border-t border-border pt-3">
+              <Label>How close to people</Label>
+              <OptionSelect
+                value={proximity}
+                onValueChange={setProximity}
+                options={proximityOptions}
+                className="w-full"
+              />
+              <p className="text-xs text-muted-foreground">
+                Decides which manufacturer safety-assurance declaration the aircraft must hold
+                under CAR 901.69. Flying an operation the aircraft is not declared for is an
+                offence in its own right, separate from airworthiness.
+              </p>
             </div>
           </fieldset>
 

@@ -46,6 +46,7 @@ export const accessAreaLabel: Record<AccessArea, string> = {
   notifications: "Notifications",
   users: "User management",
   permissions: "Roles & access matrix",
+  personal_data: "Personal data (restricted)",
 };
 
 /** Display order for the matrix — grouped by the part of the operation. */
@@ -64,6 +65,10 @@ export const accessAreaOrder: AccessArea[] = [
   "notifications",
   "users",
   "permissions",
+  // Last, because it is the one area most roles should hold nothing in: date
+  // of birth and immigration status are PIPEDA-sensitive, and every read is
+  // logged.
+  "personal_data",
 ];
 
 export const roleLabel: Record<UserRole, string> = {
